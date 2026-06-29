@@ -1,0 +1,18 @@
+#!/bin/bash
+# flutter_agent_memory CLI installer bootstrap
+# Usage:
+#   curl -fsSL https://raw.githubusercontent.com/IstiN/flutter_agent_memory/main/install | bash
+
+set -e
+
+REPO="IstiN/flutter_agent_memory"
+INSTALLER_URL="https://raw.githubusercontent.com/$REPO/main/scripts/install.sh"
+
+if command -v curl >/dev/null 2>&1; then
+  curl -fsSL "$INSTALLER_URL" | bash -s -- "$@"
+elif command -v wget >/dev/null 2>&1; then
+  wget -qO- "$INSTALLER_URL" | bash -s -- "$@"
+else
+  echo "Error: curl or wget is required." >&2
+  exit 1
+fi

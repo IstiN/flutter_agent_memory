@@ -7,6 +7,12 @@
 .buildlog/
 .history
 
+# Secrets / local environment
+.env
+
+# Test artifacts
+test_output/
+
 
 
 # Flutter repo-specific

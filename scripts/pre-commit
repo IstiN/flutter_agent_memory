@@ -1,0 +1,13 @@
+#!/bin/bash
+# Pre-commit hook for flutter_agent_memory.
+# Runs static analysis and the full test suite before allowing a commit.
+
+set -e
+
+echo "[pre-commit] Running dart analyze..."
+dart analyze
+
+echo "[pre-commit] Running dart test..."
+dart test
+
+echo "[pre-commit] All checks passed."
