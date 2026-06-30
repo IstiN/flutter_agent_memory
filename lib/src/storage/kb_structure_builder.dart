@@ -205,7 +205,7 @@ class KBStructureBuilder {
     int notesCount,
     PersonContributions contributions,
   ) {
-    final personId = normalizePersonName(personName);
+    final personId = personFileId(personName);
     final dir = Directory('${_path(outputDir)}/people/$personId')..createSync(recursive: true);
     final file = File('${dir.path}/$personId.md');
     if (file.existsSync()) {
