@@ -17,14 +17,14 @@ jobs:
         include:
           - os: ubuntu-latest
             target_os: linux
-          - os: macos-latest
+          - os: macos-15
             target_os: macos
           - os: windows-latest
             target_os: windows
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Setup Dart
         uses: dart-lang/setup-dart@v1
@@ -66,7 +66,7 @@ jobs:
           dart compile exe bin/agent_memory.dart -o "$output"
 
       - name: Upload binary artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: agent_memory-${{ matrix.target_os }}-${{ env.TARGET_ARCH }}
           path: build/agent_memory-${{ matrix.target_os }}-${{ env.TARGET_ARCH }}*
@@ -78,10 +78,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Download all binary artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           path: artifacts
 
@@ -104,6 +104,6 @@ jobs:
           cp artifacts/install-scripts.zip release-assets/
 
       - name: Upload release assets
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           files: release-assets/*
