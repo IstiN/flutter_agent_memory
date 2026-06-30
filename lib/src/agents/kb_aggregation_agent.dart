@@ -1,4 +1,5 @@
 import '../llm/llm_provider.dart';
+import 'prompts/prompt_loader.dart';
 
 /// Generates narrative descriptions for people, topics, and areas.
 class KBAggregationAgent {
@@ -12,28 +13,14 @@ class KBAggregationAgent {
     String entityData, {
     String extraInstructions = '',
   }) async {
-    final prompt = _buildPrompt(entityType, entityId, entityData, extraInstructions);
+    final prompt = await PromptLoader.load('kb_aggregation.xml', {
+      'entityType': entityType,
+      'entityId': entityId,
+      'entityData': entityData,
+      'extraInstructions': extraInstructions,
+    });
     final response = await _provider.chat(prompt);
     return _stripCodeBlock(response);
-  }
-
-  String _buildPrompt(String entityType, String entityId, String entityData, String extraInstructions) {
-    final extra = extraInstructions.isEmpty ? '' : '\nAdditional instructions: $extraInstructions\n';
-
-    return '''
-You are an AI assistant specialized in writing narrative descriptions for knowledge base entities.
-
-Entity Type: $entityType
-Entity ID: $entityId
-Entity Data:
-$entityData
-$extra
-Write plain Markdown text (Obsidian-compatible).
-- 2-4 paragraphs for people, 1-2 for topics/areas.
-- Use [[wiki-links]] for references.
-- Be specific and data-driven; avoid generic phrases.
-- Do NOT include frontmatter, YAML headers, XML tags, JSON, or code blocks.
-'''.trim();
   }
 
   String _stripCodeBlock(String response) {

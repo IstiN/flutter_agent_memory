@@ -1,10 +1,11 @@
 import 'dart:convert';
 
 import '../llm/llm_provider.dart';
-import '../utils/json_utils.dart';
 import '../models/analysis_result.dart';
 import '../models/kb_context.dart';
 import '../models/qa_mapping_result.dart';
+import '../utils/json_utils.dart';
+import 'prompts/prompt_loader.dart';
 
 /// Maps new answers and notes to existing unanswered questions.
 class KBQuestionAnswerMappingAgent {
@@ -34,14 +35,6 @@ class KBQuestionAnswerMappingAgent {
       return const QAMappingResult(mappings: []);
     }
 
-    final prompt = _buildPrompt(newAnswers, existing, extraInstructions);
-    final response = await _provider.chat(prompt);
-    final jsonText = extractJsonFromMarkdown(response);
-    final json = jsonDecode(jsonText) as Map<String, dynamic>;
-    return QAMappingResult.fromJson(json);
-  }
-
-  String _buildPrompt(List<_AnswerLike> newAnswers, List<_QuestionLike> existing, String extraInstructions) {
     final answersText = newAnswers.map((a) {
       return '[${a.id}] by ${a.author}: "${a.text}" (area: ${a.area}, topics: ${a.topics.join(", ")})';
     }).join('\n');
@@ -50,37 +43,16 @@ class KBQuestionAnswerMappingAgent {
       return '[${q.id}] by ${q.author} (UNANSWERED): "${q.text}" (area: ${q.area})';
     }).join('\n');
 
-    final extra = extraInstructions.isEmpty ? '' : '\n$extraInstructions\n';
-
-    return '''
-You are an AI assistant specialized in matching answers to questions in a knowledge base.
-
-New answers/notes:
-$answersText
-
-Existing unanswered questions:
-$questionsText
-$extra
-Return ONLY valid JSON matching this schema:
-{
-  "mappings": [
-    {
-      "answerId": "a_1 or n_1",
-      "questionId": "q_0001",
-      "confidence": 0.9
-    }
-  ]
-}
-
-Rules:
-- Only include mappings with confidence >= 0.6.
-- Each answer/note maps to AT MOST ONE question.
-- A question can have multiple answers.
-- Prefer matches within the same area/topic.
-- Return an empty mappings array if no good matches exist.
-'''.trim();
+    final prompt = await PromptLoader.load('kb_qa_mapping.xml', {
+      'answersText': answersText,
+      'questionsText': questionsText,
+      'extraInstructions': extraInstructions,
+    });
+    final response = await _provider.chat(prompt);
+    final jsonText = extractJsonFromMarkdown(response);
+    final json = jsonDecode(jsonText) as Map<String, dynamic>;
+    return QAMappingResult.fromJson(json);
   }
-
 }
 
 class _AnswerLike {

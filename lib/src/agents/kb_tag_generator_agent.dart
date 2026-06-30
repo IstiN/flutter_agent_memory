@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import '../llm/llm_provider.dart';
 import '../utils/json_utils.dart';
+import 'prompts/prompt_loader.dart';
 
 /// Generates a concise set of search tags from a natural-language query.
 class KBTagGeneratorAgent {
@@ -18,38 +19,19 @@ class KBTagGeneratorAgent {
     Set<String>? existingTags,
     int maxTags = 5,
   }) async {
-    final prompt = _buildPrompt(query, existingTags, maxTags);
+    final existing = existingTags == null || existingTags.isEmpty
+        ? '(No existing tag list provided)'
+        : existingTags.map((t) => '- $t').join('\n');
+
+    final prompt = await PromptLoader.load('kb_tag_generator.xml', {
+      'query': query,
+      'existingTags': existing,
+      'maxTags': maxTags.toString(),
+    });
     final response = await _provider.chat(prompt);
     final jsonText = extractJsonFromMarkdown(response);
     final json = jsonDecode(jsonText) as Map<String, dynamic>;
     final tags = (json['tags'] as List? ?? []).map((e) => e.toString()).toList();
     return tags.where((t) => t.isNotEmpty).toList();
   }
-
-  String _buildPrompt(String query, Set<String>? existingTags, int maxTags) {
-    final existing = existingTags == null || existingTags.isEmpty
-        ? '(No existing tag list provided)'
-        : existingTags.map((t) => '- $t').join('\n');
-
-    return '''
-You are an AI assistant that converts a user's search query into a small set of highly relevant knowledge-base tags.
-
-User query: "$query"
-
-Existing tags in the knowledge base (reuse them when semantically close):
-$existing
-
-Return ONLY valid JSON in this exact shape:
-{
-  "tags": ["tag1", "tag2", ...]
-}
-
-Rules:
-- Generate between 1 and $maxTags tags.
-- Tags should be specific keywords, techniques, tools, or domain terms found in or strongly implied by the query.
-- Keep the original language of the query.
-- Do not wrap the response in markdown code blocks.
-'''.trim();
-  }
-
 }
