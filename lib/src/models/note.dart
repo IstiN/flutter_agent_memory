@@ -1,7 +1,9 @@
 import '../utils/model_json_utils.dart';
 import 'entity_json_mixin.dart';
 import 'link.dart';
+import 'memory_level.dart';
 import 'memory_type.dart';
+import 'relation.dart';
 
 /// A standalone knowledge-base note.
 ///
@@ -24,6 +26,8 @@ class Note with KbEntityJson {
   final String? memoryType;
   final String? validFrom;
   final String? validUntil;
+  final int level;
+  final List<Relation> relations;
 
   const Note({
     required this.id,
@@ -41,6 +45,8 @@ class Note with KbEntityJson {
     this.memoryType,
     this.validFrom,
     this.validUntil,
+    this.level = MemoryLevel.raw,
+    this.relations = const [],
   });
 
   factory Note.fromJson(Map<String, dynamic> json) => Note(
@@ -59,7 +65,17 @@ class Note with KbEntityJson {
         memoryType: MemoryType.normalize(json['memoryType'] as String?),
         validFrom: json['validFrom'] as String?,
         validUntil: json['validUntil'] as String?,
+        level: (json['level'] as num?)?.toInt() ?? MemoryLevel.raw,
+        relations: _relationsFromJson(json['relations'] as List<dynamic>? ?? [], json['id'] as String? ?? ''),
       );
+
+  static List<Relation> _relationsFromJson(List<dynamic> json, String sourceId) {
+    return json
+        .map((e) => e.toString())
+        .where((s) => s.isNotEmpty)
+        .map((s) => Relation.fromFrontmatterString(sourceId, s))
+        .toList();
+  }
 
   Map<String, dynamic> toJson() => {
         ...toBaseJson(),
@@ -67,6 +83,9 @@ class Note with KbEntityJson {
         if (memoryType != null && memoryType!.isNotEmpty) 'memoryType': memoryType,
         if (validFrom != null && validFrom!.isNotEmpty) 'validFrom': validFrom,
         if (validUntil != null && validUntil!.isNotEmpty) 'validUntil': validUntil,
+        if (level != MemoryLevel.raw) 'level': level,
+        if (relations.isNotEmpty)
+          'relations': relations.map((r) => r.toFrontmatterString()).toList(),
       };
 
   Note copyWith({
@@ -85,6 +104,8 @@ class Note with KbEntityJson {
     String? memoryType,
     String? validFrom,
     String? validUntil,
+    int? level,
+    List<Relation>? relations,
   }) =>
       Note(
         id: id ?? this.id,
@@ -102,8 +123,10 @@ class Note with KbEntityJson {
         memoryType: memoryType ?? this.memoryType,
         validFrom: validFrom ?? this.validFrom,
         validUntil: validUntil ?? this.validUntil,
+        level: level ?? this.level,
+        relations: relations ?? this.relations,
       );
 
   @override
-  String toString() => 'Note($id${memoryType != null ? ' $memoryType' : ''} by $author)';
+  String toString() => 'Note($id L$level${memoryType != null ? ' $memoryType' : ''} by $author)';
 }

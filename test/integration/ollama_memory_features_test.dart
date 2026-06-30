@@ -5,7 +5,9 @@ import 'package:flutter_agent_memory/src/agents/kb_secret_redaction_agent.dart';
 import 'package:flutter_agent_memory/src/llm/llm_config.dart';
 import 'package:flutter_agent_memory/src/llm/llm_provider.dart';
 import 'package:flutter_agent_memory/src/llm/provider_factory.dart';
+import 'package:flutter_agent_memory/src/models/memory_level.dart';
 import 'package:flutter_agent_memory/src/models/memory_type.dart';
+import 'package:flutter_agent_memory/src/models/relation.dart';
 import 'package:flutter_agent_memory/src/search/kb_search_engine.dart';
 import 'package:flutter_agent_memory/src/storage/kb_memory_store.dart';
 import 'package:test/test.dart';
@@ -103,5 +105,55 @@ void main() {
     expect(result.results, isNotEmpty);
     // The LLM reranker should put the Flutter/Riverpod note at the top.
     expect(result.results.first.title!.toLowerCase(), contains('flutter'));
+  });
+
+  test('persists memory levels and promotes notes', () async {
+    final store = KBMemoryStore(tmpDir, provider: provider, source: 'agent');
+
+    final note = await store.addNote(
+      text: 'Flutter state management patterns.',
+      memoryType: MemoryType.observation,
+      level: MemoryLevel.raw,
+    );
+
+    // Raw level is the default and is omitted from frontmatter.
+    final file = File(note.path);
+    expect(note.note!.level, MemoryLevel.raw);
+    expect(file.readAsStringSync(), isNot(contains('level:')));
+
+    final promoted = await store.promote(note.id, MemoryLevel.concept);
+    expect(promoted.note!.level, MemoryLevel.concept);
+    expect(File(promoted.path).readAsStringSync(), contains('level: 3'));
+  });
+
+  test('relations and graph survive a round-trip through the store', () async {
+    final store = KBMemoryStore(tmpDir, provider: provider, source: 'agent');
+
+    final source = await store.addNote(
+      text: 'Prefer Riverpod over Provider.',
+      memoryType: MemoryType.decision,
+      level: MemoryLevel.consolidated,
+    );
+    final target = await store.addNote(
+      text: 'Provider is simpler for small apps.',
+      memoryType: MemoryType.fact,
+      level: MemoryLevel.raw,
+    );
+
+    await store.addRelation(source.id, target.id, RelationType.contradicts, weight: 0.9);
+
+    final reloaded = store.findById(source.id);
+    expect(reloaded, isNotNull);
+    expect(reloaded!.note!.relations, hasLength(1));
+
+    store.buildGraph();
+
+    final graphFile = File('${tmpDir.path}/GRAPH.md');
+    expect(graphFile.existsSync(), isTrue);
+
+    final content = graphFile.readAsStringSync();
+    expect(content, contains('### contradicts'));
+    expect(content, contains('[[${source.id}]]'));
+    expect(content, contains('[[${target.id}]]'));
   });
 }

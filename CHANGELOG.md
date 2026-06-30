@@ -7,6 +7,9 @@
 - LLM providers: OpenAI, OpenRouter, Ollama (OpenAI-compatible).
 - Markdown knowledge base generation (questions, answers, notes, people, topics, areas, stats).
 - Agent memory CRUD: add, ask, list, delete, rank, update.
+- Memory levels for notes: `raw`, `consolidated`, `concept`.
+- Typed relations between notes (`supports`, `contradicts`, `part_of`, etc.) and an Obsidian-compatible knowledge graph (`GRAPH.md` with Mermaid diagram).
+- CLI memory subcommands: `relate`, `promote`, `graph`.
 - Natural-language search with AI-generated tags.
 - Cross-platform install scripts and native binary compilation.
 - GitHub Actions workflows for CI, release, and pub.dev publishing.

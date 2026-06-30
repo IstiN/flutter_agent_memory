@@ -195,7 +195,44 @@ Future<void> _memory(ArgResults args) async {
       await _memoryUpdate(sub);
     case 'consolidate':
       await _memoryConsolidate(sub);
+    case 'relate':
+      await _memoryRelate(sub);
+    case 'promote':
+      await _memoryPromote(sub);
+    case 'graph':
+      await _memoryGraph(sub);
   }
+}
+
+Future<void> _memoryRelate(ArgResults args) async {
+  final outputPath = args['output'] as String;
+  final fromId = args['from'] as String;
+  final toId = args['to'] as String;
+  final type = args['type'] as String;
+  final weight = double.tryParse(args['weight'] as String) ?? 1.0;
+
+  final store = KBMemoryStore(Directory(outputPath), source: 'agent');
+  final record = await store.addRelation(fromId, toId, type, weight: weight);
+  stdout.writeln('Added $type relation from $fromId to $toId');
+  stdout.writeln('Updated ${record.entityType} ${record.id}');
+}
+
+Future<void> _memoryPromote(ArgResults args) async {
+  final outputPath = args['output'] as String;
+  final id = args['id'] as String;
+  final level = int.tryParse(args['level'] as String);
+  if (level == null) throw ArgumentError('Invalid level');
+
+  final store = KBMemoryStore(Directory(outputPath), source: 'agent');
+  final record = await store.promote(id, level);
+  stdout.writeln('Promoted ${record.entityType} ${record.id} to level $level');
+}
+
+Future<void> _memoryGraph(ArgResults args) async {
+  final outputPath = args['output'] as String;
+  final store = KBMemoryStore(Directory(outputPath), source: 'agent');
+  store.buildGraph();
+  stdout.writeln('Regenerated $outputPath/GRAPH.md');
 }
 
 Future<void> _memoryConsolidate(ArgResults args) async {
@@ -261,6 +298,7 @@ Future<void> _memoryAdd(ArgResults args) async {
         memoryType: args['memory-type'] as String?,
         validFrom: args['valid-from'] as String?,
         validUntil: args['valid-until'] as String?,
+        level: int.tryParse(args['level'] as String? ?? ''),
       );
     default:
       throw ArgumentError('Unknown type: $type');
@@ -372,6 +410,7 @@ Future<void> _memoryUpdate(ArgResults args) async {
   final memoryType = args['memory-type'] as String?;
   final validFrom = args['valid-from'] as String?;
   final validUntil = args['valid-until'] as String?;
+  final level = int.tryParse(args['level'] as String? ?? '');
 
   final provider = _createOptionalProvider(args);
   final store = KBMemoryStore(Directory(outputPath), provider: provider, source: 'agent');
@@ -383,6 +422,7 @@ Future<void> _memoryUpdate(ArgResults args) async {
     memoryType: memoryType,
     validFrom: validFrom,
     validUntil: validUntil,
+    level: level,
   );
   stdout.writeln('Updated ${record.entityType} ${record.id}');
 }

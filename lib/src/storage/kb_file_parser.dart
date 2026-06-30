@@ -1,7 +1,9 @@
 import '../models/answer.dart';
 import '../models/link.dart';
+import '../models/memory_level.dart';
 import '../models/note.dart';
 import '../models/question.dart';
+import '../models/relation.dart';
 import '../utils/frontmatter.dart';
 
 /// Parses knowledge-base entities from Markdown files.
@@ -46,6 +48,16 @@ class KBFileParser {
   Note parseNote(String content) {
     final base = _parseBaseFields(content, 'Note');
     final memoryType = base.frontmatter.getString('memoryType');
+    final rawLevel = base.frontmatter['level'];
+    final level = rawLevel is int
+        ? rawLevel
+        : (rawLevel is String ? int.tryParse(rawLevel) ?? MemoryLevel.raw : MemoryLevel.raw);
+    final relations = base.frontmatter
+        .getStringList('relations')
+        .where((s) => s.isNotEmpty)
+        .map((s) => Relation.fromFrontmatterString(base.id, s))
+        .toList();
+
     return Note(
       id: base.id,
       text: base.text,
@@ -62,6 +74,8 @@ class KBFileParser {
       memoryType: memoryType,
       validFrom: base.frontmatter.getString('validFrom'),
       validUntil: base.frontmatter.getString('validUntil'),
+      level: level,
+      relations: relations,
     );
   }
 

@@ -77,7 +77,7 @@ void main() {
       ),
       _SearchExpectation(
         query: 'Dart unit testing',
-        expectedKeywordsInTags: ['dart', 'test'],
+        expectedKeywordsInTags: ['dart', 'test', 'unit-testing', 'test-package'],
         expectedResultKeywordsInTitle: ['test', 'unit'],
       ),
       _SearchExpectation(

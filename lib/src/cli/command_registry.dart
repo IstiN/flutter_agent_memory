@@ -95,6 +95,21 @@ final List<CliCommand> agentMemoryCommands = [
         description: 'Consolidate memory records into a high-level MEMORY.md summary and skill cards.',
         buildParser: _memoryConsolidateCommandParser,
       ),
+      CliCommand(
+        name: 'relate',
+        description: 'Add a typed relation between two memory records.',
+        buildParser: _memoryRelateCommandParser,
+      ),
+      CliCommand(
+        name: 'promote',
+        description: 'Promote a note to a higher memory level (1 raw → 2 consolidated → 3 concept).',
+        buildParser: _memoryPromoteCommandParser,
+      ),
+      CliCommand(
+        name: 'graph',
+        description: 'Regenerate the Obsidian-compatible GRAPH.md from the knowledge base.',
+        buildParser: _memoryGraphCommandParser,
+      ),
     ],
   ),
 ];
@@ -202,24 +217,6 @@ ArgParser _searchCommandParser() => ArgParser()
 
 ArgParser _memoryCommandParser() => ArgParser();
 
-ArgParser _memoryAddCommandParser() => ArgParser()
-  ..addOption('output', abbr: 'o', defaultsTo: 'kb', help: 'Knowledge-base directory')
-  ..addOption('type', abbr: 't', help: 'Record type: question, answer, note', mandatory: true)
-  ..addOption('text', abbr: 'x', help: 'Record text/content', mandatory: true)
-  ..addOption('author', abbr: 'a', defaultsTo: 'agent', help: 'Author name')
-  ..addOption('area', help: 'Knowledge area')
-  ..addOption('topics', help: 'Comma-separated topics')
-  ..addOption('tags', help: 'Comma-separated tags')
-  ..addOption('answers-question', help: 'For answers: id of the question being answered')
-  ..addOption('importance', defaultsTo: '0.5', help: 'Importance score 0.0-1.0')
-  ..addOption('memory-type', help: 'For notes: fact, event, observation, belief, decision, rule, experience')
-  ..addOption('valid-from', help: 'ISO date from which the note is valid')
-  ..addOption('valid-until', help: 'ISO date until which the note is valid')
-  ..addOption('provider', defaultsTo: 'openai', help: 'LLM provider: openai, openrouter or ollama')
-  ..addOption('api-key', help: 'API key')
-  ..addOption('base-url', help: 'Base URL')
-  ..addOption('model', help: 'Model name');
-
 ArgParser _memoryAskCommandParser() => ArgParser()
   ..addOption('output', abbr: 'o', defaultsTo: 'kb', help: 'Knowledge-base directory')
   ..addOption('query', abbr: 'q', help: 'Natural-language question', mandatory: true)
@@ -259,10 +256,45 @@ ArgParser _memoryUpdateCommandParser() => ArgParser()
   ..addOption('memory-type', help: 'For notes: fact, event, observation, belief, decision, rule, experience')
   ..addOption('valid-from', help: 'ISO date from which the note is valid')
   ..addOption('valid-until', help: 'ISO date until which the note is valid')
+  ..addOption('level', help: 'Memory level: 1 raw, 2 consolidated, 3 concept')
   ..addOption('provider', defaultsTo: 'openai', help: 'LLM provider: openai, openrouter or ollama')
   ..addOption('api-key', help: 'API key')
   ..addOption('base-url', help: 'Base URL')
   ..addOption('model', help: 'Model name');
+
+ArgParser _memoryAddCommandParser() => ArgParser()
+  ..addOption('output', abbr: 'o', defaultsTo: 'kb', help: 'Knowledge-base directory')
+  ..addOption('type', abbr: 't', help: 'Record type: question, answer, note', mandatory: true)
+  ..addOption('text', abbr: 'x', help: 'Record text/content', mandatory: true)
+  ..addOption('author', abbr: 'a', defaultsTo: 'agent', help: 'Author name')
+  ..addOption('area', help: 'Knowledge area')
+  ..addOption('topics', help: 'Comma-separated topics')
+  ..addOption('tags', help: 'Comma-separated tags')
+  ..addOption('answers-question', help: 'For answers: id of the question being answered')
+  ..addOption('importance', defaultsTo: '0.5', help: 'Importance score 0.0-1.0')
+  ..addOption('memory-type', help: 'For notes: fact, event, observation, belief, decision, rule, experience')
+  ..addOption('valid-from', help: 'ISO date from which the note is valid')
+  ..addOption('valid-until', help: 'ISO date until which the note is valid')
+  ..addOption('level', help: 'Memory level: 1 raw, 2 consolidated, 3 concept')
+  ..addOption('provider', defaultsTo: 'openai', help: 'LLM provider: openai, openrouter or ollama')
+  ..addOption('api-key', help: 'API key')
+  ..addOption('base-url', help: 'Base URL')
+  ..addOption('model', help: 'Model name');
+
+ArgParser _memoryRelateCommandParser() => ArgParser()
+  ..addOption('output', abbr: 'o', defaultsTo: 'kb', help: 'Knowledge-base directory')
+  ..addOption('from', abbr: 'f', help: 'Source record id', mandatory: true)
+  ..addOption('to', abbr: 't', help: 'Target record id', mandatory: true)
+  ..addOption('type', abbr: 'y', help: 'Relation type', mandatory: true)
+  ..addOption('weight', defaultsTo: '1.0', help: 'Edge weight 0.0-1.0');
+
+ArgParser _memoryPromoteCommandParser() => ArgParser()
+  ..addOption('output', abbr: 'o', defaultsTo: 'kb', help: 'Knowledge-base directory')
+  ..addOption('id', abbr: 'i', help: 'Record id', mandatory: true)
+  ..addOption('level', abbr: 'l', help: 'Target level: 1 raw, 2 consolidated, 3 concept', mandatory: true);
+
+ArgParser _memoryGraphCommandParser() => ArgParser()
+  ..addOption('output', abbr: 'o', defaultsTo: 'kb', help: 'Knowledge-base directory');
 
 ArgParser _memoryConsolidateCommandParser() => ArgParser()
   ..addOption('output', abbr: 'o', defaultsTo: 'kb', help: 'Knowledge-base directory')

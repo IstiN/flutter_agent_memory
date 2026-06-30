@@ -1,5 +1,7 @@
 import 'dart:io';
 
+import 'package:flutter_agent_memory/src/models/memory_level.dart';
+import 'package:flutter_agent_memory/src/models/relation.dart';
 import 'package:flutter_agent_memory/src/storage/kb_memory_store.dart';
 import 'package:test/test.dart';
 
@@ -86,5 +88,62 @@ void main() {
     expect(updated.tags, contains('#source_agent'));
     expect(updated.tags, contains('new'));
     expect(updated.tags.where((t) => t == '#question').length, 1);
+  });
+
+  test('addNote persists memory level and relations', () async {
+    final record = await store.addNote(
+      text: 'Consolidated insight.',
+      area: 'dev',
+      tags: ['x'],
+      level: MemoryLevel.consolidated,
+      relations: const [
+        Relation(source: 'placeholder', target: 'n_0002', type: RelationType.supports),
+      ],
+    );
+
+    final file = File(record.path);
+    final content = file.readAsStringSync();
+
+    expect(content, contains('level: 2'));
+    expect(content, contains('relations: ["supports|n_0002"]'));
+  });
+
+  test('promote raises note memory level', () async {
+    final record = await store.addNote(text: 'Raw idea.', area: 'dev', tags: ['x']);
+    expect(record.note!.level, MemoryLevel.raw);
+
+    final promoted = await store.promote(record.id, MemoryLevel.concept);
+    expect(promoted.note!.level, MemoryLevel.concept);
+
+    final file = File(promoted.path);
+    expect(file.readAsStringSync(), contains('level: 3'));
+  });
+
+  test('addRelation appends typed relation to note frontmatter', () async {
+    final source = await store.addNote(text: 'Source.', area: 'dev', tags: ['x']);
+    final target = await store.addNote(text: 'Target.', area: 'dev', tags: ['y']);
+
+    await store.addRelation(source.id, target.id, RelationType.supports, weight: 1.5);
+
+    final updated = store.findById(source.id);
+    expect(updated, isNotNull);
+    expect(updated!.note!.relations, hasLength(1));
+    expect(updated.note!.relations.first.type, RelationType.supports);
+    expect(updated.note!.relations.first.target, target.id);
+    expect(updated.note!.relations.first.weight, 1.5);
+
+    final content = File(updated.path).readAsStringSync();
+    expect(content, contains('supports|${target.id}|1.50'));
+  });
+
+  test('addRelation is idempotent for duplicate relations', () async {
+    final source = await store.addNote(text: 'Source.', area: 'dev', tags: ['x']);
+    final target = await store.addNote(text: 'Target.', area: 'dev', tags: ['y']);
+
+    await store.addRelation(source.id, target.id, RelationType.supports);
+    await store.addRelation(source.id, target.id, RelationType.supports);
+
+    final updated = store.findById(source.id);
+    expect(updated!.note!.relations, hasLength(1));
   });
 }

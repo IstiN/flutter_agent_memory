@@ -3,6 +3,7 @@ import 'dart:io';
 
 import '../models/analysis_result.dart';
 import '../models/answer.dart';
+import '../models/memory_level.dart';
 import '../models/note.dart';
 import '../models/person_contributions.dart';
 import '../models/question.dart';
@@ -421,6 +422,10 @@ class KBStructureBuilder {
     if (n.memoryType != null && n.memoryType!.isNotEmpty) fm['memoryType'] = n.memoryType;
     if (n.validFrom != null && n.validFrom!.isNotEmpty) fm['validFrom'] = n.validFrom;
     if (n.validUntil != null && n.validUntil!.isNotEmpty) fm['validUntil'] = n.validUntil;
+    if (n.level != MemoryLevel.raw) fm['level'] = n.level;
+    if (n.relations.isNotEmpty) {
+      fm['relations'] = n.relations.map((r) => r.toFrontmatterString()).toList();
+    }
 
     fm['tags'] = _buildEntityTags(n.tags, source, '#note');
 

@@ -8,14 +8,17 @@ import '../models/analysis_result.dart';
 import '../models/answer.dart';
 import '../models/consolidation_result.dart';
 import '../models/kb_context.dart';
+import '../models/memory_level.dart';
 import '../models/memory_type.dart';
 import '../models/note.dart';
+import '../models/relation.dart';
 import '../models/question.dart';
 import '../utils/date_utils.dart';
 import '../utils/frontmatter.dart';
 import '../utils/slugify.dart';
 import 'kb_context_loader.dart';
 import 'kb_file_parser.dart';
+import 'kb_graph_builder.dart';
 import 'kb_structure_builder.dart';
 
 /// Persistent agent memory store backed by Markdown files.
@@ -124,6 +127,8 @@ class KBMemoryStore {
     String? memoryType,
     String? validFrom,
     String? validUntil,
+    int? level,
+    List<Relation>? relations,
   }) async {
     final prepared = await _prepareAdd(
       text,
@@ -148,6 +153,8 @@ class KBMemoryStore {
       memoryType: MemoryType.normalize(memoryType),
       validFrom: validFrom,
       validUntil: validUntil,
+      level: MemoryLevel.normalize(level),
+      relations: relations ?? const [],
     );
 
     _builder.buildNoteFile(note, kbDir, source);
@@ -171,6 +178,8 @@ class KBMemoryStore {
     String? memoryType,
     String? validFrom,
     String? validUntil,
+    int? level,
+    List<Relation>? relations,
   }) async {
     final record = findById(id);
     if (record == null) throw ArgumentError('Record not found: $id');
@@ -218,6 +227,8 @@ class KBMemoryStore {
           memoryType: memoryType != null ? MemoryType.normalize(memoryType) : n.memoryType,
           validFrom: validFrom ?? n.validFrom,
           validUntil: validUntil ?? n.validUntil,
+          level: level != null ? MemoryLevel.normalize(level) : n.level,
+          relations: relations ?? n.relations,
         );
         _builder.buildNoteFile(updated, kbDir, source);
         return _toRecord(note: updated);
@@ -481,6 +492,54 @@ class KBMemoryStore {
     } catch (_) {
       return null;
     }
+  }
+
+  /// Adds a typed relation from [sourceId] to [targetId].
+  ///
+  /// Currently supports notes as the source entity.
+  Future<MemoryRecord> addRelation(
+    String sourceId,
+    String targetId,
+    String type, {
+    double weight = 1.0,
+  }) async {
+    final record = findById(sourceId);
+    if (record == null) throw ArgumentError('Source record not found: $sourceId');
+    if (record.note == null) throw ArgumentError('Relations are currently supported only for notes: $sourceId');
+
+    final normalizedType = RelationType.normalize(type);
+    final existing = record.note!.relations.where((r) => r.target == targetId && r.type == normalizedType);
+    if (existing.isNotEmpty) return record;
+
+    final updated = record.note!.copyWith(
+      relations: [
+        ...record.note!.relations,
+        Relation(source: sourceId, target: targetId, type: normalizedType, weight: weight),
+      ],
+    );
+    _builder.buildNoteFile(updated, kbDir, source);
+    return _toRecord(note: updated);
+  }
+
+  /// Promotes a note to a higher memory level (1 raw → 2 consolidated → 3 concept).
+  Future<MemoryRecord> promote(String id, int targetLevel) async {
+    final record = findById(id);
+    if (record == null) throw ArgumentError('Record not found: $id');
+    if (record.note == null) throw ArgumentError('Promotion is currently supported only for notes: $id');
+
+    final newLevel = MemoryLevel.normalize(targetLevel);
+    if (newLevel <= record.note!.level) {
+      throw ArgumentError('Target level $targetLevel is not higher than current level ${record.note!.level}');
+    }
+
+    final updated = record.note!.copyWith(level: newLevel);
+    _builder.buildNoteFile(updated, kbDir, source);
+    return _toRecord(note: updated);
+  }
+
+  /// Regenerates `GRAPH.md` from the current knowledge base.
+  void buildGraph() {
+    KBGraphBuilder(kbDir).build();
   }
 
   /// Consolidates the top [limit] memory records into a high-level summary and
