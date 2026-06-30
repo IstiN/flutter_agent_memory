@@ -1,16 +1,139 @@
-name: Release
+name: Release agent_memory
 
 on:
-  release:
-    types: [published]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Custom version (e.g., 0.1.2). Leave empty to auto-increment patch version.'
+        required: false
+        type: string
 
 permissions:
   contents: write
   actions: write
 
 jobs:
+  version-and-tag:
+    name: Determine version, update pubspec, and create tag
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.new_version.outputs.version }}
+      current_version: ${{ steps.current_version.outputs.current }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Dart
+        uses: dart-lang/setup-dart@v1
+        with:
+          sdk: stable
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Install dependencies and verify
+        run: |
+          dart pub get
+          dart analyze
+          dart test
+
+      - name: Read current version
+        id: current_version
+        run: |
+          CURRENT_VERSION=$(grep '^version:' pubspec.yaml | sed 's/^version: //;s/[[:space:]]*$//')
+          echo "current=$CURRENT_VERSION" >> "$GITHUB_OUTPUT"
+          echo "Current version: $CURRENT_VERSION"
+
+      - name: Determine new version
+        id: new_version
+        run: |
+          CURRENT_VERSION="${{ steps.current_version.outputs.current }}"
+          CUSTOM_VERSION="${{ github.event.inputs.version }}"
+
+          if [ -n "$CUSTOM_VERSION" ]; then
+            NEW_VERSION="$CUSTOM_VERSION"
+            echo "Using custom version: $NEW_VERSION"
+          else
+            IFS='.' read -ra VERSION_PARTS <<< "$CURRENT_VERSION"
+            MAJOR="${VERSION_PARTS[0]}"
+            MINOR="${VERSION_PARTS[1]}"
+            PATCH="${VERSION_PARTS[2]}"
+            PATCH=$((PATCH + 1))
+            NEW_VERSION="$MAJOR.$MINOR.$PATCH"
+            echo "Auto-incremented version: $NEW_VERSION"
+          fi
+
+          echo "version=$NEW_VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Update pubspec.yaml
+        run: |
+          NEW_VERSION="${{ steps.new_version.outputs.version }}"
+          sed -i "s/^version: .*/version: $NEW_VERSION/" pubspec.yaml
+          cat pubspec.yaml | grep '^version:'
+
+      - name: Commit version change
+        run: |
+          NEW_VERSION="${{ steps.new_version.outputs.version }}"
+          git add pubspec.yaml
+          git commit -m "version increased to $NEW_VERSION"
+
+      - name: Create tag
+        run: |
+          NEW_VERSION="${{ steps.new_version.outputs.version }}"
+          git tag "v$NEW_VERSION"
+          echo "Created tag: v$NEW_VERSION"
+
+      - name: Generate changelog
+        id: changelog
+        run: |
+          CURRENT_VERSION="${{ steps.current_version.outputs.current }}"
+          NEW_VERSION="${{ steps.new_version.outputs.version }}"
+          PREV_TAG="v$CURRENT_VERSION"
+          NEW_TAG="v$NEW_VERSION"
+
+          {
+            echo "## 📝 What's Changed"
+            echo ""
+            if git rev-parse "$PREV_TAG" >/dev/null 2>&1; then
+              git log --pretty=format:'- %s (%h)' "$PREV_TAG..HEAD"
+            else
+              git log --pretty=format:'- %s (%h)' --reverse
+            fi
+            echo ""
+          } > changelog.md
+
+          echo "--- Generated changelog ---"
+          cat changelog.md
+          echo "--- End changelog ---"
+
+      - name: Upload changelog artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: release-changelog
+          path: changelog.md
+          retention-days: 7
+
+      - name: Push changes and tag
+        run: |
+          NEW_VERSION="${{ steps.new_version.outputs.version }}"
+          git push origin main
+          git push origin "v$NEW_VERSION"
+
+      - name: Summary
+        run: |
+          echo "✅ Version and tag created successfully!"
+          echo "📦 Old version: ${{ steps.current_version.outputs.current }}"
+          echo "🚀 New version: ${{ steps.new_version.outputs.version }}"
+          echo "🏷️  Tag: v${{ steps.new_version.outputs.version }}"
+
   build-binaries:
     name: Build release binaries
+    needs: version-and-tag
     strategy:
       fail-fast: false
       matrix:
@@ -25,6 +148,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
+        with:
+          ref: v${{ needs.version-and-tag.outputs.version }}
 
       - name: Setup Dart
         uses: dart-lang/setup-dart@v1
@@ -72,38 +197,151 @@ jobs:
           path: build/agent_memory-${{ matrix.target_os }}-${{ env.TARGET_ARCH }}*
           if-no-files-found: error
 
-  release:
-    name: Publish release assets
-    needs: build-binaries
+  create-release:
+    name: Create unified release
+    needs: [version-and-tag, build-binaries]
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
+      - name: Checkout repository
         uses: actions/checkout@v6
+        with:
+          ref: v${{ needs.version-and-tag.outputs.version }}
 
-      - name: Download all binary artifacts
+      - name: Download binary artifacts
         uses: actions/download-artifact@v8
         with:
+          pattern: agent_memory-*
           path: artifacts
+          merge-multiple: true
 
-      - name: Package install scripts
-        run: |
-          mkdir -p artifacts/install-scripts
-          cp install artifacts/install-scripts/
-          cp scripts/install.sh scripts/install.ps1 scripts/install.bat artifacts/install-scripts/
-          cp scripts/agent_memory.sh scripts/agent_memory.bat scripts/agent_memory.ps1 artifacts/install-scripts/
-          cd artifacts/install-scripts
-          zip -r ../install-scripts.zip .
+      - name: Download changelog
+        uses: actions/download-artifact@v8
+        with:
+          name: release-changelog
+          path: changelog/
 
-      - name: Flatten artifacts for release
+      - name: Stage release assets
         run: |
           mkdir -p release-assets
-          for dir in artifacts/agent_memory-*; do
-            [ -d "$dir" ] || continue
-            cp "$dir"/* release-assets/
-          done
-          cp artifacts/install-scripts.zip release-assets/
+          cp artifacts/agent_memory-* release-assets/ || true
+          cp install release-assets/install
+          cp scripts/install.sh release-assets/
+          cp scripts/install.ps1 release-assets/
+          cp scripts/install.bat release-assets/
+          cp scripts/agent_memory.sh release-assets/
+          cp scripts/agent_memory.bat release-assets/
+          cp scripts/agent_memory.ps1 release-assets/
+          ls -lh release-assets/
 
-      - name: Upload release assets
+      - name: Generate release notes
+        run: |
+          VERSION="${{ needs.version-and-tag.outputs.version }}"
+          CHANGELOG_FILE="changelog/changelog.md"
+          if [ -f "$CHANGELOG_FILE" ]; then
+            CHANGELOG_CONTENT=$(cat "$CHANGELOG_FILE")
+          else
+            CHANGELOG_CONTENT="## 📝 What's Changed\n\nNo changelog available for this release."
+          fi
+
+          cat > release_notes.md << EOF
+          # 🚀 agent_memory Release v${VERSION}
+
+          ${CHANGELOG_CONTENT}
+
+          ---
+
+          A Dart memory / knowledge-base CLI and library. Turn text, images, or directories into a structured Markdown KB and query it with any OpenAI-compatible LLM.
+
+          ## 📦 What's Included
+
+          - **Native binaries** for Linux, macOS, and Windows
+          - **Cross-platform install scripts** (bash, PowerShell, Windows batch)
+          - **Development wrappers** for running from source
+
+          ## 🎯 Quick Start
+
+          ### Install the CLI
+
+          **macOS / Linux:**
+          \`\`\`bash
+          curl -fsSL https://github.com/${{ github.repository }}/releases/latest/download/install.sh | bash
+          \`\`\`
+
+          **Windows (PowerShell):**
+          \`\`\`powershell
+          irm https://github.com/${{ github.repository }}/releases/latest/download/install.ps1 | iex
+          \`\`\`
+
+          **Windows (cmd.exe):**
+          \`\`\`cmd
+          curl -fsSL https://github.com/${{ github.repository }}/releases/latest/download/install.bat -o %TEMP%\\agent_memory-install.bat && %TEMP%\\agent_memory-install.bat
+          \`\`\`
+
+          ### Install a Specific Version (v${VERSION})
+
+          **macOS / Linux:**
+          \`\`\`bash
+          curl -fsSL https://github.com/${{ github.repository }}/releases/download/v${VERSION}/install.sh | bash
+          \`\`\`
+
+          **Windows (PowerShell):**
+          \`\`\`powershell
+          irm https://github.com/${{ github.repository }}/releases/download/v${VERSION}/install.ps1 | iex
+          \`\`\`
+
+          ## 🛠️ Development Wrapper
+
+          If you already have the repo cloned and Dart installed:
+
+          \`\`\`bash
+          ./scripts/agent_memory.sh --help
+          \`\`\`
+
+          ## 📋 System Requirements
+
+          - **Dart SDK 3.12+** (only if running from source; the native binary has no runtime dependency)
+          - ~50 MB disk space
+
+          ## 📊 Build Information
+
+          - **Version:** v${VERSION}
+          - **Build Date:** $(date -u '+%Y-%m-%d %H:%M:%S UTC')
+          - **Git Commit:** \`${GITHUB_SHA:0:8}\`
+
+          ## 🐛 Troubleshooting
+
+          - If `agent_memory` is not found after install, restart your terminal or run `source ~/.bashrc` / `source ~/.zshrc`.
+          - For source runs, ensure a `.env` file with your LLM credentials is in the working directory.
+
+          ## 🆘 Getting Help
+
+          - **Issues:** https://github.com/${{ github.repository }}/issues
+          - **Repository:** https://github.com/${{ github.repository }}
+          EOF
+
+          echo "Release notes generated"
+
+      - name: Create GitHub Release
         uses: softprops/action-gh-release@v3
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
+          tag_name: v${{ needs.version-and-tag.outputs.version }}
+          name: "agent_memory v${{ needs.version-and-tag.outputs.version }}"
+          body_path: release_notes.md
+          draft: false
+          prerelease: false
           files: release-assets/*
+
+      - name: Summary
+        run: |
+          VERSION="${{ needs.version-and-tag.outputs.version }}"
+          echo "## 🎉 Release Created Successfully!" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "**Version:** v$VERSION" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "### Install" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "\`\`\`bash" >> "$GITHUB_STEP_SUMMARY"
+          echo "curl -fsSL https://github.com/${{ github.repository }}/releases/latest/download/install.sh | bash" >> "$GITHUB_STEP_SUMMARY"
+          echo "\`\`\`" >> "$GITHUB_STEP_SUMMARY"
