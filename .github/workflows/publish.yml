@@ -1,0 +1,52 @@
+name: Publish to pub.dev
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  publish:
+    name: Publish package
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write # Optional: enables OIDC-based publishing when pub.dev supports it
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Dart
+        uses: dart-lang/setup-dart@v1
+        with:
+          sdk: stable
+
+      - name: Install dependencies
+        run: dart pub get
+
+      - name: Analyze
+        run: dart analyze
+
+      - name: Run tests
+        run: dart test
+
+      - name: Write pub.dev credentials
+        if: env.PUB_CREDENTIALS != ''
+        env:
+          PUB_CREDENTIALS: ${{ secrets.PUB_CREDENTIALS }}
+        run: |
+          mkdir -p ~/.config/dart
+          echo "$PUB_CREDENTIALS" > ~/.config/dart/pub-credentials.json
+
+      - name: Publish to pub.dev
+        if: env.PUB_CREDENTIALS != ''
+        env:
+          PUB_CREDENTIALS: ${{ secrets.PUB_CREDENTIALS }}
+        run: dart pub publish --force
+
+      - name: Publish skipped (no credentials)
+        if: env.PUB_CREDENTIALS == ''
+        run: |
+          echo "PUB_CREDENTIALS secret is not configured. Skipping publish."
+          echo "See README for instructions on how to set it up."
