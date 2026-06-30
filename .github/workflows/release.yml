@@ -7,6 +7,9 @@ on:
         description: 'Custom version (e.g., 0.1.2). Leave empty to auto-increment patch version.'
         required: false
         type: string
+  push:
+    tags:
+      - 'v*'
 
 permissions:
   contents: write
@@ -19,6 +22,7 @@ jobs:
     outputs:
       version: ${{ steps.new_version.outputs.version }}
       current_version: ${{ steps.current_version.outputs.current }}
+      ref: ${{ steps.ref.outputs.ref }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
@@ -52,13 +56,15 @@ jobs:
       - name: Determine new version
         id: new_version
         run: |
-          CURRENT_VERSION="${{ steps.current_version.outputs.current }}"
-          CUSTOM_VERSION="${{ github.event.inputs.version }}"
-
-          if [ -n "$CUSTOM_VERSION" ]; then
-            NEW_VERSION="$CUSTOM_VERSION"
+          if [ "${{ github.event_name }}" = "push" ]; then
+            TAG="${{ github.ref_name }}"
+            NEW_VERSION="${TAG#v}"
+            echo "Using pushed tag: $NEW_VERSION"
+          elif [ -n "${{ github.event.inputs.version }}" ]; then
+            NEW_VERSION="${{ github.event.inputs.version }}"
             echo "Using custom version: $NEW_VERSION"
           else
+            CURRENT_VERSION="${{ steps.current_version.outputs.current }}"
             IFS='.' read -ra VERSION_PARTS <<< "$CURRENT_VERSION"
             MAJOR="${VERSION_PARTS[0]}"
             MINOR="${VERSION_PARTS[1]}"
@@ -67,22 +73,26 @@ jobs:
             NEW_VERSION="$MAJOR.$MINOR.$PATCH"
             echo "Auto-incremented version: $NEW_VERSION"
           fi
-
           echo "version=$NEW_VERSION" >> "$GITHUB_OUTPUT"
 
-      - name: Update pubspec.yaml
+      - name: Update pubspec.yaml (manual only)
+        if: github.event_name == 'workflow_dispatch'
         run: |
           NEW_VERSION="${{ steps.new_version.outputs.version }}"
           sed -i "s/^version: .*/version: $NEW_VERSION/" pubspec.yaml
           cat pubspec.yaml | grep '^version:'
 
-      - name: Commit version change
+      - name: Commit version change (manual only)
+        id: commit
+        if: github.event_name == 'workflow_dispatch'
         run: |
           NEW_VERSION="${{ steps.new_version.outputs.version }}"
           git add pubspec.yaml
           git commit -m "version increased to $NEW_VERSION"
+          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
-      - name: Create tag
+      - name: Create tag (manual only)
+        if: github.event_name == 'workflow_dispatch'
         run: |
           NEW_VERSION="${{ steps.new_version.outputs.version }}"
           git tag "v$NEW_VERSION"
@@ -91,18 +101,23 @@ jobs:
       - name: Generate changelog
         id: changelog
         run: |
-          CURRENT_VERSION="${{ steps.current_version.outputs.current }}"
           NEW_VERSION="${{ steps.new_version.outputs.version }}"
-          PREV_TAG="v$CURRENT_VERSION"
           NEW_TAG="v$NEW_VERSION"
+
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            CURRENT_VERSION="${{ steps.current_version.outputs.current }}"
+            PREV_TAG="v$CURRENT_VERSION"
+          else
+            PREV_TAG=$(git describe --tags --abbrev=0 HEAD~1 2>/dev/null || echo "")
+          fi
 
           {
             echo "## 📝 What's Changed"
             echo ""
-            if git rev-parse "$PREV_TAG" >/dev/null 2>&1; then
-              git log --pretty=format:'- %s (%h)' "$PREV_TAG..HEAD"
+            if [ -n "$PREV_TAG" ] && git rev-parse "$PREV_TAG" >/dev/null 2>&1; then
+              git log --pretty=format:'- %s (%h)' "$PREV_TAG..$NEW_TAG"
             else
-              git log --pretty=format:'- %s (%h)' --reverse
+              git log --pretty=format:'- %s (%h)' --reverse "$NEW_TAG"
             fi
             echo ""
           } > changelog.md
@@ -118,15 +133,25 @@ jobs:
           path: changelog.md
           retention-days: 7
 
-      - name: Push changes and tag
+      - name: Push changes and tag (manual only)
+        if: github.event_name == 'workflow_dispatch'
         run: |
           NEW_VERSION="${{ steps.new_version.outputs.version }}"
           git push origin main
           git push origin "v$NEW_VERSION"
 
+      - name: Output ref
+        id: ref
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "ref=v${{ steps.new_version.outputs.version }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "ref=${{ github.ref_name }}" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Summary
         run: |
-          echo "✅ Version and tag created successfully!"
+          echo "✅ Version and tag prepared successfully!"
           echo "📦 Old version: ${{ steps.current_version.outputs.current }}"
           echo "🚀 New version: ${{ steps.new_version.outputs.version }}"
           echo "🏷️  Tag: v${{ steps.new_version.outputs.version }}"
@@ -149,7 +174,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
         with:
-          ref: v${{ needs.version-and-tag.outputs.version }}
+          ref: ${{ needs.version-and-tag.outputs.ref }}
 
       - name: Setup Dart
         uses: dart-lang/setup-dart@v1
@@ -205,7 +230,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v6
         with:
-          ref: v${{ needs.version-and-tag.outputs.version }}
+          ref: ${{ needs.version-and-tag.outputs.ref }}
 
       - name: Download binary artifacts
         uses: actions/download-artifact@v8
@@ -310,8 +335,8 @@ jobs:
 
           ## 🐛 Troubleshooting
 
-          - If `agent_memory` is not found after install, restart your terminal or run `source ~/.bashrc` / `source ~/.zshrc`.
-          - For source runs, ensure a `.env` file with your LLM credentials is in the working directory.
+          - If \`agent_memory\` is not found after install, restart your terminal or run \`source ~/.bashrc\` / \`source ~/.zshrc\`.
+          - For source runs, ensure a \`.env\` file with your LLM credentials is in the working directory.
 
           ## 🆘 Getting Help
 
