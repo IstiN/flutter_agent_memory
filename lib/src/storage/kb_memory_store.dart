@@ -261,11 +261,15 @@ class KBMemoryStore {
   }
 
   /// Lists records, optionally filtered and sorted.
+  ///
+  /// [asOf] returns only records whose [date] is on or before the given time,
+  /// useful for answering "what did I know at date X?".
   List<MemoryRecord> list({
     String? type,
     List<String>? tags,
     String sortBy = 'lastAccessed',
     int? limit,
+    DateTime? asOf,
   }) {
     final records = <MemoryRecord>[];
     final types = type != null ? [type.toLowerCase()] : ['question', 'answer', 'note'];
@@ -282,6 +286,7 @@ class KBMemoryStore {
             final normalizedRequested = tags.map((x) => x.toLowerCase()).toSet();
             if (!normalizedRequested.any(normalizedRecordTags.contains)) continue;
           }
+          if (asOf != null && !_isRecordActiveAt(record, asOf)) continue;
           records.add(record);
         } catch (_) {}
       }
@@ -522,6 +527,16 @@ class KBMemoryStore {
         ..writeln()
         ..writeln(skill.instruction);
       file.writeAsStringSync(buffer.toString());
+    }
+  }
+
+  bool _isRecordActiveAt(MemoryRecord record, DateTime asOf) {
+    if (record.date.isEmpty) return true;
+    try {
+      final dt = DateTime.parse(record.date);
+      return !dt.isAfter(asOf);
+    } catch (_) {
+      return true;
     }
   }
 

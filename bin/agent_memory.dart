@@ -270,12 +270,19 @@ Future<void> _memoryAsk(ArgResults args) async {
   final outputPath = args['output'] as String;
   final query = args['query'] as String;
   final asJson = args['json'] as bool;
+  final asOf = _parseAsOf(args['as-of'] as String?);
 
   final provider = _createProvider(args, args['provider'] as String);
   final store = KBMemoryStore(Directory(outputPath), provider: provider, source: 'agent');
   final engine = KBSearchEngine(Directory(outputPath), provider: provider);
 
-  final result = await engine.searchByText(query, matchAll: false);
+  var result = await engine.searchByText(query, matchAll: false);
+  if (asOf != null) {
+    result = KBTextSearchResult(
+      generatedTags: result.generatedTags,
+      results: result.results.where((r) => _recordKnownAt(r, asOf)).toList(),
+    );
+  }
   if (result.results.isNotEmpty) {
     final id = result.results.first.id;
     if (id != null && id.isNotEmpty) store.recordAccess(id);
@@ -300,6 +307,7 @@ Future<void> _memoryList(ArgResults args) async {
   final sort = args['sort'] as String;
   final limit = args['limit'] != null ? int.tryParse(args['limit'] as String) : null;
   final asJson = args['json'] as bool;
+  final asOf = _parseAsOf(args['as-of'] as String?);
 
   final store = KBMemoryStore(Directory(outputPath), source: 'agent');
   final records = store.list(
@@ -307,9 +315,23 @@ Future<void> _memoryList(ArgResults args) async {
     tags: tags.isNotEmpty ? tags : null,
     sortBy: sort,
     limit: limit,
+    asOf: asOf,
   );
 
   _printMemoryRecords(records, asJson, header: 'Found');
+}
+
+DateTime? _parseAsOf(String? value) {
+  if (value == null || value.isEmpty) return null;
+  return DateTime.tryParse(value);
+}
+
+bool _recordKnownAt(KBSearchResult result, DateTime asOf) {
+  final dateStr = result.question?.date ?? result.answer?.date ?? result.note?.date;
+  if (dateStr == null || dateStr.isEmpty) return true;
+  final dt = DateTime.tryParse(dateStr);
+  if (dt == null) return true;
+  return !dt.isAfter(asOf);
 }
 
 Future<void> _memoryDelete(ArgResults args) async {

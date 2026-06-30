@@ -46,8 +46,12 @@ class KBSearchEngine {
     return _rankAndSort(results);
   }
 
-  /// Ranks results by relevance, access frequency, importance, and recency.
-  List<KBSearchResult> _rankAndSort(List<KBSearchResult> results) {
+  /// Ranks results by tag relevance, keyword overlap, access frequency,
+  /// importance, and recency.
+  List<KBSearchResult> _rankAndSort(
+    List<KBSearchResult> results, {
+    Map<String, int> keywordHits = const {},
+  }) {
     final now = DateTime.now().toUtc();
 
     int daysAgo(String? iso) {
@@ -65,6 +69,7 @@ class KBSearchEngine {
       final a = r.answer;
       final n = r.note;
       final matchedTags = r.matchedTags.length;
+      final keywordScore = keywordHits[r.path] ?? 0;
       final accessCount = q?.accessCount ?? a?.accessCount ?? n?.accessCount ?? 0;
       final importance = q?.importance ?? a?.importance ?? n?.importance ?? 0.5;
       final lastUsedDays = daysAgo(q?.lastAccessedAt ?? a?.lastAccessedAt ?? n?.lastAccessedAt);
@@ -75,7 +80,7 @@ class KBSearchEngine {
       else if (lastUsedDays <= 30) recency = 4;
       else if (lastUsedDays <= 90) recency = 2;
 
-      return matchedTags * 10 + accessCount * 2 + importance * 5 + recency;
+      return matchedTags * 10 + keywordScore * 4 + accessCount * 2 + importance * 5 + recency;
     }
 
     final scored = results.map((r) => (r, score(r))).toList()
@@ -83,8 +88,8 @@ class KBSearchEngine {
     return scored.map((e) => e.$1).toList();
   }
 
-  /// Generates tags from [query] using the configured LLM provider and then
-  /// searches the knowledge base for records that match those tags.
+  /// Generates tags from [query] using the configured LLM provider, runs a
+  /// tag-based search, and augments it with a keyword search over record text.
   ///
   /// Throws [StateError] if no [provider] was supplied to the engine.
   Future<KBTextSearchResult> searchByText(
@@ -110,11 +115,17 @@ class KBSearchEngine {
       maxTags: maxGeneratedTags,
     );
 
-    if (generatedTags.isEmpty) {
-      return KBTextSearchResult(generatedTags: generatedTags, results: const []);
-    }
-    final results = searchByTags(generatedTags, matchAll: matchAll, entityTypes: entityTypes);
-    return KBTextSearchResult(generatedTags: generatedTags, results: results);
+    final tagResults = generatedTags.isEmpty
+        ? <KBSearchResult>[]
+        : searchByTags(generatedTags, matchAll: matchAll, entityTypes: entityTypes);
+
+    final (keywordResults, keywordHits) = _searchByKeywords(query, entityTypes);
+    final merged = _mergeResults(tagResults, keywordResults);
+
+    return KBTextSearchResult(
+      generatedTags: generatedTags,
+      results: _rankAndSort(merged, keywordHits: keywordHits),
+    );
   }
 
   /// Collects all unique tags currently used in the knowledge base.
@@ -181,5 +192,80 @@ class KBSearchEngine {
     if (matched.isEmpty) return null;
     if (matchAll && !requested.every(normalized.contains)) return null;
     return matched;
+  }
+
+  /// Tokenizes [query] into searchable keywords and scans record text for hits.
+  (List<KBSearchResult>, Map<String, int>) _searchByKeywords(
+    String query,
+    List<String>? entityTypes,
+  ) {
+    final tokens = _tokenize(query);
+    if (tokens.isEmpty) return (<KBSearchResult>[], <String, int>{});
+
+    final types = entityTypes?.map((t) => t.toLowerCase()).toSet() ??
+        const {'question', 'answer', 'note'};
+    final results = <KBSearchResult>[];
+    final hits = <String, int>{};
+
+    void scan(String type, String dirName) {
+      if (!types.contains(type.toLowerCase())) return;
+      _forEachEntityFile(dirName, (file, content) {
+        final result = _parseSearchResult(type, file.path, content);
+        if (result == null) return;
+        final text = _recordText(result).toLowerCase();
+        var count = 0;
+        for (final token in tokens) {
+          if (text.contains(token)) count++;
+        }
+        if (count > 0) {
+          results.add(result);
+          hits[result.path] = count;
+        }
+      });
+    }
+
+    scan('question', 'questions');
+    scan('answer', 'answers');
+    scan('note', 'notes');
+
+    return (results, hits);
+  }
+
+  String _recordText(KBSearchResult result) {
+    final q = result.question;
+    final a = result.answer;
+    final n = result.note;
+    final title = q?.text ?? a?.text ?? n?.text ?? '';
+    final tags = (q?.tags ?? a?.tags ?? n?.tags ?? []).join(' ');
+    return '$title $tags';
+  }
+
+  List<String> _tokenize(String query) {
+    return query
+        .toLowerCase()
+        .split(RegExp(r'[^a-z0-9\u00c0-\u017e]+'))
+        .where((t) => t.length > 2)
+        .toSet()
+        .toList();
+  }
+
+  List<KBSearchResult> _mergeResults(
+    List<KBSearchResult> tagResults,
+    List<KBSearchResult> keywordResults,
+  ) {
+    final byPath = <String, KBSearchResult>{};
+    for (final r in tagResults) {
+      byPath[r.path] = r;
+    }
+    for (final r in keywordResults) {
+      final existing = byPath[r.path];
+      if (existing != null) {
+        final mergedTags = {...existing.matchedTags, ...r.matchedTags}.toList();
+        byPath[r.path] = existing.withMatchedTags(mergedTags);
+      } else {
+        byPath[r.path] = r;
+      }
+    }
+    return byPath.values.toList();
   }
 }
