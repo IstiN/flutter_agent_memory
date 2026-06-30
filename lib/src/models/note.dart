@@ -1,8 +1,13 @@
 import '../utils/model_json_utils.dart';
 import 'entity_json_mixin.dart';
 import 'link.dart';
+import 'memory_type.dart';
 
 /// A standalone knowledge-base note.
+///
+/// Notes can optionally carry a [memoryType] (fact, event, observation, belief,
+/// etc.) so that durable memories do not get mixed with question/answer pairs.
+/// Optional [validFrom] / [validUntil] fields support temporal queries.
 class Note with KbEntityJson {
   final String id;
   final String text;
@@ -16,6 +21,9 @@ class Note with KbEntityJson {
   final int accessCount;
   final String? lastAccessedAt;
   final double importance;
+  final String? memoryType;
+  final String? validFrom;
+  final String? validUntil;
 
   const Note({
     required this.id,
@@ -30,6 +38,9 @@ class Note with KbEntityJson {
     this.accessCount = 0,
     this.lastAccessedAt,
     this.importance = 0.5,
+    this.memoryType,
+    this.validFrom,
+    this.validUntil,
   });
 
   factory Note.fromJson(Map<String, dynamic> json) => Note(
@@ -45,11 +56,17 @@ class Note with KbEntityJson {
         accessCount: (json['accessCount'] as num?)?.toInt() ?? 0,
         lastAccessedAt: json['lastAccessedAt'] as String?,
         importance: (json['importance'] as num?)?.toDouble() ?? 0.5,
+        memoryType: MemoryType.normalize(json['memoryType'] as String?),
+        validFrom: json['validFrom'] as String?,
+        validUntil: json['validUntil'] as String?,
       );
 
   Map<String, dynamic> toJson() => {
         ...toBaseJson(),
         if (answersQuestions.isNotEmpty) 'answersQuestions': answersQuestions,
+        if (memoryType != null && memoryType!.isNotEmpty) 'memoryType': memoryType,
+        if (validFrom != null && validFrom!.isNotEmpty) 'validFrom': validFrom,
+        if (validUntil != null && validUntil!.isNotEmpty) 'validUntil': validUntil,
       };
 
   Note copyWith({
@@ -65,6 +82,9 @@ class Note with KbEntityJson {
     int? accessCount,
     String? lastAccessedAt,
     double? importance,
+    String? memoryType,
+    String? validFrom,
+    String? validUntil,
   }) =>
       Note(
         id: id ?? this.id,
@@ -79,8 +99,11 @@ class Note with KbEntityJson {
         accessCount: accessCount ?? this.accessCount,
         lastAccessedAt: lastAccessedAt ?? this.lastAccessedAt,
         importance: importance ?? this.importance,
+        memoryType: memoryType ?? this.memoryType,
+        validFrom: validFrom ?? this.validFrom,
+        validUntil: validUntil ?? this.validUntil,
       );
 
   @override
-  String toString() => 'Note($id by $author)';
+  String toString() => 'Note($id${memoryType != null ? ' $memoryType' : ''} by $author)';
 }

@@ -1,12 +1,14 @@
 import 'dart:io';
 
 import '../agents/kb_consolidation_agent.dart';
+import '../agents/kb_secret_redaction_agent.dart';
 import '../agents/kb_tag_generator_agent.dart';
 import '../llm/llm_provider.dart';
 import '../models/analysis_result.dart';
 import '../models/answer.dart';
 import '../models/consolidation_result.dart';
 import '../models/kb_context.dart';
+import '../models/memory_type.dart';
 import '../models/note.dart';
 import '../models/question.dart';
 import '../utils/date_utils.dart';
@@ -58,7 +60,7 @@ class KBMemoryStore {
     final question = Question(
       id: prepared.id,
       author: author,
-      text: text,
+      text: prepared.text,
       date: prepared.now,
       area: prepared.enriched.area,
       topics: prepared.enriched.topics,
@@ -95,7 +97,7 @@ class KBMemoryStore {
     final answer = Answer(
       id: prepared.id,
       author: author,
-      text: text,
+      text: prepared.text,
       date: prepared.now,
       area: prepared.enriched.area,
       topics: prepared.enriched.topics,
@@ -119,6 +121,9 @@ class KBMemoryStore {
     List<String>? tags,
     List<String>? answersQuestions,
     double importance = 0.5,
+    String? memoryType,
+    String? validFrom,
+    String? validUntil,
   }) async {
     final prepared = await _prepareAdd(
       text,
@@ -131,7 +136,7 @@ class KBMemoryStore {
 
     final note = Note(
       id: prepared.id,
-      text: text,
+      text: prepared.text,
       area: prepared.enriched.area,
       topics: prepared.enriched.topics,
       tags: prepared.enriched.tags,
@@ -140,6 +145,9 @@ class KBMemoryStore {
       answersQuestions: answersQuestions ?? const [],
       links: const [],
       importance: importance,
+      memoryType: MemoryType.normalize(memoryType),
+      validFrom: validFrom,
+      validUntil: validUntil,
     );
 
     _builder.buildNoteFile(note, kbDir, source);
@@ -160,6 +168,9 @@ class KBMemoryStore {
     String? text,
     List<String>? tags,
     double? importance,
+    String? memoryType,
+    String? validFrom,
+    String? validUntil,
   }) async {
     final record = findById(id);
     if (record == null) throw ArgumentError('Record not found: $id');
@@ -168,7 +179,7 @@ class KBMemoryStore {
       case 'question':
         final q = record.question!;
         final updatedTags = tags ?? q.tags;
-        final updatedText = text ?? q.text;
+        final updatedText = KBSecretRedactionAgent.redact(text ?? q.text);
         final enriched = await _enrich(updatedText, area: q.area, topics: q.topics, tags: updatedTags);
         final updated = q.copyWith(
           text: updatedText,
@@ -182,7 +193,7 @@ class KBMemoryStore {
       case 'answer':
         final a = record.answer!;
         final updatedTags = tags ?? a.tags;
-        final updatedText = text ?? a.text;
+        final updatedText = KBSecretRedactionAgent.redact(text ?? a.text);
         final enriched = await _enrich(updatedText, area: a.area, topics: a.topics, tags: updatedTags);
         final updated = a.copyWith(
           text: updatedText,
@@ -196,7 +207,7 @@ class KBMemoryStore {
       case 'note':
         final n = record.note!;
         final updatedTags = tags ?? n.tags;
-        final updatedText = text ?? n.text;
+        final updatedText = KBSecretRedactionAgent.redact(text ?? n.text);
         final enriched = await _enrich(updatedText, area: n.area, topics: n.topics, tags: updatedTags);
         final updated = n.copyWith(
           text: updatedText,
@@ -204,6 +215,9 @@ class KBMemoryStore {
           topics: enriched.topics,
           area: enriched.area,
           importance: importance ?? n.importance,
+          memoryType: memoryType != null ? MemoryType.normalize(memoryType) : n.memoryType,
+          validFrom: validFrom ?? n.validFrom,
+          validUntil: validUntil ?? n.validUntil,
         );
         _builder.buildNoteFile(updated, kbDir, source);
         return _toRecord(note: updated);
@@ -312,7 +326,7 @@ class KBMemoryStore {
     return records;
   }
 
-  Future<({String id, String now, _Enriched enriched})> _prepareAdd(
+  Future<({String id, String text, String now, _Enriched enriched})> _prepareAdd(
     String text, {
     String? area,
     List<String>? topics,
@@ -320,15 +334,16 @@ class KBMemoryStore {
     required String prefix,
     required int Function() nextId,
   }) async {
+    final safeText = KBSecretRedactionAgent.redact(text);
     final enriched = await _enrich(
-      text,
+      safeText,
       area: area,
       topics: topics ?? const [],
       tags: tags ?? const [],
     );
     final id = '${prefix}_${_pad(nextId())}';
     final now = currentUtcTimestamp();
-    return (id: id, now: now, enriched: enriched);
+    return (id: id, text: safeText, now: now, enriched: enriched);
   }
 
   Future<_Enriched> _enrich(
@@ -531,6 +546,24 @@ class KBMemoryStore {
   }
 
   bool _isRecordActiveAt(MemoryRecord record, DateTime asOf) {
+    // If the note explicitly declares validity boundaries, use them.
+    if (record.note != null) {
+      final note = record.note!;
+      if (note.validFrom != null && note.validFrom!.isNotEmpty) {
+        try {
+          final from = DateTime.parse(note.validFrom!);
+          if (asOf.isBefore(from)) return false;
+        } catch (_) {}
+      }
+      if (note.validUntil != null && note.validUntil!.isNotEmpty) {
+        try {
+          final until = DateTime.parse(note.validUntil!);
+          if (asOf.isAfter(until)) return false;
+        } catch (_) {}
+      }
+      return true;
+    }
+
     if (record.date.isEmpty) return true;
     try {
       final dt = DateTime.parse(record.date);
@@ -586,4 +619,10 @@ class MemoryRecord {
   List<String> get tags => question?.tags ?? answer?.tags ?? note?.tags ?? const [];
 
   String get area => question?.area ?? answer?.area ?? note?.area ?? '';
+
+  String? get memoryType => note?.memoryType;
+
+  String? get validFrom => note?.validFrom;
+
+  String? get validUntil => note?.validUntil;
 }

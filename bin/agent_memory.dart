@@ -258,6 +258,9 @@ Future<void> _memoryAdd(ArgResults args) async {
         topics: topics,
         tags: tags,
         importance: importance,
+        memoryType: args['memory-type'] as String?,
+        validFrom: args['valid-from'] as String?,
+        validUntil: args['valid-until'] as String?,
       );
     default:
       throw ArgumentError('Unknown type: $type');
@@ -308,15 +311,20 @@ Future<void> _memoryList(ArgResults args) async {
   final limit = args['limit'] != null ? int.tryParse(args['limit'] as String) : null;
   final asJson = args['json'] as bool;
   final asOf = _parseAsOf(args['as-of'] as String?);
+  final memoryType = args['memory-type'] as String?;
 
   final store = KBMemoryStore(Directory(outputPath), source: 'agent');
-  final records = store.list(
+  var records = store.list(
     type: type,
     tags: tags.isNotEmpty ? tags : null,
     sortBy: sort,
     limit: limit,
     asOf: asOf,
   );
+
+  if (memoryType != null && memoryType.isNotEmpty) {
+    records = records.where((r) => r.memoryType == memoryType).toList();
+  }
 
   _printMemoryRecords(records, asJson, header: 'Found');
 }
@@ -361,6 +369,9 @@ Future<void> _memoryUpdate(ArgResults args) async {
   final text = args['text'] as String?;
   final tags = _splitList(args['tags'] as String?);
   final importance = args['importance'] != null ? double.tryParse(args['importance'] as String) : null;
+  final memoryType = args['memory-type'] as String?;
+  final validFrom = args['valid-from'] as String?;
+  final validUntil = args['valid-until'] as String?;
 
   final provider = _createOptionalProvider(args);
   final store = KBMemoryStore(Directory(outputPath), provider: provider, source: 'agent');
@@ -369,6 +380,9 @@ Future<void> _memoryUpdate(ArgResults args) async {
     text: text,
     tags: tags.isNotEmpty ? tags : null,
     importance: importance,
+    memoryType: memoryType,
+    validFrom: validFrom,
+    validUntil: validUntil,
   );
   stdout.writeln('Updated ${record.entityType} ${record.id}');
 }

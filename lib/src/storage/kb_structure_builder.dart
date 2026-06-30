@@ -418,6 +418,9 @@ class KBStructureBuilder {
       ..['importance'] = n.importance;
     if (n.answersQuestions.isNotEmpty) fm['answersQuestions'] = n.answersQuestions;
     if (n.lastAccessedAt != null && n.lastAccessedAt!.isNotEmpty) fm['lastAccessedAt'] = n.lastAccessedAt;
+    if (n.memoryType != null && n.memoryType!.isNotEmpty) fm['memoryType'] = n.memoryType;
+    if (n.validFrom != null && n.validFrom!.isNotEmpty) fm['validFrom'] = n.validFrom;
+    if (n.validUntil != null && n.validUntil!.isNotEmpty) fm['validUntil'] = n.validUntil;
 
     fm['tags'] = _buildEntityTags(n.tags, source, '#note');
 

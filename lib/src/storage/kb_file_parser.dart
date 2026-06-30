@@ -45,6 +45,7 @@ class KBFileParser {
 
   Note parseNote(String content) {
     final base = _parseBaseFields(content, 'Note');
+    final memoryType = base.frontmatter.getString('memoryType');
     return Note(
       id: base.id,
       text: base.text,
@@ -58,6 +59,9 @@ class KBFileParser {
       accessCount: base.accessCount,
       lastAccessedAt: base.lastAccessedAt,
       importance: base.importance,
+      memoryType: memoryType,
+      validFrom: base.frontmatter.getString('validFrom'),
+      validUntil: base.frontmatter.getString('validUntil'),
     );
   }
 

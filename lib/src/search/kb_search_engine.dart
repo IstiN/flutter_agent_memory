@@ -1,8 +1,10 @@
 import 'dart:io';
 
+import '../agents/kb_reranker_agent.dart';
 import '../agents/kb_tag_generator_agent.dart';
 import '../llm/llm_provider.dart';
 import '../storage/kb_file_parser.dart';
+import '../storage/kb_memory_store.dart' show MemoryRecord;
 import 'kb_search_result.dart';
 import 'kb_text_search_result.dart';
 
@@ -97,6 +99,7 @@ class KBSearchEngine {
     bool matchAll = false,
     List<String>? entityTypes,
     int maxGeneratedTags = 5,
+    int rerankTopN = 10,
   }) async {
     if (query.trim().isEmpty) {
       return const KBTextSearchResult(generatedTags: [], results: []);
@@ -120,11 +123,34 @@ class KBSearchEngine {
         : searchByTags(generatedTags, matchAll: matchAll, entityTypes: entityTypes);
 
     final (keywordResults, keywordHits) = _searchByKeywords(query, entityTypes);
-    final merged = _mergeResults(tagResults, keywordResults);
+    var merged = _mergeResults(tagResults, keywordResults);
+    merged = _rankAndSort(merged, keywordHits: keywordHits);
+
+    if (rerankTopN > 0 && merged.length > 1 && provider != null) {
+      final take = merged.length < rerankTopN ? merged.length : rerankTopN;
+      final top = merged.sublist(0, take);
+      final candidates = top
+          .map((r) => MemoryRecord(
+                entityType: r.entityType,
+                path: r.path,
+                question: r.question,
+                answer: r.answer,
+                note: r.note,
+              ))
+          .toList();
+      final agent = KBRerankerAgent(provider!);
+      final rankedIds = await agent.rerank(query, candidates);
+      final byId = {for (final r in top) r.id!: r};
+      final reranked = rankedIds.map((id) => byId[id]).whereType<KBSearchResult>().toList();
+      // Append any remaining results in their original order.
+      final rerankedIds = rankedIds.toSet();
+      final tail = merged.sublist(take).where((r) => !rerankedIds.contains(r.id)).toList();
+      merged = [...reranked, ...tail];
+    }
 
     return KBTextSearchResult(
       generatedTags: generatedTags,
-      results: _rankAndSort(merged, keywordHits: keywordHits),
+      results: merged,
     );
   }
 
