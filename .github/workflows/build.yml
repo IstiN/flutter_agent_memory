@@ -50,7 +50,7 @@ jobs:
           sdk: '3.10.8'
 
       - name: Run installer with local repo
-        run: FAM_INSTALL_DIR=/tmp/fam_ci FAM_REPO_DIR="$GITHUB_WORKSPACE" bash scripts/install.sh
+        run: FAM_INSTALL_DIR=/tmp/fam_ci FAM_BIN_DIR=/tmp/fam_ci/bin FAM_REPO_DIR="$GITHUB_WORKSPACE" bash scripts/install.sh
 
       - name: Verify installed command
         run: /tmp/fam_ci/bin/agent_memory --help
