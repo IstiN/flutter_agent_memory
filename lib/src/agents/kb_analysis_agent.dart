@@ -4,6 +4,7 @@ import '../llm/llm_message.dart';
 import '../llm/llm_provider.dart';
 import '../models/analysis_result.dart';
 import '../models/kb_context.dart';
+import '../utils/json_utils.dart';
 
 /// Extracts structured knowledge (questions, answers, notes) from raw text
 /// and optionally images.
@@ -26,7 +27,7 @@ class KBAnalysisAgent {
             LlmMessage(role: 'user', content: prompt, images: images),
           ])
         : await _provider.chat(prompt);
-    final jsonText = _extractJson(response);
+    final jsonText = extractJsonFromMarkdown(response);
     final json = jsonDecode(jsonText) as Map<String, dynamic>;
     return AnalysisResult.fromJson(json);
   }
@@ -126,15 +127,4 @@ Be concise but complete.
 ''';
   }
 
-  String _extractJson(String response) {
-    var text = response.trim();
-    if (text.startsWith('```json')) {
-      text = text.substring(7);
-      if (text.endsWith('```')) text = text.substring(0, text.length - 3);
-    } else if (text.startsWith('```')) {
-      text = text.substring(3);
-      if (text.endsWith('```')) text = text.substring(0, text.length - 3);
-    }
-    return text.trim();
-  }
 }

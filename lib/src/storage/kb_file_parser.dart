@@ -7,30 +7,66 @@ import '../utils/frontmatter.dart';
 /// Parses knowledge-base entities from Markdown files.
 class KBFileParser {
   Question parseQuestion(String content) {
-    final fm = parseFrontmatter(content);
-    final body = extractBody(content);
-    final text = _extractEntityText(body, 'Question');
+    final base = _parseBaseFields(content, 'Question');
     return Question(
-      id: fm.getString('id') ?? '',
-      author: fm.getString('author') ?? '',
-      text: text,
-      date: fm.getString('date') ?? '',
-      area: fm.getString('area') ?? '',
-      topics: fm.getStringList('topics'),
-      tags: fm.getStringList('tags'),
-      answeredBy: fm.getString('answeredBy'),
-      links: _parseLinks(body),
-      accessCount: fm.getString('accessCount') != null ? int.tryParse(fm.getString('accessCount')!) ?? 0 : 0,
-      lastAccessedAt: fm.getString('lastAccessedAt'),
-      importance: fm.getDouble('importance') ?? 0.5,
+      id: base.id,
+      author: base.author,
+      text: base.text,
+      date: base.date,
+      area: base.area,
+      topics: base.topics,
+      tags: base.tags,
+      answeredBy: base.frontmatter.getString('answeredBy'),
+      links: base.links,
+      accessCount: base.accessCount,
+      lastAccessedAt: base.lastAccessedAt,
+      importance: base.importance,
     );
   }
 
   Answer parseAnswer(String content) {
+    final base = _parseBaseFields(content, 'Answer');
+    return Answer(
+      id: base.id,
+      author: base.author,
+      text: base.text,
+      date: base.date,
+      area: base.area,
+      topics: base.topics,
+      tags: base.tags,
+      answersQuestion: base.frontmatter.getString('answersQuestion'),
+      quality: base.frontmatter.getDouble('quality') ?? 0.0,
+      links: base.links,
+      accessCount: base.accessCount,
+      lastAccessedAt: base.lastAccessedAt,
+      importance: base.importance,
+    );
+  }
+
+  Note parseNote(String content) {
+    final base = _parseBaseFields(content, 'Note');
+    return Note(
+      id: base.id,
+      text: base.text,
+      area: base.area,
+      topics: base.topics,
+      tags: base.tags,
+      author: base.author,
+      date: base.date,
+      answersQuestions: base.frontmatter.getStringList('answersQuestions'),
+      links: base.links,
+      accessCount: base.accessCount,
+      lastAccessedAt: base.lastAccessedAt,
+      importance: base.importance,
+    );
+  }
+
+  _BaseFields _parseBaseFields(String content, String entityType) {
     final fm = parseFrontmatter(content);
     final body = extractBody(content);
-    final text = _extractEntityText(body, 'Answer');
-    return Answer(
+    final text = _extractEntityText(body, entityType);
+    return _BaseFields(
+      frontmatter: fm,
       id: fm.getString('id') ?? '',
       author: fm.getString('author') ?? '',
       text: text,
@@ -38,33 +74,16 @@ class KBFileParser {
       area: fm.getString('area') ?? '',
       topics: fm.getStringList('topics'),
       tags: fm.getStringList('tags'),
-      answersQuestion: fm.getString('answersQuestion'),
-      quality: fm.getDouble('quality') ?? 0.0,
       links: _parseLinks(body),
-      accessCount: fm.getString('accessCount') != null ? int.tryParse(fm.getString('accessCount')!) ?? 0 : 0,
+      accessCount: _parseAccessCount(fm),
       lastAccessedAt: fm.getString('lastAccessedAt'),
       importance: fm.getDouble('importance') ?? 0.5,
     );
   }
 
-  Note parseNote(String content) {
-    final fm = parseFrontmatter(content);
-    final body = extractBody(content);
-    final text = _extractEntityText(body, 'Note');
-    return Note(
-      id: fm.getString('id') ?? '',
-      text: text,
-      area: fm.getString('area') ?? '',
-      topics: fm.getStringList('topics'),
-      tags: fm.getStringList('tags'),
-      author: fm.getString('author') ?? '',
-      date: fm.getString('date') ?? '',
-      answersQuestions: fm.getStringList('answersQuestions'),
-      links: _parseLinks(body),
-      accessCount: fm.getString('accessCount') != null ? int.tryParse(fm.getString('accessCount')!) ?? 0 : 0,
-      lastAccessedAt: fm.getString('lastAccessedAt'),
-      importance: fm.getDouble('importance') ?? 0.5,
-    );
+  int _parseAccessCount(Frontmatter fm) {
+    final raw = fm.getString('accessCount');
+    return raw != null ? int.tryParse(raw) ?? 0 : 0;
   }
 
   String _extractEntityText(String body, String entityType) {
@@ -93,4 +112,34 @@ class KBFileParser {
     }
     return links;
   }
+}
+
+class _BaseFields {
+  final Frontmatter frontmatter;
+  final String id;
+  final String author;
+  final String text;
+  final String date;
+  final String area;
+  final List<String> topics;
+  final List<String> tags;
+  final List<Link> links;
+  final int accessCount;
+  final String? lastAccessedAt;
+  final double importance;
+
+  _BaseFields({
+    required this.frontmatter,
+    required this.id,
+    required this.author,
+    required this.text,
+    required this.date,
+    required this.area,
+    required this.topics,
+    required this.tags,
+    required this.links,
+    required this.accessCount,
+    required this.lastAccessedAt,
+    required this.importance,
+  });
 }

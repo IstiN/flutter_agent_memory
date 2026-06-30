@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import '../llm/llm_provider.dart';
+import '../utils/json_utils.dart';
 
 /// Generates a concise set of search tags from a natural-language query.
 class KBTagGeneratorAgent {
@@ -19,7 +20,7 @@ class KBTagGeneratorAgent {
   }) async {
     final prompt = _buildPrompt(query, existingTags, maxTags);
     final response = await _provider.chat(prompt);
-    final jsonText = _extractJson(response);
+    final jsonText = extractJsonFromMarkdown(response);
     final json = jsonDecode(jsonText) as Map<String, dynamic>;
     final tags = (json['tags'] as List? ?? []).map((e) => e.toString()).toList();
     return tags.where((t) => t.isNotEmpty).toList();
@@ -51,15 +52,4 @@ Rules:
 '''.trim();
   }
 
-  String _extractJson(String response) {
-    var text = response.trim();
-    if (text.startsWith('```json')) {
-      text = text.substring(7);
-      if (text.endsWith('```')) text = text.substring(0, text.length - 3);
-    } else if (text.startsWith('```')) {
-      text = text.substring(3);
-      if (text.endsWith('```')) text = text.substring(0, text.length - 3);
-    }
-    return text.trim();
-  }
 }

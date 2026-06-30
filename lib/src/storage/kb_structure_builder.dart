@@ -95,14 +95,9 @@ class KBStructureBuilder {
         final data = topicDataMap.putIfAbsent(topic, () => _TopicData());
         switch (type) {
           case 'question':
-            data.questions.add(id);
-            if (answeredBy != null && answeredBy.isNotEmpty) data.qToA[id] = answeredBy;
+            _recordQuestionLink(data, id, answeredBy);
           case 'answer':
-            data.answers.add(id);
-            if (answersQuestion != null && answersQuestion.isNotEmpty) {
-              data.linkedAnswers.add(id);
-              data.aToQ[id] = answersQuestion;
-            }
+            _recordAnswerLink(data, id, answersQuestion);
           case 'note':
             data.notes.add(id);
         }
@@ -151,16 +146,11 @@ class KBStructureBuilder {
             final data = topicDataMap.putIfAbsent(topic, () => _TopicData());
             switch (type) {
               case 'question':
-                data.questions.add(id);
                 final answeredBy = fm.getString('answeredBy')?.replaceAll('"', '').trim();
-                if (answeredBy != null && answeredBy.isNotEmpty) data.qToA[id] = answeredBy;
+                _recordQuestionLink(data, id, answeredBy);
               case 'answer':
-                data.answers.add(id);
                 final answersQuestion = fm.getString('answersQuestion')?.replaceAll('"', '').trim();
-                if (answersQuestion != null && answersQuestion.isNotEmpty) {
-                  data.linkedAnswers.add(id);
-                  data.aToQ[id] = answersQuestion;
-                }
+                _recordAnswerLink(data, id, answersQuestion);
               case 'note':
                 data.notes.add(id);
             }
@@ -319,12 +309,7 @@ class KBStructureBuilder {
     if (q.answeredBy != null && q.answeredBy!.isNotEmpty) fm['answeredBy'] = q.answeredBy;
     if (q.lastAccessedAt != null && q.lastAccessedAt!.isNotEmpty) fm['lastAccessedAt'] = q.lastAccessedAt;
 
-    final tags = <String>[
-      if (!q.tags.any((t) => t == '#question')) '#question',
-      if (!q.tags.any((t) => t.startsWith('#source_'))) _formatSourceTag(source),
-      ...q.tags.where((t) => t != '#question' && !t.startsWith('#source_')),
-    ];
-    fm['tags'] = tags;
+    fm['tags'] = _buildEntityTags(q.tags, source, '#question');
 
     final buffer = StringBuffer()
       ..writeln('---')
@@ -383,12 +368,7 @@ class KBStructureBuilder {
     if (a.answersQuestion != null && a.answersQuestion!.isNotEmpty) fm['answersQuestion'] = a.answersQuestion;
     if (a.lastAccessedAt != null && a.lastAccessedAt!.isNotEmpty) fm['lastAccessedAt'] = a.lastAccessedAt;
 
-    final tags = <String>[
-      if (!a.tags.any((t) => t == '#answer')) '#answer',
-      if (!a.tags.any((t) => t.startsWith('#source_'))) _formatSourceTag(source),
-      ...a.tags.where((t) => t != '#answer' && !t.startsWith('#source_')),
-    ];
-    fm['tags'] = tags;
+    fm['tags'] = _buildEntityTags(a.tags, source, '#answer');
 
     final buffer = StringBuffer()
       ..writeln('---')
@@ -439,12 +419,7 @@ class KBStructureBuilder {
     if (n.answersQuestions.isNotEmpty) fm['answersQuestions'] = n.answersQuestions;
     if (n.lastAccessedAt != null && n.lastAccessedAt!.isNotEmpty) fm['lastAccessedAt'] = n.lastAccessedAt;
 
-    final tags = <String>[
-      if (!n.tags.any((t) => t == '#note')) '#note',
-      if (!n.tags.any((t) => t.startsWith('#source_'))) _formatSourceTag(source),
-      ...n.tags.where((t) => t != '#note' && !t.startsWith('#source_')),
-    ];
-    fm['tags'] = tags;
+    fm['tags'] = _buildEntityTags(n.tags, source, '#note');
 
     final buffer = StringBuffer()
       ..writeln('---')
@@ -648,15 +623,8 @@ class KBStructureBuilder {
     List<String> contributors,
     List<String> topics,
   ) {
-    final sources = <String>[];
-    String? existingCreated;
-    if (areaFile.existsSync()) {
-      try {
-        final content = areaFile.readAsStringSync();
-        sources.addAll(parseFrontmatter(content).getStringList('sources'));
-        existingCreated = parseFrontmatter(content).getString('created');
-      } catch (_) {}
-    }
+    final existing = _loadExistingSourcesAndCreated(areaFile);
+    final sources = existing.sources;
     if (source != null && !sources.contains(source)) sources.add(source);
 
     final fm = Frontmatter()
@@ -665,17 +633,9 @@ class KBStructureBuilder {
       ..['id'] = id
       ..['sources'] = sources
       ..['contributors'] = (contributors.toList()..sort())
-      ..['created'] = existingCreated ?? currentUtcTimestamp();
+      ..['created'] = existing.created ?? currentUtcTimestamp();
 
-    final buffer = StringBuffer()
-      ..writeln('---')
-      ..write(fm.serialize())
-      ..writeln('---')
-      ..writeln()
-      ..writeln('# $title')
-      ..writeln()
-      ..writeln('![[$id-desc]]')
-      ..writeln();
+    final buffer = _startEntityFileBuffer(fm, title, id);
 
     if (topics.isNotEmpty) {
       buffer.writeln('## Topics');
@@ -721,15 +681,8 @@ class KBStructureBuilder {
     _TopicData data,
     AnalysisResult analysis,
   ) {
-    final sources = <String>[];
-    String? existingCreated;
-    if (topicFile.existsSync()) {
-      try {
-        final content = topicFile.readAsStringSync();
-        sources.addAll(parseFrontmatter(content).getStringList('sources'));
-        existingCreated = parseFrontmatter(content).getString('created');
-      } catch (_) {}
-    }
+    final existing = _loadExistingSourcesAndCreated(topicFile);
+    final sources = existing.sources;
     if (source != null && !sources.contains(source)) sources.add(source);
 
     final fm = Frontmatter()
@@ -738,21 +691,13 @@ class KBStructureBuilder {
       ..['id'] = id
       ..['sources'] = sources
       ..['contributors'] = data.contributors.toList()
-      ..['created'] = existingCreated ?? currentUtcTimestamp();
+      ..['created'] = existing.created ?? currentUtcTimestamp();
 
     if (data.tags.isNotEmpty) {
       fm['tags'] = data.tags.toList()..sort();
     }
 
-    final buffer = StringBuffer()
-      ..writeln('---')
-      ..write(fm.serialize())
-      ..writeln('---')
-      ..writeln()
-      ..writeln('# $title')
-      ..writeln()
-      ..writeln('![[$id-desc]]')
-      ..writeln()
+    final buffer = _startEntityFileBuffer(fm, title, id)
       ..writeln('## Key Contributors')
       ..writeln();
     for (final c in data.contributors) {
@@ -842,6 +787,49 @@ class KBStructureBuilder {
 
   String _formatSourceTag(String source) =>
       source.startsWith('source_') ? '#$source' : '#source_$source';
+
+  void _recordQuestionLink(_TopicData data, String id, String? answeredBy) {
+    data.questions.add(id);
+    if (answeredBy != null && answeredBy.isNotEmpty) data.qToA[id] = answeredBy;
+  }
+
+  void _recordAnswerLink(_TopicData data, String id, String? answersQuestion) {
+    data.answers.add(id);
+    if (answersQuestion != null && answersQuestion.isNotEmpty) {
+      data.linkedAnswers.add(id);
+      data.aToQ[id] = answersQuestion;
+    }
+  }
+
+  StringBuffer _startEntityFileBuffer(Frontmatter fm, String title, String id) => StringBuffer()
+    ..writeln('---')
+    ..write(fm.serialize())
+    ..writeln('---')
+    ..writeln()
+    ..writeln('# $title')
+    ..writeln()
+    ..writeln('![[$id-desc]]')
+    ..writeln();
+
+  ({List<String> sources, String? created}) _loadExistingSourcesAndCreated(File file) {
+    final sources = <String>[];
+    String? created;
+    if (file.existsSync()) {
+      try {
+        final fm = parseFrontmatter(file.readAsStringSync());
+        sources.addAll(fm.getStringList('sources'));
+        created = fm.getString('created');
+      } catch (_) {}
+    }
+    return (sources: sources, created: created);
+  }
+
+  List<String> _buildEntityTags(List<String> originalTags, String source, String entityTag) =>
+      <String>[
+        if (!originalTags.any((t) => t == entityTag)) entityTag,
+        if (!originalTags.any((t) => t.startsWith('#source_'))) _formatSourceTag(source),
+        ...originalTags.where((t) => t != entityTag && !t.startsWith('#source_')),
+      ];
 
   String _path(Directory dir) => dir.path;
 }

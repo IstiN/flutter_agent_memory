@@ -56,29 +56,8 @@ Future<void> _process(ArgResults args) async {
   final orchestrator = KBOrchestrator(provider);
   final mode = KBProcessingModeParsing.fromString(args['mode'] as String);
 
-  if (inputs.length == 1) {
-    final input = inputs.first;
-    final sourceName = (args['source'] as String?) ??
-        _deriveSourceName(inputPath == '-' ? 'stdin' : input.sourcePath);
-
-    final result = await orchestrator.run(KBOrchestratorParams(
-      sourceName: sourceName,
-      inputText: input.promptText,
-      inputImages: input.images ?? const [],
-      outputPath: outputPath,
-      processingMode: mode,
-      analysisExtraInstructions: args['analysis-instructions'] as String? ?? '',
-      aggregationExtraInstructions: args['aggregation-instructions'] as String? ?? '',
-      qaMappingExtraInstructions: args['qa-mapping-instructions'] as String? ?? '',
-      cleanOutput: args['clean'] as bool,
-    ));
-    _printResult(result, verbose);
-  } else {
-    // Directory: process each supported file as a separate source.
-    for (final input in inputs) {
-      final sourceName = _deriveSourceName(input.sourcePath);
-      if (verbose) stdout.writeln('Processing $sourceName...');
-      final result = await orchestrator.run(KBOrchestratorParams(
+  KBOrchestratorParams paramsFor(InputContent input, String sourceName, {bool? clean}) =>
+      KBOrchestratorParams(
         sourceName: sourceName,
         inputText: input.promptText,
         inputImages: input.images ?? const [],
@@ -87,7 +66,22 @@ Future<void> _process(ArgResults args) async {
         analysisExtraInstructions: args['analysis-instructions'] as String? ?? '',
         aggregationExtraInstructions: args['aggregation-instructions'] as String? ?? '',
         qaMappingExtraInstructions: args['qa-mapping-instructions'] as String? ?? '',
-      ));
+        cleanOutput: clean ?? false,
+      );
+
+  if (inputs.length == 1) {
+    final input = inputs.first;
+    final sourceName = (args['source'] as String?) ??
+        _deriveSourceName(inputPath == '-' ? 'stdin' : input.sourcePath);
+
+    final result = await orchestrator.run(paramsFor(input, sourceName, clean: args['clean'] as bool));
+    _printResult(result, verbose);
+  } else {
+    // Directory: process each supported file as a separate source.
+    for (final input in inputs) {
+      final sourceName = _deriveSourceName(input.sourcePath);
+      if (verbose) stdout.writeln('Processing $sourceName...');
+      final result = await orchestrator.run(paramsFor(input, sourceName));
       _printResult(result, verbose);
     }
   }
@@ -118,13 +112,9 @@ Future<void> _stats(ArgResults args) async {
 
 Future<void> _searchTags(ArgResults args) async {
   final outputPath = args['output'] as String;
-  final tags = (args['tags'] as String).split(',').map((t) => t.trim()).where((t) => t.isNotEmpty).toList();
+  final tags = _splitList(args['tags'] as String);
   final matchAll = !(args['match-any'] as bool);
-  final types = (args['type'] as String?)
-      ?.split(',')
-      .map((t) => t.trim().toLowerCase())
-      .where((t) => t.isNotEmpty)
-      .toList();
+  final types = _parseEntityTypes(args['type'] as String?);
   final asJson = args['json'] as bool;
 
   final engine = KBSearchEngine(Directory(outputPath));
@@ -136,11 +126,7 @@ Future<void> _search(ArgResults args) async {
   final outputPath = args['output'] as String;
   final query = args['query'] as String;
   final matchAll = args['match-all'] as bool;
-  final types = (args['type'] as String?)
-      ?.split(',')
-      .map((t) => t.trim().toLowerCase())
-      .where((t) => t.isNotEmpty)
-      .toList();
+  final types = _parseEntityTypes(args['type'] as String?);
   final asJson = args['json'] as bool;
   final showTags = args['show-tags'] as bool;
 
@@ -160,14 +146,16 @@ Future<void> _search(ArgResults args) async {
   _printSearchResults(searchResult.results, asJson);
 }
 
+Map<String, dynamic> _searchResultToJson(KBSearchResult r) => {
+  'type': r.entityType,
+  'id': r.id,
+  'path': r.path,
+  'matchedTags': r.matchedTags,
+};
+
 void _printSearchResults(List<KBSearchResult> results, bool asJson) {
   if (asJson) {
-    stdout.writeln(jsonEncode(results.map((r) => {
-      'type': r.entityType,
-      'id': r.id,
-      'path': r.path,
-      'matchedTags': r.matchedTags,
-    }).toList()));
+    stdout.writeln(jsonEncode(results.map(_searchResultToJson).toList()));
     return;
   }
 
@@ -276,12 +264,7 @@ Future<void> _memoryAsk(ArgResults args) async {
   if (asJson) {
     stdout.writeln(jsonEncode({
       'generatedTags': result.generatedTags,
-      'results': result.results.map((r) => {
-        'type': r.entityType,
-        'id': r.id,
-        'path': r.path,
-        'matchedTags': r.matchedTags,
-      }).toList(),
+      'results': result.results.map(_searchResultToJson).toList(),
     }));
     return;
   }
@@ -306,20 +289,7 @@ Future<void> _memoryList(ArgResults args) async {
     limit: limit,
   );
 
-  if (asJson) {
-    stdout.writeln(jsonEncode(records.map((r) => _recordToJson(r)).toList()));
-    return;
-  }
-
-  if (records.isEmpty) {
-    stdout.writeln('No records found.');
-    return;
-  }
-
-  stdout.writeln('Found ${records.length} record(s):\n');
-  for (final r in records) {
-    _printMemoryRecord(r);
-  }
+  _printMemoryRecords(records, asJson, header: 'Found');
 }
 
 Future<void> _memoryDelete(ArgResults args) async {
@@ -340,20 +310,7 @@ Future<void> _memoryRank(ArgResults args) async {
   final store = KBMemoryStore(Directory(outputPath), source: 'agent');
   final records = store.list(sortBy: sort, limit: limit);
 
-  if (asJson) {
-    stdout.writeln(jsonEncode(records.map((r) => _recordToJson(r)).toList()));
-    return;
-  }
-
-  if (records.isEmpty) {
-    stdout.writeln('No records found.');
-    return;
-  }
-
-  stdout.writeln('Top ${records.length} record(s):\n');
-  for (final r in records) {
-    _printMemoryRecord(r);
-  }
+  _printMemoryRecords(records, asJson, header: 'Top');
 }
 
 Future<void> _memoryUpdate(ArgResults args) async {
@@ -407,6 +364,28 @@ void _printMemoryRecord(MemoryRecord r) {
 List<String> _splitList(String? value) {
   if (value == null || value.trim().isEmpty) return const [];
   return value.split(',').map((t) => t.trim()).where((t) => t.isNotEmpty).toList();
+}
+
+List<String>? _parseEntityTypes(String? value) {
+  final list = _splitList(value);
+  return list.isEmpty ? null : list.map((t) => t.toLowerCase()).toList();
+}
+
+void _printMemoryRecords(List<MemoryRecord> records, bool asJson, {required String header}) {
+  if (asJson) {
+    stdout.writeln(jsonEncode(records.map(_recordToJson).toList()));
+    return;
+  }
+
+  if (records.isEmpty) {
+    stdout.writeln('No records found.');
+    return;
+  }
+
+  stdout.writeln('$header ${records.length} record(s):\n');
+  for (final r in records) {
+    _printMemoryRecord(r);
+  }
 }
 
 String _deriveSourceName(String inputPath) {

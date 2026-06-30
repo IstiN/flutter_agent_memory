@@ -35,7 +35,7 @@ python3 scripts/coverage_check.py
 # ═══════════════════════════════════════════════════════════════════════════
 # 4. CODE DUPLICATION GUARD
 # ═══════════════════════════════════════════════════════════════════════════
-DUP_THRESHOLD=5.0
+DUP_THRESHOLD=1.0
 if command -v jscpd >/dev/null 2>&1; then
   echo "[pre-commit] Checking code duplication (threshold: < ${DUP_THRESHOLD}%)..."
   jscpd --min-tokens 50 --min-lines 5 --reporters json --output /tmp/jscpd-precommit lib/ bin/ >/dev/null 2>&1 || true

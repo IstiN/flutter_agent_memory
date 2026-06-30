@@ -44,19 +44,23 @@ class KBMemoryStore {
     String? answeredBy,
     double importance = 0.5,
   }) async {
-    final enriched = await _enrich(text, area: area, topics: topics ?? const [], tags: tags ?? const []);
-    final context = _loadContext();
-    final id = 'q_${_pad(context.nextQuestionId())}';
-    final now = currentUtcTimestamp();
+    final prepared = await _prepareAdd(
+      text,
+      area: area,
+      topics: topics,
+      tags: tags,
+      prefix: 'q',
+      nextId: _loadContext().nextQuestionId,
+    );
 
     final question = Question(
-      id: id,
+      id: prepared.id,
       author: author,
       text: text,
-      date: now,
-      area: enriched.area,
-      topics: enriched.topics,
-      tags: enriched.tags,
+      date: prepared.now,
+      area: prepared.enriched.area,
+      topics: prepared.enriched.topics,
+      tags: prepared.enriched.tags,
       answeredBy: answeredBy,
       links: const [],
       importance: importance,
@@ -77,19 +81,23 @@ class KBMemoryStore {
     double quality = 0.8,
     double importance = 0.5,
   }) async {
-    final enriched = await _enrich(text, area: area, topics: topics ?? const [], tags: tags ?? const []);
-    final context = _loadContext();
-    final id = 'a_${_pad(context.nextAnswerId())}';
-    final now = currentUtcTimestamp();
+    final prepared = await _prepareAdd(
+      text,
+      area: area,
+      topics: topics,
+      tags: tags,
+      prefix: 'a',
+      nextId: _loadContext().nextAnswerId,
+    );
 
     final answer = Answer(
-      id: id,
+      id: prepared.id,
       author: author,
       text: text,
-      date: now,
-      area: enriched.area,
-      topics: enriched.topics,
-      tags: enriched.tags,
+      date: prepared.now,
+      area: prepared.enriched.area,
+      topics: prepared.enriched.topics,
+      tags: prepared.enriched.tags,
       answersQuestion: answersQuestion,
       quality: quality,
       links: const [],
@@ -110,19 +118,23 @@ class KBMemoryStore {
     List<String>? answersQuestions,
     double importance = 0.5,
   }) async {
-    final enriched = await _enrich(text, area: area, topics: topics ?? const [], tags: tags ?? const []);
-    final context = _loadContext();
-    final id = 'n_${_pad(context.nextNoteId())}';
-    final now = currentUtcTimestamp();
+    final prepared = await _prepareAdd(
+      text,
+      area: area,
+      topics: topics,
+      tags: tags,
+      prefix: 'n',
+      nextId: _loadContext().nextNoteId,
+    );
 
     final note = Note(
-      id: id,
+      id: prepared.id,
       text: text,
-      area: enriched.area,
-      topics: enriched.topics,
-      tags: enriched.tags,
+      area: prepared.enriched.area,
+      topics: prepared.enriched.topics,
+      tags: prepared.enriched.tags,
       author: author,
-      date: now,
+      date: prepared.now,
       answersQuestions: answersQuestions ?? const [],
       links: const [],
       importance: importance,
@@ -291,6 +303,25 @@ class KBMemoryStore {
       return records.sublist(0, limit);
     }
     return records;
+  }
+
+  Future<({String id, String now, _Enriched enriched})> _prepareAdd(
+    String text, {
+    String? area,
+    List<String>? topics,
+    List<String>? tags,
+    required String prefix,
+    required int Function() nextId,
+  }) async {
+    final enriched = await _enrich(
+      text,
+      area: area,
+      topics: topics ?? const [],
+      tags: tags ?? const [],
+    );
+    final id = '${prefix}_${_pad(nextId())}';
+    final now = currentUtcTimestamp();
+    return (id: id, now: now, enriched: enriched);
   }
 
   Future<_Enriched> _enrich(

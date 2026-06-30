@@ -30,67 +30,13 @@ class KBSearchEngine {
 
     void scan(String type, String dirName) {
       if (!types.contains(type.toLowerCase())) return;
-      final dir = Directory('${kbDir.path}/$dirName');
-      if (!dir.existsSync()) return;
-
-      for (final file in dir.listSync().whereType<File>().where((f) => f.path.endsWith('.md'))) {
-        try {
-          final content = file.readAsStringSync();
-          late final List<String> recordTags;
-          KBSearchResult? result;
-
-          switch (type) {
-            case 'question':
-              final q = _parser.parseQuestion(content);
-              recordTags = q.tags;
-              result = KBSearchResult(
-                path: file.path,
-                entityType: 'question',
-                question: q,
-                matchedTags: const [],
-              );
-            case 'answer':
-              final a = _parser.parseAnswer(content);
-              recordTags = a.tags;
-              result = KBSearchResult(
-                path: file.path,
-                entityType: 'answer',
-                answer: a,
-                matchedTags: const [],
-              );
-            case 'note':
-              final n = _parser.parseNote(content);
-              recordTags = n.tags;
-              result = KBSearchResult(
-                path: file.path,
-                entityType: 'note',
-                note: n,
-                matchedTags: const [],
-              );
-            default:
-              continue;
-          }
-
-          final normalized = recordTags.map((t) => t.toLowerCase()).toSet();
-          final matched = requested.intersection(normalized).toList();
-          if (matched.isEmpty) continue;
-
-          if (matchAll) {
-            if (!requested.every(normalized.contains)) continue;
-          }
-
-          results.add(KBSearchResult(
-            path: result.path,
-            entityType: result.entityType,
-            question: result.question,
-            answer: result.answer,
-            note: result.note,
-            matchedTags: matched,
-          ));
-        } catch (_) {
-          // Skip malformed files.
-        }
-      }
+      _forEachEntityFile(dirName, (file, content) {
+        final result = _parseSearchResult(type, file.path, content);
+        if (result == null) return;
+        final matched = _matchingTags(requested, result.tags, matchAll);
+        if (matched == null) return;
+        results.add(result.withMatchedTags(matched));
+      });
     }
 
     scan('question', 'questions');
@@ -176,21 +122,10 @@ class KBSearchEngine {
     final tags = <String>{};
 
     void collect(String type, String dirName) {
-      final dir = Directory('${kbDir.path}/$dirName');
-      if (!dir.existsSync()) return;
-      for (final file in dir.listSync().whereType<File>().where((f) => f.path.endsWith('.md'))) {
-        try {
-          final content = file.readAsStringSync();
-          switch (type) {
-            case 'question':
-              tags.addAll(_parser.parseQuestion(content).tags);
-            case 'answer':
-              tags.addAll(_parser.parseAnswer(content).tags);
-            case 'note':
-              tags.addAll(_parser.parseNote(content).tags);
-          }
-        } catch (_) {}
-      }
+      _forEachEntityFile(dirName, (_, content) {
+        final result = _parseSearchResult(type, '', content);
+        if (result != null) tags.addAll(result.tags);
+      });
     }
 
     collect('question', 'questions');
@@ -198,5 +133,53 @@ class KBSearchEngine {
     collect('note', 'notes');
 
     return tags.map((t) => t.toLowerCase()).toSet();
+  }
+
+  void _forEachEntityFile(String dirName, void Function(File file, String content) action) {
+    final dir = Directory('${kbDir.path}/$dirName');
+    if (!dir.existsSync()) return;
+    for (final file in dir.listSync().whereType<File>().where((f) => f.path.endsWith('.md'))) {
+      try {
+        action(file, file.readAsStringSync());
+      } catch (_) {}
+    }
+  }
+
+  KBSearchResult? _parseSearchResult(String type, String path, String content) {
+    switch (type) {
+      case 'question':
+        final q = _parser.parseQuestion(content);
+        return KBSearchResult(
+          path: path,
+          entityType: 'question',
+          question: q,
+          matchedTags: const [],
+        );
+      case 'answer':
+        final a = _parser.parseAnswer(content);
+        return KBSearchResult(
+          path: path,
+          entityType: 'answer',
+          answer: a,
+          matchedTags: const [],
+        );
+      case 'note':
+        final n = _parser.parseNote(content);
+        return KBSearchResult(
+          path: path,
+          entityType: 'note',
+          note: n,
+          matchedTags: const [],
+        );
+    }
+    return null;
+  }
+
+  List<String>? _matchingTags(Set<String> requested, List<String> recordTags, bool matchAll) {
+    final normalized = recordTags.map((t) => t.toLowerCase()).toSet();
+    final matched = requested.intersection(normalized).toList();
+    if (matched.isEmpty) return null;
+    if (matchAll && !requested.every(normalized.contains)) return null;
+    return matched;
   }
 }

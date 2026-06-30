@@ -131,35 +131,15 @@ class KBStructureManager {
       }
     }
 
-    final qDir = Directory('${outputDir.path}/questions');
-    if (qDir.existsSync()) {
-      for (final f in qDir.listSync().whereType<File>().where((f) => f.path.endsWith('.md'))) {
-        try {
-          final q = _parser.parseQuestion(f.readAsStringSync());
-          addContribution('question', q.author, q.id, q.topics, q.date);
-        } catch (_) {}
-      }
-    }
-
-    final aDir = Directory('${outputDir.path}/answers');
-    if (aDir.existsSync()) {
-      for (final f in aDir.listSync().whereType<File>().where((f) => f.path.endsWith('.md'))) {
-        try {
-          final a = _parser.parseAnswer(f.readAsStringSync());
-          addContribution('answer', a.author, a.id, a.topics, a.date);
-        } catch (_) {}
-      }
-    }
-
-    final nDir = Directory('${outputDir.path}/notes');
-    if (nDir.existsSync()) {
-      for (final f in nDir.listSync().whereType<File>().where((f) => f.path.endsWith('.md'))) {
-        try {
-          final n = _parser.parseNote(f.readAsStringSync());
-          addContribution('note', n.author, n.id, n.topics, n.date);
-        } catch (_) {}
-      }
-    }
+    _scanEntityFiles(outputDir, 'questions', _parser.parseQuestion, (q) {
+      addContribution('question', q.author, q.id, q.topics, q.date);
+    });
+    _scanEntityFiles(outputDir, 'answers', _parser.parseAnswer, (a) {
+      addContribution('answer', a.author, a.id, a.topics, a.date);
+    });
+    _scanEntityFiles(outputDir, 'notes', _parser.parseNote, (n) {
+      addContribution('note', n.author, n.id, n.topics, n.date);
+    });
 
     _recalculateTopicContributions(result, outputDir);
     return result;
@@ -168,47 +148,17 @@ class KBStructureManager {
   void _recalculateTopicContributions(Map<String, PersonContributions> contributions, Directory outputDir) {
     final topicCounts = <String, Map<String, int>>{};
 
-    void countFile(File file, String type) {
-      try {
-        late final String author;
-        late final List<String> topics;
-        switch (type) {
-          case 'question':
-            final q = _parser.parseQuestion(file.readAsStringSync());
-            author = q.author;
-            topics = q.topics;
-          case 'answer':
-            final a = _parser.parseAnswer(file.readAsStringSync());
-            author = a.author;
-            topics = a.topics;
-          case 'note':
-            final n = _parser.parseNote(file.readAsStringSync());
-            author = n.author;
-            topics = n.topics;
-          default:
-            return;
-        }
-        for (final topic in topics) {
-          final topicId = slugify(topic);
-          topicCounts.putIfAbsent(author, () => <String, int>{})[topicId] =
-              (topicCounts[author]![topicId] ?? 0) + 1;
-        }
-      } catch (_) {}
+    void countTopics(String author, List<String> topics) {
+      for (final topic in topics) {
+        final topicId = slugify(topic);
+        topicCounts.putIfAbsent(author, () => <String, int>{})[topicId] =
+            (topicCounts[author]![topicId] ?? 0) + 1;
+      }
     }
 
-    final qDir = Directory('${outputDir.path}/questions');
-    final aDir = Directory('${outputDir.path}/answers');
-    final nDir = Directory('${outputDir.path}/notes');
-
-    if (qDir.existsSync()) {
-      for (final f in qDir.listSync().whereType<File>().where((f) => f.path.endsWith('.md'))) countFile(f, 'question');
-    }
-    if (aDir.existsSync()) {
-      for (final f in aDir.listSync().whereType<File>().where((f) => f.path.endsWith('.md'))) countFile(f, 'answer');
-    }
-    if (nDir.existsSync()) {
-      for (final f in nDir.listSync().whereType<File>().where((f) => f.path.endsWith('.md'))) countFile(f, 'note');
-    }
+    _scanEntityFiles(outputDir, 'questions', _parser.parseQuestion, (q) => countTopics(q.author, q.topics));
+    _scanEntityFiles(outputDir, 'answers', _parser.parseAnswer, (a) => countTopics(a.author, a.topics));
+    _scanEntityFiles(outputDir, 'notes', _parser.parseNote, (n) => countTopics(n.author, n.topics));
 
     for (final entry in contributions.entries) {
       final person = entry.key;
@@ -228,35 +178,15 @@ class KBStructureManager {
       fn(stats.putIfAbsent(author, () => _Counts()));
     }
 
-    final qDir = Directory('${outputDir.path}/questions');
-    if (qDir.existsSync()) {
-      for (final f in qDir.listSync().whereType<File>().where((f) => f.path.endsWith('.md'))) {
-        try {
-          final q = _parser.parseQuestion(f.readAsStringSync());
-          increment(q.author, (c) => c.questions++);
-        } catch (_) {}
-      }
-    }
-
-    final aDir = Directory('${outputDir.path}/answers');
-    if (aDir.existsSync()) {
-      for (final f in aDir.listSync().whereType<File>().where((f) => f.path.endsWith('.md'))) {
-        try {
-          final a = _parser.parseAnswer(f.readAsStringSync());
-          increment(a.author, (c) => c.answers++);
-        } catch (_) {}
-      }
-    }
-
-    final nDir = Directory('${outputDir.path}/notes');
-    if (nDir.existsSync()) {
-      for (final f in nDir.listSync().whereType<File>().where((f) => f.path.endsWith('.md'))) {
-        try {
-          final n = _parser.parseNote(f.readAsStringSync());
-          increment(n.author, (c) => c.notes++);
-        } catch (_) {}
-      }
-    }
+    _scanEntityFiles(outputDir, 'questions', _parser.parseQuestion, (q) {
+      increment(q.author, (c) => c.questions++);
+    });
+    _scanEntityFiles(outputDir, 'answers', _parser.parseAnswer, (a) {
+      increment(a.author, (c) => c.answers++);
+    });
+    _scanEntityFiles(outputDir, 'notes', _parser.parseNote, (n) {
+      increment(n.author, (c) => c.notes++);
+    });
 
     return stats;
   }
@@ -276,6 +206,21 @@ class KBStructureManager {
   int _countAreas(Directory outputDir) {
     final dir = Directory('${outputDir.path}/areas');
     return dir.existsSync() ? dir.listSync().whereType<Directory>().length : 0;
+  }
+
+  void _scanEntityFiles<T>(
+    Directory outputDir,
+    String dirName,
+    T Function(String content) parse,
+    void Function(T entity) onEntity,
+  ) {
+    final dir = Directory('${outputDir.path}/$dirName');
+    if (!dir.existsSync()) return;
+    for (final file in dir.listSync().whereType<File>().where((f) => f.path.endsWith('.md'))) {
+      try {
+        onEntity(parse(file.readAsStringSync()));
+      } catch (_) {}
+    }
   }
 }
 

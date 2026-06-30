@@ -1,7 +1,9 @@
+import '../utils/model_json_utils.dart';
+import 'entity_json_mixin.dart';
 import 'link.dart';
 
 /// A knowledge-base answer.
-class Answer {
+class Answer with KbEntityJson {
   final String id;
   final String author;
   final String text;
@@ -38,31 +40,21 @@ class Answer {
         text: json['text'] as String? ?? '',
         date: json['date'] as String? ?? '',
         area: json['area'] as String? ?? '',
-        topics: _stringList(json['topics']),
-        tags: _stringList(json['tags']),
+        topics: stringListFromJson(json['topics']),
+        tags: stringListFromJson(json['tags']),
         answersQuestion: json['answersQuestion'] as String?,
         quality: (json['quality'] as num?)?.toDouble() ?? 0.0,
-        links: _linkList(json['links']),
+        links: linkListFromJson(json['links']),
         accessCount: (json['accessCount'] as num?)?.toInt() ?? 0,
         lastAccessedAt: json['lastAccessedAt'] as String?,
         importance: (json['importance'] as num?)?.toDouble() ?? 0.5,
       );
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'author': author,
-        'text': text,
-        'date': date,
-        'area': area,
-        'topics': topics,
-        'tags': tags,
+        ...toBaseJson(),
         if (answersQuestion != null && answersQuestion!.isNotEmpty)
           'answersQuestion': answersQuestion,
         'quality': quality,
-        'links': links.map((l) => l.toJson()).toList(),
-        'accessCount': accessCount,
-        if (lastAccessedAt != null && lastAccessedAt!.isNotEmpty) 'lastAccessedAt': lastAccessedAt,
-        'importance': importance,
       };
 
   Answer copyWith({
@@ -95,16 +87,6 @@ class Answer {
         lastAccessedAt: lastAccessedAt ?? this.lastAccessedAt,
         importance: importance ?? this.importance,
       );
-
-  static List<String> _stringList(dynamic value) {
-    if (value is List) return value.map((e) => e.toString()).toList();
-    return const <String>[];
-  }
-
-  static List<Link> _linkList(dynamic value) {
-    if (value is List) return value.map((e) => Link.fromJson(e as Map<String, dynamic>)).toList();
-    return const <Link>[];
-  }
 
   @override
   String toString() => 'Answer($id by $author)';

@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import '../llm/llm_provider.dart';
+import '../utils/json_utils.dart';
 import '../models/analysis_result.dart';
 import '../models/kb_context.dart';
 import '../models/qa_mapping_result.dart';
@@ -35,7 +36,7 @@ class KBQuestionAnswerMappingAgent {
 
     final prompt = _buildPrompt(newAnswers, existing, extraInstructions);
     final response = await _provider.chat(prompt);
-    final jsonText = _extractJson(response);
+    final jsonText = extractJsonFromMarkdown(response);
     final json = jsonDecode(jsonText) as Map<String, dynamic>;
     return QAMappingResult.fromJson(json);
   }
@@ -80,17 +81,6 @@ Rules:
 '''.trim();
   }
 
-  String _extractJson(String response) {
-    var text = response.trim();
-    if (text.startsWith('```json')) {
-      text = text.substring(7);
-      if (text.endsWith('```')) text = text.substring(0, text.length - 3);
-    } else if (text.startsWith('```')) {
-      text = text.substring(3);
-      if (text.endsWith('```')) text = text.substring(0, text.length - 3);
-    }
-    return text.trim();
-  }
 }
 
 class _AnswerLike {
