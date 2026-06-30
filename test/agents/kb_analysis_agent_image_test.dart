@@ -15,7 +15,10 @@ class _VisionFakeProvider implements LlmProvider {
       '{"questions":[],"answers":[],"notes":[]}';
 
   @override
-  Future<String> chatMessages(List<LlmMessage> messages, {String? model}) async {
+  Future<String> chatMessages(
+    List<LlmMessage> messages, {
+    String? model,
+  }) async {
     capturedMessages = messages;
     return '{"questions":[],"answers":[],"notes":[]}';
   }

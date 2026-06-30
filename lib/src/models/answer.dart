@@ -35,27 +35,27 @@ class Answer with KbEntityJson {
   });
 
   factory Answer.fromJson(Map<String, dynamic> json) => Answer(
-        id: json['id'] as String? ?? '',
-        author: json['author'] as String? ?? '',
-        text: json['text'] as String? ?? '',
-        date: json['date'] as String? ?? '',
-        area: json['area'] as String? ?? '',
-        topics: stringListFromJson(json['topics']),
-        tags: stringListFromJson(json['tags']),
-        answersQuestion: json['answersQuestion'] as String?,
-        quality: (json['quality'] as num?)?.toDouble() ?? 0.0,
-        links: linkListFromJson(json['links']),
-        accessCount: (json['accessCount'] as num?)?.toInt() ?? 0,
-        lastAccessedAt: json['lastAccessedAt'] as String?,
-        importance: (json['importance'] as num?)?.toDouble() ?? 0.5,
-      );
+    id: json['id'] as String? ?? '',
+    author: json['author'] as String? ?? '',
+    text: json['text'] as String? ?? '',
+    date: json['date'] as String? ?? '',
+    area: json['area'] as String? ?? '',
+    topics: stringListFromJson(json['topics']),
+    tags: stringListFromJson(json['tags']),
+    answersQuestion: json['answersQuestion'] as String?,
+    quality: (json['quality'] as num?)?.toDouble() ?? 0.0,
+    links: linkListFromJson(json['links']),
+    accessCount: (json['accessCount'] as num?)?.toInt() ?? 0,
+    lastAccessedAt: json['lastAccessedAt'] as String?,
+    importance: (json['importance'] as num?)?.toDouble() ?? 0.5,
+  );
 
   Map<String, dynamic> toJson() => {
-        ...toBaseJson(),
-        if (answersQuestion != null && answersQuestion!.isNotEmpty)
-          'answersQuestion': answersQuestion,
-        'quality': quality,
-      };
+    ...toBaseJson(),
+    if (answersQuestion != null && answersQuestion!.isNotEmpty)
+      'answersQuestion': answersQuestion,
+    'quality': quality,
+  };
 
   Answer copyWith({
     String? id,
@@ -71,22 +71,21 @@ class Answer with KbEntityJson {
     int? accessCount,
     String? lastAccessedAt,
     double? importance,
-  }) =>
-      Answer(
-        id: id ?? this.id,
-        author: author ?? this.author,
-        text: text ?? this.text,
-        date: date ?? this.date,
-        area: area ?? this.area,
-        topics: topics ?? this.topics,
-        tags: tags ?? this.tags,
-        answersQuestion: answersQuestion ?? this.answersQuestion,
-        quality: quality ?? this.quality,
-        links: links ?? this.links,
-        accessCount: accessCount ?? this.accessCount,
-        lastAccessedAt: lastAccessedAt ?? this.lastAccessedAt,
-        importance: importance ?? this.importance,
-      );
+  }) => Answer(
+    id: id ?? this.id,
+    author: author ?? this.author,
+    text: text ?? this.text,
+    date: date ?? this.date,
+    area: area ?? this.area,
+    topics: topics ?? this.topics,
+    tags: tags ?? this.tags,
+    answersQuestion: answersQuestion ?? this.answersQuestion,
+    quality: quality ?? this.quality,
+    links: links ?? this.links,
+    accessCount: accessCount ?? this.accessCount,
+    lastAccessedAt: lastAccessedAt ?? this.lastAccessedAt,
+    importance: importance ?? this.importance,
+  );
 
   @override
   String toString() => 'Answer($id by $author)';

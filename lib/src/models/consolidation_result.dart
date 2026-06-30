@@ -6,10 +6,7 @@ class ConsolidationResult {
   /// Concrete skill cards derived from the memory records.
   final List<SkillCard> skills;
 
-  const ConsolidationResult({
-    required this.summary,
-    required this.skills,
-  });
+  const ConsolidationResult({required this.summary, required this.skills});
 
   factory ConsolidationResult.fromJson(Map<String, dynamic> json) {
     final skillsJson = (json['skills'] as List<dynamic>? ?? []);
@@ -23,9 +20,9 @@ class ConsolidationResult {
   }
 
   Map<String, dynamic> toJson() => {
-        'summary': summary,
-        'skills': skills.map((s) => s.toJson()).toList(),
-      };
+    'summary': summary,
+    'skills': skills.map((s) => s.toJson()).toList(),
+  };
 }
 
 /// A single reusable skill extracted from memory.
@@ -59,9 +56,9 @@ class SkillCard {
   }
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'title': title,
-        'instruction': instruction,
-        'tags': tags,
-      };
+    'id': id,
+    'title': title,
+    'instruction': instruction,
+    'tags': tags,
+  };
 }

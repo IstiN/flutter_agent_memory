@@ -28,7 +28,9 @@ class KBStatistics {
     for (final month in sortedMonths) {
       final c = counts[month]!;
       final total = c.questions + c.answers + c.notes;
-      buffer.writeln('| $month | ${c.questions} | ${c.answers} | ${c.notes} | $total |');
+      buffer.writeln(
+        '| $month | ${c.questions} | ${c.answers} | ${c.notes} | $total |',
+      );
     }
 
     buffer
@@ -41,7 +43,9 @@ class KBStatistics {
     final stats = <_TopicStats>[];
     final topicsDir = Directory('${kbDir.path}/topics');
     if (topicsDir.existsSync()) {
-      for (final file in topicsDir.listSync().whereType<File>().where((f) => f.path.endsWith('.md') && !f.path.endsWith('-desc.md'))) {
+      for (final file in topicsDir.listSync().whereType<File>().where(
+        (f) => f.path.endsWith('.md') && !f.path.endsWith('-desc.md'),
+      )) {
         try {
           final fm = parseFrontmatter(file.readAsStringSync());
           final id = fm.getString('id') ?? '';
@@ -72,7 +76,9 @@ class KBStatistics {
       ..writeln('|-------|-----------|---------|-------|-------|');
 
     for (final s in stats) {
-      buffer.writeln('| [[${s.id}|${s.name}]] | ${s.questions} | ${s.answers} | ${s.notes} | ${s.total} |');
+      buffer.writeln(
+        '| [[${s.id}|${s.name}]] | ${s.questions} | ${s.answers} | ${s.notes} | ${s.total} |',
+      );
     }
 
     buffer
@@ -86,13 +92,23 @@ class KBStatistics {
     final aCount = _countFiles(Directory('${kbDir.path}/answers'));
     final nCount = _countFiles(Directory('${kbDir.path}/notes'));
     final peopleCount = Directory('${kbDir.path}/people').existsSync()
-        ? Directory('${kbDir.path}/people').listSync().whereType<Directory>().length
+        ? Directory(
+            '${kbDir.path}/people',
+          ).listSync().whereType<Directory>().length
         : 0;
     final topicsCount = Directory('${kbDir.path}/topics').existsSync()
-        ? Directory('${kbDir.path}/topics').listSync().whereType<File>().where((f) => f.path.endsWith('.md') && !f.path.endsWith('-desc.md')).length
+        ? Directory('${kbDir.path}/topics')
+              .listSync()
+              .whereType<File>()
+              .where(
+                (f) => f.path.endsWith('.md') && !f.path.endsWith('-desc.md'),
+              )
+              .length
         : 0;
     final areasCount = Directory('${kbDir.path}/areas').existsSync()
-        ? Directory('${kbDir.path}/areas').listSync().whereType<Directory>().length
+        ? Directory(
+            '${kbDir.path}/areas',
+          ).listSync().whereType<Directory>().length
         : 0;
 
     final file = File('${kbDir.path}/INDEX.md');
@@ -125,7 +141,9 @@ class KBStatistics {
 
     void scan(Directory dir, void Function(_MonthlyCounts c) increment) {
       if (!dir.existsSync()) return;
-      for (final file in dir.listSync().whereType<File>().where((f) => f.path.endsWith('.md'))) {
+      for (final file in dir.listSync().whereType<File>().where(
+        (f) => f.path.endsWith('.md'),
+      )) {
         try {
           final fm = parseFrontmatter(file.readAsStringSync());
           final date = fm.getString('date');
@@ -142,26 +160,42 @@ class KBStatistics {
     return counts;
   }
 
-  void _countByTopic(Directory dir, List<_TopicStats> stats, void Function(_TopicStats s) increment) {
+  void _countByTopic(
+    Directory dir,
+    List<_TopicStats> stats,
+    void Function(_TopicStats s) increment,
+  ) {
     if (!dir.existsSync()) return;
-    for (final file in dir.listSync().whereType<File>().where((f) => f.path.endsWith('.md'))) {
+    for (final file in dir.listSync().whereType<File>().where(
+      (f) => f.path.endsWith('.md'),
+    )) {
       try {
-        final topics = parseFrontmatter(file.readAsStringSync()).getStringList('topics');
+        final topics = parseFrontmatter(
+          file.readAsStringSync(),
+        ).getStringList('topics');
         for (final topic in topics) {
           final topicId = slugify(topic);
-          final stat = stats.firstWhere((s) => s.id == topicId, orElse: () {
-            final created = _TopicStats(id: topicId, name: topic);
-            stats.add(created);
-            return created;
-          });
+          final stat = stats.firstWhere(
+            (s) => s.id == topicId,
+            orElse: () {
+              final created = _TopicStats(id: topicId, name: topic);
+              stats.add(created);
+              return created;
+            },
+          );
           increment(stat);
         }
       } catch (_) {}
     }
   }
 
-  int _countFiles(Directory dir) =>
-      dir.existsSync() ? dir.listSync().whereType<File>().where((f) => f.path.endsWith('.md')).length : 0;
+  int _countFiles(Directory dir) => dir.existsSync()
+      ? dir
+            .listSync()
+            .whereType<File>()
+            .where((f) => f.path.endsWith('.md'))
+            .length
+      : 0;
 }
 
 class _MonthlyCounts {

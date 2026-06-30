@@ -25,11 +25,15 @@ class KBRerankerAgent {
     if (candidates.isEmpty) return const [];
     if (candidates.length == 1) return [candidates.first.id];
 
-    final itemsText = candidates.asMap().entries.map((e) {
-      final i = e.key + 1;
-      final r = e.value;
-      return '$i. [${r.entityType}] ${r.id}: ${r.text}';
-    }).join('\n');
+    final itemsText = candidates
+        .asMap()
+        .entries
+        .map((e) {
+          final i = e.key + 1;
+          final r = e.value;
+          return '$i. [${r.entityType}] ${r.id}: ${r.text}';
+        })
+        .join('\n');
 
     final prompt = await PromptLoader.load('kb_reranker.xml', {
       'query': query,
@@ -40,7 +44,9 @@ class KBRerankerAgent {
     final response = await _provider.chat(prompt);
     final jsonText = extractJsonFromMarkdown(response);
     final json = jsonDecode(jsonText) as Map<String, dynamic>;
-    final ranked = (json['rankedIds'] as List<dynamic>? ?? []).map((e) => e.toString()).toList();
+    final ranked = (json['rankedIds'] as List<dynamic>? ?? [])
+        .map((e) => e.toString())
+        .toList();
 
     // Preserve any candidates the model forgot, but at the bottom.
     final seen = <String>{};

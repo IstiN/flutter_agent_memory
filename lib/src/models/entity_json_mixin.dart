@@ -19,16 +19,17 @@ mixin KbEntityJson {
 
   /// Serializes the fields common to all knowledge-base entities.
   Map<String, dynamic> toBaseJson() => {
-        'id': id,
-        'author': author,
-        'text': text,
-        'date': date,
-        'area': area,
-        'topics': topics,
-        'tags': tags,
-        'links': links.map((l) => l.toJson()).toList(),
-        'accessCount': accessCount,
-        if (lastAccessedAt != null && lastAccessedAt!.isNotEmpty) 'lastAccessedAt': lastAccessedAt,
-        'importance': importance,
-      };
+    'id': id,
+    'author': author,
+    'text': text,
+    'date': date,
+    'area': area,
+    'topics': topics,
+    'tags': tags,
+    'links': links.map((l) => l.toJson()).toList(),
+    'accessCount': accessCount,
+    if (lastAccessedAt != null && lastAccessedAt!.isNotEmpty)
+      'lastAccessedAt': lastAccessedAt,
+    'importance': importance,
+  };
 }

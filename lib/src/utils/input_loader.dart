@@ -12,18 +12,22 @@ class InputContent {
   final String? imageDataUrl;
 
   const InputContent.text({required this.sourcePath, required this.text})
-      : type = InputType.text,
-        imageDataUrl = null;
+    : type = InputType.text,
+      imageDataUrl = null;
 
-  const InputContent.image({required this.sourcePath, required this.imageDataUrl})
-      : type = InputType.image,
-        text = null;
+  const InputContent.image({
+    required this.sourcePath,
+    required this.imageDataUrl,
+  }) : type = InputType.image,
+       text = null;
 
   /// Returns the text prompt that should be sent to the LLM alongside images.
-  String get promptText => text ?? 'Analyze the attached image(s) and extract knowledge.';
+  String get promptText =>
+      text ?? 'Analyze the attached image(s) and extract knowledge.';
 
   /// Returns the image data URLs, if any.
-  List<String>? get images => type == InputType.image && imageDataUrl != null ? [imageDataUrl!] : null;
+  List<String>? get images =>
+      type == InputType.image && imageDataUrl != null ? [imageDataUrl!] : null;
 }
 
 /// Loads input content for the analysis pipeline.
@@ -35,13 +39,40 @@ class InputContent {
 /// - stdin (`-`)
 class InputLoader {
   static const List<String> _textExtensions = [
-    '.txt', '.md', '.markdown', '.json', '.yaml', '.yml', '.csv', '.log',
-    '.dart', '.py', '.js', '.ts', '.java', '.kt', '.swift', '.go', '.rs',
-    '.sh', '.bash', '.zsh', '.xml', '.html', '.css', '.sql', '.graphql',
+    '.txt',
+    '.md',
+    '.markdown',
+    '.json',
+    '.yaml',
+    '.yml',
+    '.csv',
+    '.log',
+    '.dart',
+    '.py',
+    '.js',
+    '.ts',
+    '.java',
+    '.kt',
+    '.swift',
+    '.go',
+    '.rs',
+    '.sh',
+    '.bash',
+    '.zsh',
+    '.xml',
+    '.html',
+    '.css',
+    '.sql',
+    '.graphql',
   ];
 
   static const List<String> _imageExtensions = [
-    '.png', '.jpg', '.jpeg', '.gif', '.webp', '.bmp',
+    '.png',
+    '.jpg',
+    '.jpeg',
+    '.gif',
+    '.webp',
+    '.bmp',
   ];
 
   /// Loads all supported inputs from [path].

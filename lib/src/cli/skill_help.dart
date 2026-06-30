@@ -26,23 +26,39 @@ String _buildMarkdown(List<CliCommand> commands, ArgParser rootParser) {
   buffer.writeln('# agent_memory skill');
   buffer.writeln();
   buffer.writeln('`agent_memory` is a Dart memory / knowledge-base framework.');
-  buffer.writeln('It turns unstructured text, images, or directories into a structured,');
-  buffer.writeln('Obsidian-compatible Markdown knowledge base of questions, answers,');
+  buffer.writeln(
+    'It turns unstructured text, images, or directories into a structured,',
+  );
+  buffer.writeln(
+    'Obsidian-compatible Markdown knowledge base of questions, answers,',
+  );
   buffer.writeln('notes, and people, powered by any OpenAI-compatible LLM.');
   buffer.writeln();
   buffer.writeln('## What the framework does');
   buffer.writeln();
-  buffer.writeln('1. **Ingest** raw text, images, or whole directories via `process`.');
+  buffer.writeln(
+    '1. **Ingest** raw text, images, or whole directories via `process`.',
+  );
   buffer.writeln('2. **Extract** questions, answers, and notes with an LLM.');
-  buffer.writeln('3. **Link** answers to questions and notes to topics, areas, and people.');
+  buffer.writeln(
+    '3. **Link** answers to questions and notes to topics, areas, and people.',
+  );
   buffer.writeln('4. **Build** a Markdown knowledge base:');
-  buffer.writeln('   `questions/`, `answers/`, `notes/`, `topics/`, `areas/`, `people/`, `stats/`, `INDEX.md`.');
-  buffer.writeln('5. **Search** by explicit tags or by natural language (AI generates tags).');
-  buffer.writeln('6. **Remember** agent facts via `memory add`, query them via `memory ask`, and manage them via `memory list/update/delete/rank`.');
+  buffer.writeln(
+    '   `questions/`, `answers/`, `notes/`, `topics/`, `areas/`, `people/`, `stats/`, `INDEX.md`.',
+  );
+  buffer.writeln(
+    '5. **Search** by explicit tags or by natural language (AI generates tags).',
+  );
+  buffer.writeln(
+    '6. **Remember** agent facts via `memory add`, query them via `memory ask`, and manage them via `memory list/update/delete/rank`.',
+  );
   buffer.writeln();
   buffer.writeln('## Provider configuration');
   buffer.writeln();
-  buffer.writeln('Place a `.env` file in the working directory, or set environment variables:');
+  buffer.writeln(
+    'Place a `.env` file in the working directory, or set environment variables:',
+  );
   buffer.writeln();
   buffer.writeln('```bash');
   buffer.writeln('# OpenAI');
@@ -85,9 +101,13 @@ String _buildMarkdown(List<CliCommand> commands, ArgParser rootParser) {
       for (final option in options) {
         final abbr = option.abbr != null ? '-${option.abbr}, ' : '';
         final name = '--${option.name}';
-        final defaults = option.defaultsTo != null ? ' (defaults to `${option.defaultsTo}`)' : '';
+        final defaults = option.defaultsTo != null
+            ? ' (defaults to `${option.defaultsTo}`)'
+            : '';
         final mandatory = option.mandatory ? ' **(mandatory)**' : '';
-        buffer.writeln('- `$abbr$name`$mandatory$defaults: ${option.help ?? ''}');
+        buffer.writeln(
+          '- `$abbr$name`$mandatory$defaults: ${option.help ?? ''}',
+        );
       }
       buffer.writeln();
     }
@@ -102,9 +122,13 @@ String _buildMarkdown(List<CliCommand> commands, ArgParser rootParser) {
           for (final option in subSubparser.options.values) {
             final abbr = option.abbr != null ? '-${option.abbr}, ' : '';
             final name = '--${option.name}';
-            final defaults = option.defaultsTo != null ? ' (defaults to `${option.defaultsTo}`)' : '';
+            final defaults = option.defaultsTo != null
+                ? ' (defaults to `${option.defaultsTo}`)'
+                : '';
             final mandatory = option.mandatory ? ' **(mandatory)**' : '';
-            buffer.writeln('  - `$abbr$name`$mandatory$defaults: ${option.help ?? ''}');
+            buffer.writeln(
+              '  - `$abbr$name`$mandatory$defaults: ${option.help ?? ''}',
+            );
           }
         }
       }
@@ -116,13 +140,19 @@ String _buildMarkdown(List<CliCommand> commands, ArgParser rootParser) {
   buffer.writeln();
   buffer.writeln('```bash');
   buffer.writeln('# Process a file');
-  buffer.writeln('agent_memory process -i meeting_notes.txt -o kb -s meetings --verbose');
+  buffer.writeln(
+    'agent_memory process -i meeting_notes.txt -o kb -s meetings --verbose',
+  );
   buffer.writeln();
   buffer.writeln('# Search with natural language');
-  buffer.writeln('agent_memory search -o kb -q "How do we handle errors in Dart?" --show-tags');
+  buffer.writeln(
+    'agent_memory search -o kb -q "How do we handle errors in Dart?" --show-tags',
+  );
   buffer.writeln();
   buffer.writeln('# Add agent memory and ask it back');
-  buffer.writeln('agent_memory memory add -t note -x "Use Result type for error handling"');
+  buffer.writeln(
+    'agent_memory memory add -t note -x "Use Result type for error handling"',
+  );
   buffer.writeln('agent_memory memory ask -q "How do we handle errors?"');
   buffer.writeln('```');
 
@@ -149,7 +179,9 @@ String _buildJson(List<CliCommand> commands, ArgParser rootParser) {
           return {
             'name': sub.name,
             'description': sub.description,
-            'options': subSubparser != null ? _optionsToJson(subSubparser) : <Map<String, dynamic>>[],
+            'options': subSubparser != null
+                ? _optionsToJson(subSubparser)
+                : <Map<String, dynamic>>[],
           };
         }).toList(),
       };

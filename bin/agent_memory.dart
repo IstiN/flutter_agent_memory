@@ -56,25 +56,33 @@ Future<void> _process(ArgResults args) async {
   final orchestrator = KBOrchestrator(provider);
   final mode = KBProcessingModeParsing.fromString(args['mode'] as String);
 
-  KBOrchestratorParams paramsFor(InputContent input, String sourceName, {bool? clean}) =>
-      KBOrchestratorParams(
-        sourceName: sourceName,
-        inputText: input.promptText,
-        inputImages: input.images ?? const [],
-        outputPath: outputPath,
-        processingMode: mode,
-        analysisExtraInstructions: args['analysis-instructions'] as String? ?? '',
-        aggregationExtraInstructions: args['aggregation-instructions'] as String? ?? '',
-        qaMappingExtraInstructions: args['qa-mapping-instructions'] as String? ?? '',
-        cleanOutput: clean ?? false,
-      );
+  KBOrchestratorParams paramsFor(
+    InputContent input,
+    String sourceName, {
+    bool? clean,
+  }) => KBOrchestratorParams(
+    sourceName: sourceName,
+    inputText: input.promptText,
+    inputImages: input.images ?? const [],
+    outputPath: outputPath,
+    processingMode: mode,
+    analysisExtraInstructions: args['analysis-instructions'] as String? ?? '',
+    aggregationExtraInstructions:
+        args['aggregation-instructions'] as String? ?? '',
+    qaMappingExtraInstructions:
+        args['qa-mapping-instructions'] as String? ?? '',
+    cleanOutput: clean ?? false,
+  );
 
   if (inputs.length == 1) {
     final input = inputs.first;
-    final sourceName = (args['source'] as String?) ??
+    final sourceName =
+        (args['source'] as String?) ??
         _deriveSourceName(inputPath == '-' ? 'stdin' : input.sourcePath);
 
-    final result = await orchestrator.run(paramsFor(input, sourceName, clean: args['clean'] as bool));
+    final result = await orchestrator.run(
+      paramsFor(input, sourceName, clean: args['clean'] as bool),
+    );
     _printResult(result, verbose);
   } else {
     // Directory: process each supported file as a separate source.
@@ -99,7 +107,10 @@ Future<void> _regenerate(ArgResults args) async {
   // Regeneration does not require an LLM, but the orchestrator needs a provider
   // for its interface. Create a no-op provider that throws on any AI call.
   final orchestrator = KBOrchestrator(_NoOpProvider());
-  final result = await orchestrator.regenerateStructureFromExistingFiles(outputPath, sourceName);
+  final result = await orchestrator.regenerateStructureFromExistingFiles(
+    outputPath,
+    sourceName,
+  );
   _printResult(result, args['verbose'] as bool);
 }
 
@@ -117,8 +128,12 @@ Future<void> _searchTags(ArgResults args) async {
   final types = _parseEntityTypes(args['type'] as String?);
   final asJson = args['json'] as bool;
 
-  final engine = KBSearchEngine(Directory(outputPath));
-  final results = engine.searchByTags(tags, matchAll: matchAll, entityTypes: types);
+  final engine = KBSearchEngine.file(outputPath);
+  final results = await engine.searchByTags(
+    tags,
+    matchAll: matchAll,
+    entityTypes: types,
+  );
   _printSearchResults(results, asJson);
 }
 
@@ -131,7 +146,7 @@ Future<void> _search(ArgResults args) async {
   final showTags = args['show-tags'] as bool;
 
   final provider = _createProvider(args, args['provider'] as String);
-  final engine = KBSearchEngine(Directory(outputPath), provider: provider);
+  final engine = KBSearchEngine.file(outputPath, provider: provider);
   final searchResult = await engine.searchByText(
     query,
     matchAll: matchAll,
@@ -139,7 +154,9 @@ Future<void> _search(ArgResults args) async {
   );
 
   if (showTags && !asJson) {
-    stdout.writeln('Generated tags: ${searchResult.generatedTags.isNotEmpty ? searchResult.generatedTags.join(', ') : 'none'}');
+    stdout.writeln(
+      'Generated tags: ${searchResult.generatedTags.isNotEmpty ? searchResult.generatedTags.join(', ') : 'none'}',
+    );
     stdout.writeln();
   }
 
@@ -211,7 +228,7 @@ Future<void> _memoryRelate(ArgResults args) async {
   final type = args['type'] as String;
   final weight = double.tryParse(args['weight'] as String) ?? 1.0;
 
-  final store = KBMemoryStore(Directory(outputPath), source: 'agent');
+  final store = KBMemoryStore.file(outputPath, source: 'agent');
   final record = await store.addRelation(fromId, toId, type, weight: weight);
   stdout.writeln('Added $type relation from $fromId to $toId');
   stdout.writeln('Updated ${record.entityType} ${record.id}');
@@ -223,15 +240,15 @@ Future<void> _memoryPromote(ArgResults args) async {
   final level = int.tryParse(args['level'] as String);
   if (level == null) throw ArgumentError('Invalid level');
 
-  final store = KBMemoryStore(Directory(outputPath), source: 'agent');
+  final store = KBMemoryStore.file(outputPath, source: 'agent');
   final record = await store.promote(id, level);
   stdout.writeln('Promoted ${record.entityType} ${record.id} to level $level');
 }
 
 Future<void> _memoryGraph(ArgResults args) async {
   final outputPath = args['output'] as String;
-  final store = KBMemoryStore(Directory(outputPath), source: 'agent');
-  store.buildGraph();
+  final store = KBMemoryStore.file(outputPath, source: 'agent');
+  await store.buildGraph();
   stdout.writeln('Regenerated $outputPath/GRAPH.md');
 }
 
@@ -241,13 +258,19 @@ Future<void> _memoryConsolidate(ArgResults args) async {
   final extraInstructions = args['instructions'] as String? ?? '';
 
   final provider = _createProvider(args, args['provider'] as String);
-  final store = KBMemoryStore(Directory(outputPath), provider: provider, source: 'agent');
+  final store = KBMemoryStore.file(
+    outputPath,
+    provider: provider,
+    source: 'agent',
+  );
   final result = await store.consolidate(
     extraInstructions: extraInstructions,
     limit: limit,
   );
 
-  stdout.writeln('Consolidated ${result.skills.length} skill(s) into $outputPath/MEMORY.md');
+  stdout.writeln(
+    'Consolidated ${result.skills.length} skill(s) into $outputPath/MEMORY.md',
+  );
   for (final skill in result.skills) {
     stdout.writeln('  - ${skill.id}: ${skill.title}');
   }
@@ -264,7 +287,11 @@ Future<void> _memoryAdd(ArgResults args) async {
   final importance = double.tryParse(args['importance'] as String) ?? 0.5;
 
   final provider = _createOptionalProvider(args);
-  final store = KBMemoryStore(Directory(outputPath), provider: provider, source: 'agent');
+  final store = KBMemoryStore.file(
+    outputPath,
+    provider: provider,
+    source: 'agent',
+  );
 
   late final MemoryRecord record;
   switch (type) {
@@ -314,8 +341,12 @@ Future<void> _memoryAsk(ArgResults args) async {
   final asOf = _parseAsOf(args['as-of'] as String?);
 
   final provider = _createProvider(args, args['provider'] as String);
-  final store = KBMemoryStore(Directory(outputPath), provider: provider, source: 'agent');
-  final engine = KBSearchEngine(Directory(outputPath), provider: provider);
+  final store = KBMemoryStore.file(
+    outputPath,
+    provider: provider,
+    source: 'agent',
+  );
+  final engine = KBSearchEngine.file(outputPath, provider: provider);
 
   var result = await engine.searchByText(query, matchAll: false);
   if (asOf != null) {
@@ -326,18 +357,22 @@ Future<void> _memoryAsk(ArgResults args) async {
   }
   if (result.results.isNotEmpty) {
     final id = result.results.first.id;
-    if (id != null && id.isNotEmpty) store.recordAccess(id);
+    if (id != null && id.isNotEmpty) await store.recordAccess(id);
   }
 
   if (asJson) {
-    stdout.writeln(jsonEncode({
-      'generatedTags': result.generatedTags,
-      'results': result.results.map(_searchResultToJson).toList(),
-    }));
+    stdout.writeln(
+      jsonEncode({
+        'generatedTags': result.generatedTags,
+        'results': result.results.map(_searchResultToJson).toList(),
+      }),
+    );
     return;
   }
 
-  stdout.writeln('Generated tags: ${result.generatedTags.isNotEmpty ? result.generatedTags.join(', ') : 'none'}\n');
+  stdout.writeln(
+    'Generated tags: ${result.generatedTags.isNotEmpty ? result.generatedTags.join(', ') : 'none'}\n',
+  );
   _printSearchResults(result.results, false);
 }
 
@@ -346,13 +381,15 @@ Future<void> _memoryList(ArgResults args) async {
   final type = args['type'] as String?;
   final tags = _splitList(args['tags'] as String?);
   final sort = args['sort'] as String;
-  final limit = args['limit'] != null ? int.tryParse(args['limit'] as String) : null;
+  final limit = args['limit'] != null
+      ? int.tryParse(args['limit'] as String)
+      : null;
   final asJson = args['json'] as bool;
   final asOf = _parseAsOf(args['as-of'] as String?);
   final memoryType = args['memory-type'] as String?;
 
-  final store = KBMemoryStore(Directory(outputPath), source: 'agent');
-  var records = store.list(
+  final store = KBMemoryStore.file(outputPath, source: 'agent');
+  var records = await store.list(
     type: type,
     tags: tags.isNotEmpty ? tags : null,
     sortBy: sort,
@@ -373,7 +410,8 @@ DateTime? _parseAsOf(String? value) {
 }
 
 bool _recordKnownAt(KBSearchResult result, DateTime asOf) {
-  final dateStr = result.question?.date ?? result.answer?.date ?? result.note?.date;
+  final dateStr =
+      result.question?.date ?? result.answer?.date ?? result.note?.date;
   if (dateStr == null || dateStr.isEmpty) return true;
   final dt = DateTime.tryParse(dateStr);
   if (dt == null) return true;
@@ -384,8 +422,8 @@ Future<void> _memoryDelete(ArgResults args) async {
   final outputPath = args['output'] as String;
   final id = args['id'] as String;
 
-  final store = KBMemoryStore(Directory(outputPath), source: 'agent');
-  store.deleteRecord(id);
+  final store = KBMemoryStore.file(outputPath, source: 'agent');
+  await store.deleteRecord(id);
   stdout.writeln('Deleted $id');
 }
 
@@ -395,8 +433,8 @@ Future<void> _memoryRank(ArgResults args) async {
   final sort = args['sort'] as String;
   final asJson = args['json'] as bool;
 
-  final store = KBMemoryStore(Directory(outputPath), source: 'agent');
-  final records = store.list(sortBy: sort, limit: limit);
+  final store = KBMemoryStore.file(outputPath, source: 'agent');
+  final records = await store.list(sortBy: sort, limit: limit);
 
   _printMemoryRecords(records, asJson, header: 'Top');
 }
@@ -406,14 +444,20 @@ Future<void> _memoryUpdate(ArgResults args) async {
   final id = args['id'] as String;
   final text = args['text'] as String?;
   final tags = _splitList(args['tags'] as String?);
-  final importance = args['importance'] != null ? double.tryParse(args['importance'] as String) : null;
+  final importance = args['importance'] != null
+      ? double.tryParse(args['importance'] as String)
+      : null;
   final memoryType = args['memory-type'] as String?;
   final validFrom = args['valid-from'] as String?;
   final validUntil = args['valid-until'] as String?;
   final level = int.tryParse(args['level'] as String? ?? '');
 
   final provider = _createOptionalProvider(args);
-  final store = KBMemoryStore(Directory(outputPath), provider: provider, source: 'agent');
+  final store = KBMemoryStore.file(
+    outputPath,
+    provider: provider,
+    source: 'agent',
+  );
   final record = await store.updateRecord(
     id,
     text: text,
@@ -450,8 +494,12 @@ Map<String, dynamic> _recordToJson(MemoryRecord r) => {
 
 void _printMemoryRecord(MemoryRecord r) {
   stdout.writeln('- [${r.entityType}] ${r.id}: ${r.title}');
-  stdout.writeln('  author: ${r.author}, area: ${r.area}, importance: ${r.importance.toStringAsFixed(2)}');
-  stdout.writeln('  accessCount: ${r.accessCount}, lastAccessedAt: ${r.lastAccessedAt ?? 'never'}');
+  stdout.writeln(
+    '  author: ${r.author}, area: ${r.area}, importance: ${r.importance.toStringAsFixed(2)}',
+  );
+  stdout.writeln(
+    '  accessCount: ${r.accessCount}, lastAccessedAt: ${r.lastAccessedAt ?? 'never'}',
+  );
   stdout.writeln('  tags: ${r.tags.join(', ')}');
   stdout.writeln('  path: ${r.path}');
   stdout.writeln();
@@ -459,7 +507,11 @@ void _printMemoryRecord(MemoryRecord r) {
 
 List<String> _splitList(String? value) {
   if (value == null || value.trim().isEmpty) return const [];
-  return value.split(',').map((t) => t.trim()).where((t) => t.isNotEmpty).toList();
+  return value
+      .split(',')
+      .map((t) => t.trim())
+      .where((t) => t.isNotEmpty)
+      .toList();
 }
 
 List<String>? _parseEntityTypes(String? value) {
@@ -467,7 +519,11 @@ List<String>? _parseEntityTypes(String? value) {
   return list.isEmpty ? null : list.map((t) => t.toLowerCase()).toList();
 }
 
-void _printMemoryRecords(List<MemoryRecord> records, bool asJson, {required String header}) {
+void _printMemoryRecords(
+  List<MemoryRecord> records,
+  bool asJson, {
+  required String header,
+}) {
   if (asJson) {
     stdout.writeln(jsonEncode(records.map(_recordToJson).toList()));
     return;
@@ -495,9 +551,13 @@ LlmProvider _createProvider(ArgResults args, String providerName) {
   String? optionalString(String name) =>
       args.options.contains(name) ? args[name] as String? : null;
   int? optionalInt(String name) =>
-      args.options.contains(name) && args[name] != null ? int.tryParse(args[name] as String) : null;
+      args.options.contains(name) && args[name] != null
+      ? int.tryParse(args[name] as String)
+      : null;
   double? optionalDouble(String name) =>
-      args.options.contains(name) && args[name] != null ? double.tryParse(args[name] as String) : null;
+      args.options.contains(name) && args[name] != null
+      ? double.tryParse(args[name] as String)
+      : null;
 
   final config = LlmConfig.fromEnvironment(
     provider: providerName,
@@ -540,6 +600,8 @@ class _NoOpProvider implements LlmProvider {
       throw UnsupportedError('Regeneration does not use LLM calls');
 
   @override
-  Future<String> chatMessages(List<LlmMessage> messages, {String? model}) async =>
-      throw UnsupportedError('Regeneration does not use LLM calls');
+  Future<String> chatMessages(
+    List<LlmMessage> messages, {
+    String? model,
+  }) async => throw UnsupportedError('Regeneration does not use LLM calls');
 }

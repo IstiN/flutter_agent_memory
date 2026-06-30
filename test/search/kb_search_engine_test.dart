@@ -9,7 +9,7 @@ void main() {
 
   setUp(() {
     tmpDir = Directory.systemTemp.createTempSync('kb_search_');
-    engine = KBSearchEngine(tmpDir);
+    engine = KBSearchEngine.file(tmpDir);
 
     Directory('${tmpDir.path}/questions').createSync(recursive: true);
     Directory('${tmpDir.path}/answers').createSync(recursive: true);
@@ -68,38 +68,47 @@ Use the test package.
     if (tmpDir.existsSync()) tmpDir.deleteSync(recursive: true);
   });
 
-  test('finds records matching all requested tags', () {
-    final results = engine.searchByTags(['dart', 'unit-tests']);
+  test('finds records matching all requested tags', () async {
+    final results = await engine.searchByTags(['dart', 'unit-tests']);
     expect(results.length, 1);
     expect(results.first.id, 'q_0001');
     expect(results.first.matchedTags, containsAll(['dart', 'unit-tests']));
   });
 
-  test('finds records matching any requested tag when matchAll=false', () {
-    final results = engine.searchByTags(['unit-tests', 'widgets'], matchAll: false);
-    final ids = results.map((r) => r.id).toSet();
-    expect(ids, containsAll(['q_0001', 'q_0002']));
-  });
+  test(
+    'finds records matching any requested tag when matchAll=false',
+    () async {
+      final results = await engine.searchByTags([
+        'unit-tests',
+        'widgets',
+      ], matchAll: false);
+      final ids = results.map((r) => r.id).toSet();
+      expect(ids, containsAll(['q_0001', 'q_0002']));
+    },
+  );
 
-  test('filters by entity type', () {
-    final results = engine.searchByTags(['dart'], entityTypes: ['answer']);
+  test('filters by entity type', () async {
+    final results = await engine.searchByTags(
+      ['dart'],
+      entityTypes: ['answer'],
+    );
     expect(results.length, 1);
     expect(results.first.entityType, 'answer');
     expect(results.first.id, 'a_0001');
   });
 
-  test('returns empty list for unknown tags', () {
-    final results = engine.searchByTags(['kubernetes']);
+  test('returns empty list for unknown tags', () async {
+    final results = await engine.searchByTags(['kubernetes']);
     expect(results, isEmpty);
   });
 
-  test('case-insensitive matching', () {
-    final results = engine.searchByTags(['DART', 'UNIT-TESTS']);
+  test('case-insensitive matching', () async {
+    final results = await engine.searchByTags(['DART', 'UNIT-TESTS']);
     expect(results.length, 1);
     expect(results.first.id, 'q_0001');
   });
 
-  test('ranks frequently accessed and important records higher', () {
+  test('ranks frequently accessed and important records higher', () async {
     Directory('${tmpDir.path}/notes').createSync(recursive: true);
     File('${tmpDir.path}/questions/q_0003.md').writeAsStringSync('''
 ---
@@ -120,7 +129,7 @@ lastAccessedAt: "2024-06-01T00:00:00Z"
 Popular dart question.
 ''');
 
-    final results = engine.searchByTags(['dart'], matchAll: false);
+    final results = await engine.searchByTags(['dart'], matchAll: false);
     expect(results.first.id, 'q_0003');
   });
 }

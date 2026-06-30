@@ -3,17 +3,22 @@ import 'dart:io';
 
 import '../models/analysis_result.dart';
 import '../models/answer.dart';
-import '../models/memory_level.dart';
 import '../models/note.dart';
 import '../models/person_contributions.dart';
 import '../models/question.dart';
 import '../utils/date_utils.dart';
 import '../utils/frontmatter.dart';
 import '../utils/slugify.dart';
+import 'kb_markdown_renderer.dart';
 
 /// Writes the Obsidian-compatible Markdown knowledge-base structure.
 class KBStructureBuilder {
-  void buildAreaStructure(AnalysisResult analysis, Directory outputDir, String sourceName) {
+  final _renderer = const KbMarkdownRenderer();
+  void buildAreaStructure(
+    AnalysisResult analysis,
+    Directory outputDir,
+    String sourceName,
+  ) {
     final areaContributors = <String, Set<String>>{};
     final areaTopics = <String, Set<String>>{};
     final areasFromCurrentAnalysis = <String>{};
@@ -22,7 +27,8 @@ class KBStructureBuilder {
       if (area == null || area.isEmpty) return;
       areasFromCurrentAnalysis.add(area);
       areaContributors.putIfAbsent(area, () => <String>{});
-      if (author != null && author.isNotEmpty) areaContributors[area]!.add(author);
+      if (author != null && author.isNotEmpty)
+        areaContributors[area]!.add(author);
       if (topics != null && topics.isNotEmpty) {
         areaTopics.putIfAbsent(area, () => <String>{})..addAll(topics);
       }
@@ -41,7 +47,10 @@ class KBStructureBuilder {
     final areasDir = Directory('${_path(outputDir)}/areas');
     if (areasDir.existsSync()) {
       for (final areaDir in areasDir.listSync().whereType<Directory>()) {
-        final areaId = areaDir.uri.pathSegments.reversed.firstWhere((s) => s.isNotEmpty, orElse: () => '');
+        final areaId = areaDir.uri.pathSegments.reversed.firstWhere(
+          (s) => s.isNotEmpty,
+          orElse: () => '',
+        );
         final areaFile = File('${areaDir.path}/$areaId.md');
         if (!areaFile.existsSync()) continue;
         try {
@@ -49,16 +58,23 @@ class KBStructureBuilder {
           final title = parseFrontmatter(content).getString('title');
           if (title == null || title.isEmpty) continue;
 
-          final contributors = parseFrontmatter(content).getStringList('contributors');
+          final contributors = parseFrontmatter(
+            content,
+          ).getStringList('contributors');
           if (contributors.isNotEmpty) {
-            areaContributors.putIfAbsent(title, () => <String>{})..addAll(contributors);
+            areaContributors.putIfAbsent(title, () => <String>{})
+              ..addAll(contributors);
           }
 
-          final topicsSection = RegExp(r'##\s+Topics\s+(.+?)(?=##|<!--|\Z)', dotAll: true).firstMatch(content);
+          final topicsSection = RegExp(
+            r'##\s+Topics\s+(.+?)(?=##|<!--|\Z)',
+            dotAll: true,
+          ).firstMatch(content);
           if (topicsSection != null) {
             final linkRegex = RegExp(r'\[\[([^|\]]+)\|([^\]]+)\]\]');
             for (final m in linkRegex.allMatches(topicsSection.group(1)!)) {
-              areaTopics.putIfAbsent(title, () => <String>{})..add(m.group(2)!.trim());
+              areaTopics.putIfAbsent(title, () => <String>{})
+                ..add(m.group(2)!.trim());
             }
           }
         } catch (_) {}
@@ -68,10 +84,13 @@ class KBStructureBuilder {
     areasDir.createSync(recursive: true);
     for (final area in areaContributors.keys) {
       final areaId = slugify(area);
-      final areaDir = Directory('${areasDir.path}/$areaId')..createSync(recursive: true);
+      final areaDir = Directory('${areasDir.path}/$areaId')
+        ..createSync(recursive: true);
       final areaFile = File('${areaDir.path}/$areaId.md');
       final areaDescFile = File('${areaDir.path}/$areaId-desc.md');
-      final sourceToAdd = areasFromCurrentAnalysis.contains(area) ? sourceName : null;
+      final sourceToAdd = areasFromCurrentAnalysis.contains(area)
+          ? sourceName
+          : null;
       _createAreaFileWithTopics(
         areaFile,
         areaDescFile,
@@ -84,12 +103,23 @@ class KBStructureBuilder {
     }
   }
 
-  void buildTopicFiles(AnalysisResult analysis, Directory outputDir, String sourceName) {
+  void buildTopicFiles(
+    AnalysisResult analysis,
+    Directory outputDir,
+    String sourceName,
+  ) {
     final topicDataMap = <String, _TopicData>{};
     final topicsFromCurrentAnalysis = <String>{};
 
-    void collectFromEntity(String type, String? id, List<String>? topics, String? author,
-        List<String>? tags, String? answeredBy, String? answersQuestion) {
+    void collectFromEntity(
+      String type,
+      String? id,
+      List<String>? topics,
+      String? author,
+      List<String>? tags,
+      String? answeredBy,
+      String? answersQuestion,
+    ) {
       if (id == null || topics == null) return;
       for (final topic in topics) {
         topicsFromCurrentAnalysis.add(topic);
@@ -103,15 +133,32 @@ class KBStructureBuilder {
             data.notes.add(id);
         }
         if (author != null && author.isNotEmpty) data.contributors.add(author);
-        if (tags != null) data.tags.addAll(tags.where((t) => !t.startsWith('#')));
+        if (tags != null)
+          data.tags.addAll(tags.where((t) => !t.startsWith('#')));
       }
     }
 
     for (final q in analysis.questions) {
-      collectFromEntity('question', q.id, q.topics, q.author, q.tags, q.answeredBy, null);
+      collectFromEntity(
+        'question',
+        q.id,
+        q.topics,
+        q.author,
+        q.tags,
+        q.answeredBy,
+        null,
+      );
     }
     for (final a in analysis.answers) {
-      collectFromEntity('answer', a.id, a.topics, a.author, a.tags, null, a.answersQuestion);
+      collectFromEntity(
+        'answer',
+        a.id,
+        a.topics,
+        a.author,
+        a.tags,
+        null,
+        a.answersQuestion,
+      );
     }
     for (final n in analysis.notes) {
       collectFromEntity('note', n.id, n.topics, n.author, n.tags, null, null);
@@ -119,22 +166,38 @@ class KBStructureBuilder {
 
     _collectFromExistingFiles(outputDir, topicDataMap);
 
-    final topicsDir = Directory('${_path(outputDir)}/topics')..createSync(recursive: true);
+    final topicsDir = Directory('${_path(outputDir)}/topics')
+      ..createSync(recursive: true);
     for (final entry in topicDataMap.entries) {
       final topic = entry.key;
       final topicId = slugify(topic);
       final topicFile = File('${topicsDir.path}/$topicId.md');
       final topicDescFile = File('${topicsDir.path}/$topicId-desc.md');
-      final sourceToAdd = topicsFromCurrentAnalysis.contains(topic) ? sourceName : null;
-      _createTopicFileWithAggregation(topicFile, topicDescFile, topic, topicId, sourceToAdd, entry.value, analysis);
+      final sourceToAdd = topicsFromCurrentAnalysis.contains(topic)
+          ? sourceName
+          : null;
+      _createTopicFileWithAggregation(
+        topicFile,
+        topicDescFile,
+        topic,
+        topicId,
+        sourceToAdd,
+        entry.value,
+        analysis,
+      );
     }
   }
 
-  void _collectFromExistingFiles(Directory outputDir, Map<String, _TopicData> topicDataMap) {
+  void _collectFromExistingFiles(
+    Directory outputDir,
+    Map<String, _TopicData> topicDataMap,
+  ) {
     void scan(String type, String dirName) {
       final dir = Directory('${_path(outputDir)}/$dirName');
       if (!dir.existsSync()) return;
-      for (final file in dir.listSync().whereType<File>().where((f) => f.path.endsWith('.md'))) {
+      for (final file in dir.listSync().whereType<File>().where(
+        (f) => f.path.endsWith('.md'),
+      )) {
         try {
           final content = file.readAsStringSync();
           final fm = parseFrontmatter(content);
@@ -147,15 +210,22 @@ class KBStructureBuilder {
             final data = topicDataMap.putIfAbsent(topic, () => _TopicData());
             switch (type) {
               case 'question':
-                final answeredBy = fm.getString('answeredBy')?.replaceAll('"', '').trim();
+                final answeredBy = fm
+                    .getString('answeredBy')
+                    ?.replaceAll('"', '')
+                    .trim();
                 _recordQuestionLink(data, id, answeredBy);
               case 'answer':
-                final answersQuestion = fm.getString('answersQuestion')?.replaceAll('"', '').trim();
+                final answersQuestion = fm
+                    .getString('answersQuestion')
+                    ?.replaceAll('"', '')
+                    .trim();
                 _recordAnswerLink(data, id, answersQuestion);
               case 'note':
                 data.notes.add(id);
             }
-            if (author != null && author.isNotEmpty) data.contributors.add(author);
+            if (author != null && author.isNotEmpty)
+              data.contributors.add(author);
           }
         } catch (_) {}
       }
@@ -166,7 +236,12 @@ class KBStructureBuilder {
     scan('note', 'notes');
   }
 
-  void buildQuestionFile(Question question, Directory outputDir, String sourceName, AnalysisResult analysisResult) {
+  void buildQuestionFile(
+    Question question,
+    Directory outputDir,
+    String sourceName,
+    AnalysisResult analysisResult,
+  ) {
     if (question.area.isEmpty) return;
 
     final answerIds = <String>[];
@@ -178,23 +253,33 @@ class KBStructureBuilder {
       if (n.answersQuestions.contains(question.id)) noteIds.add(n.id);
     }
 
-    final dir = Directory('${_path(outputDir)}/questions')..createSync(recursive: true);
+    final dir = Directory('${_path(outputDir)}/questions')
+      ..createSync(recursive: true);
     final file = File('${dir.path}/${question.id}.md');
-    file.writeAsStringSync(_renderQuestion(question, sourceName, answerIds, noteIds));
+    file.writeAsStringSync(
+      _renderer.renderQuestion(
+        question,
+        sourceName,
+        answerIds: answerIds,
+        noteIds: noteIds,
+      ),
+    );
   }
 
   void buildAnswerFile(Answer answer, Directory outputDir, String sourceName) {
     if (answer.area.isEmpty) return;
-    final dir = Directory('${_path(outputDir)}/answers')..createSync(recursive: true);
+    final dir = Directory('${_path(outputDir)}/answers')
+      ..createSync(recursive: true);
     final file = File('${dir.path}/${answer.id}.md');
-    file.writeAsStringSync(_renderAnswer(answer, sourceName));
+    file.writeAsStringSync(_renderer.renderAnswer(answer, sourceName));
   }
 
   void buildNoteFile(Note note, Directory outputDir, String sourceName) {
     if (note.area.isEmpty) return;
-    final dir = Directory('${_path(outputDir)}/notes')..createSync(recursive: true);
+    final dir = Directory('${_path(outputDir)}/notes')
+      ..createSync(recursive: true);
     final file = File('${dir.path}/${note.id}.md');
-    file.writeAsStringSync(_renderNote(note, sourceName));
+    file.writeAsStringSync(_renderer.renderNote(note, sourceName));
   }
 
   void buildPersonProfile(
@@ -207,12 +292,29 @@ class KBStructureBuilder {
     PersonContributions contributions,
   ) {
     final personId = personFileId(personName);
-    final dir = Directory('${_path(outputDir)}/people/$personId')..createSync(recursive: true);
+    final dir = Directory('${_path(outputDir)}/people/$personId')
+      ..createSync(recursive: true);
     final file = File('${dir.path}/$personId.md');
     if (file.existsSync()) {
-      _updatePersonFile(file, sourceName, questionsCount, answersCount, notesCount, contributions);
+      _updatePersonFile(
+        file,
+        sourceName,
+        questionsCount,
+        answersCount,
+        notesCount,
+        contributions,
+      );
     } else {
-      _createPersonFile(file, personName, personId, sourceName, questionsCount, answersCount, notesCount, contributions);
+      _createPersonFile(
+        file,
+        personName,
+        personId,
+        sourceName,
+        questionsCount,
+        answersCount,
+        notesCount,
+        contributions,
+      );
     }
   }
 
@@ -220,13 +322,19 @@ class KBStructureBuilder {
     final peopleDir = Directory('${_path(outputDir)}/people');
     if (!peopleDir.existsSync()) return;
 
-    final people = peopleDir
-        .listSync()
-        .whereType<Directory>()
-        .map((d) => d.uri.pathSegments.reversed.firstWhere((s) => s.isNotEmpty, orElse: () => ''))
-        .where((s) => s.isNotEmpty)
-        .toList()
-      ..sort();
+    final people =
+        peopleDir
+            .listSync()
+            .whereType<Directory>()
+            .map(
+              (d) => d.uri.pathSegments.reversed.firstWhere(
+                (s) => s.isNotEmpty,
+                orElse: () => '',
+              ),
+            )
+            .where((s) => s.isNotEmpty)
+            .toList()
+          ..sort();
 
     final buffer = StringBuffer()
       ..writeln('# People')
@@ -289,179 +397,13 @@ class KBStructureBuilder {
     buffer.write('<!-- AUTO_GENERATED_END -->');
 
     content = content.replaceAllMapped(
-      RegExp(r'<!-- AUTO_GENERATED_START -->.*?<!-- AUTO_GENERATED_END -->', dotAll: true),
+      RegExp(
+        r'<!-- AUTO_GENERATED_START -->.*?<!-- AUTO_GENERATED_END -->',
+        dotAll: true,
+      ),
       (_) => buffer.toString(),
     );
     file.writeAsStringSync(content);
-  }
-
-  String _renderQuestion(Question q, String source, List<String> answerIds, List<String> noteIds) {
-    final fm = Frontmatter()
-      ..['id'] = q.id
-      ..['type'] = 'question'
-      ..['author'] = q.author
-      ..['date'] = q.date
-      ..['area'] = q.area
-      ..['topics'] = q.topics
-      ..['answered'] = q.answeredBy != null && q.answeredBy!.isNotEmpty
-      ..['source'] = source
-      ..['accessCount'] = q.accessCount
-      ..['importance'] = q.importance;
-    if (q.answeredBy != null && q.answeredBy!.isNotEmpty) fm['answeredBy'] = q.answeredBy;
-    if (q.lastAccessedAt != null && q.lastAccessedAt!.isNotEmpty) fm['lastAccessedAt'] = q.lastAccessedAt;
-
-    fm['tags'] = _buildEntityTags(q.tags, source, '#question');
-
-    final buffer = StringBuffer()
-      ..writeln('---')
-      ..write(fm.serialize())
-      ..writeln('---')
-      ..writeln()
-      ..writeln('# Question: ${q.id}')
-      ..writeln()
-      ..writeln(q.text)
-      ..writeln()
-      ..writeln('**Asked by:** [[${normalizePersonName(q.author)}]]')
-      ..writeln('**Date:** ${q.date}');
-
-    if (q.area.isNotEmpty) {
-      buffer.writeln('**Area:** [[${slugify(q.area)}|${q.area}]]');
-    }
-    if (q.topics.isNotEmpty) {
-      buffer.write('**Topics:** ');
-      buffer.writeln(q.topics.map((t) => '[[${slugify(t)}|$t]]').join(', '));
-    }
-    if (q.links.isNotEmpty) {
-      buffer.writeln();
-      buffer.writeln('**Links:**');
-      for (final link in q.links) {
-        buffer.writeln('- [${link.title}](${link.url})');
-      }
-    }
-    if (answerIds.isNotEmpty) {
-      buffer.writeln();
-      buffer.writeln('## Answers');
-      buffer.writeln();
-      for (final id in answerIds) buffer.writeln('![[$id]]\n');
-    }
-    if (noteIds.isNotEmpty) {
-      buffer.writeln();
-      buffer.writeln('## Related Notes');
-      buffer.writeln();
-      for (final id in noteIds) buffer.writeln('![[$id]]\n');
-    }
-
-    return buffer.toString();
-  }
-
-  String _renderAnswer(Answer a, String source) {
-    final fm = Frontmatter()
-      ..['id'] = a.id
-      ..['type'] = 'answer'
-      ..['author'] = a.author
-      ..['date'] = a.date
-      ..['area'] = a.area
-      ..['topics'] = a.topics
-      ..['quality'] = a.quality
-      ..['source'] = source
-      ..['accessCount'] = a.accessCount
-      ..['importance'] = a.importance;
-    if (a.answersQuestion != null && a.answersQuestion!.isNotEmpty) fm['answersQuestion'] = a.answersQuestion;
-    if (a.lastAccessedAt != null && a.lastAccessedAt!.isNotEmpty) fm['lastAccessedAt'] = a.lastAccessedAt;
-
-    fm['tags'] = _buildEntityTags(a.tags, source, '#answer');
-
-    final buffer = StringBuffer()
-      ..writeln('---')
-      ..write(fm.serialize())
-      ..writeln('---')
-      ..writeln()
-      ..writeln('# Answer: ${a.id}')
-      ..writeln()
-      ..writeln(a.text)
-      ..writeln()
-      ..writeln('**Provided by:** [[${normalizePersonName(a.author)}]]')
-      ..writeln('**Date:** ${a.date}')
-      ..writeln('**Quality Score:** ${a.quality.toStringAsFixed(2)}');
-
-    if (a.area.isNotEmpty) {
-      buffer.writeln('**Area:** [[${slugify(a.area)}|${a.area}]]');
-    }
-    if (a.topics.isNotEmpty) {
-      buffer.write('**Topics:** ');
-      buffer.writeln(a.topics.map((t) => '[[${slugify(t)}|$t]]').join(', '));
-    }
-    if (a.answersQuestion != null && a.answersQuestion!.isNotEmpty) {
-      buffer.writeln();
-      buffer.writeln('**Answers:** [[${a.answersQuestion}]]');
-    }
-    if (a.links.isNotEmpty) {
-      buffer.writeln();
-      buffer.writeln('**Links:**');
-      for (final link in a.links) {
-        buffer.writeln('- [${link.title}](${link.url})');
-      }
-    }
-
-    return buffer.toString();
-  }
-
-  String _renderNote(Note n, String source) {
-    final fm = Frontmatter()
-      ..['id'] = n.id
-      ..['type'] = 'note'
-      ..['author'] = n.author
-      ..['date'] = n.date
-      ..['area'] = n.area
-      ..['topics'] = n.topics
-      ..['source'] = source
-      ..['accessCount'] = n.accessCount
-      ..['importance'] = n.importance;
-    if (n.answersQuestions.isNotEmpty) fm['answersQuestions'] = n.answersQuestions;
-    if (n.lastAccessedAt != null && n.lastAccessedAt!.isNotEmpty) fm['lastAccessedAt'] = n.lastAccessedAt;
-    if (n.memoryType != null && n.memoryType!.isNotEmpty) fm['memoryType'] = n.memoryType;
-    if (n.validFrom != null && n.validFrom!.isNotEmpty) fm['validFrom'] = n.validFrom;
-    if (n.validUntil != null && n.validUntil!.isNotEmpty) fm['validUntil'] = n.validUntil;
-    if (n.level != MemoryLevel.raw) fm['level'] = n.level;
-    if (n.relations.isNotEmpty) {
-      fm['relations'] = n.relations.map((r) => r.toFrontmatterString()).toList();
-    }
-
-    fm['tags'] = _buildEntityTags(n.tags, source, '#note');
-
-    final buffer = StringBuffer()
-      ..writeln('---')
-      ..write(fm.serialize())
-      ..writeln('---')
-      ..writeln()
-      ..writeln('# Note: ${n.id}')
-      ..writeln()
-      ..writeln(n.text)
-      ..writeln()
-      ..writeln('**By:** [[${normalizePersonName(n.author)}]]')
-      ..writeln('**Date:** ${n.date}');
-
-    if (n.area.isNotEmpty) {
-      buffer.writeln('**Area:** [[${slugify(n.area)}|${n.area}]]');
-    }
-    if (n.topics.isNotEmpty) {
-      buffer.write('**Topics:** ');
-      buffer.writeln(n.topics.map((t) => '[[${slugify(t)}|$t]]').join(', '));
-    }
-    if (n.answersQuestions.isNotEmpty) {
-      buffer.writeln();
-      buffer.write('**Answers Questions:** ');
-      buffer.writeln(n.answersQuestions.map((id) => '[[$id]]').join(', '));
-    }
-    if (n.links.isNotEmpty) {
-      buffer.writeln();
-      buffer.writeln('**Links:**');
-      for (final link in n.links) {
-        buffer.writeln('- [${link.title}](${link.url})');
-      }
-    }
-
-    return buffer.toString();
   }
 
   void _createPersonFile(
@@ -515,9 +457,21 @@ class KBStructureBuilder {
     final sources = fm.getStringList('sources').toSet();
     if (newSource.isNotEmpty) sources.add(newSource);
 
-    content = _updateFrontmatterField(content, 'questionsAsked', questions.toString());
-    content = _updateFrontmatterField(content, 'answersProvided', answers.toString());
-    content = _updateFrontmatterField(content, 'notesContributed', notes.toString());
+    content = _updateFrontmatterField(
+      content,
+      'questionsAsked',
+      questions.toString(),
+    );
+    content = _updateFrontmatterField(
+      content,
+      'answersProvided',
+      answers.toString(),
+    );
+    content = _updateFrontmatterField(
+      content,
+      'notesContributed',
+      notes.toString(),
+    );
     content = _updateFrontmatterSourcesAndTags(content, sources.toList());
 
     final replacement = StringBuffer()
@@ -527,13 +481,19 @@ class KBStructureBuilder {
     replacement.write('<!-- AUTO_GENERATED_END -->');
 
     content = content.replaceAllMapped(
-      RegExp(r'<!-- AUTO_GENERATED_START -->.*?<!-- AUTO_GENERATED_END -->', dotAll: true),
+      RegExp(
+        r'<!-- AUTO_GENERATED_START -->.*?<!-- AUTO_GENERATED_END -->',
+        dotAll: true,
+      ),
       (_) => replacement.toString(),
     );
     file.writeAsStringSync(content);
   }
 
-  void _appendContributions(StringBuffer buffer, PersonContributions contributions) {
+  void _appendContributions(
+    StringBuffer buffer,
+    PersonContributions contributions,
+  ) {
     _deduplicateAndSort(contributions);
 
     if (contributions.questions.isNotEmpty) {
@@ -565,16 +525,24 @@ class KBStructureBuilder {
       buffer.writeln();
       for (final t in contributions.topics.where((t) => t.count > 0)) {
         final plural = t.count > 1 ? 's' : '';
-        buffer.writeln('- [[../../topics/${t.topicId}|${t.topicId}]] - ${t.count} contribution$plural');
+        buffer.writeln(
+          '- [[../../topics/${t.topicId}|${t.topicId}]] - ${t.count} contribution$plural',
+        );
       }
       buffer.writeln();
     }
   }
 
   void _deduplicateAndSort(PersonContributions contributions) {
-    final questions = _dedupeItems(contributions.questions)..sort((a, b) => _extractIdNumber(a.id).compareTo(_extractIdNumber(b.id)));
-    final answers = _dedupeItems(contributions.answers)..sort((a, b) => _extractIdNumber(a.id).compareTo(_extractIdNumber(b.id)));
-    final notes = _dedupeItems(contributions.notes)..sort((a, b) => _extractIdNumber(a.id).compareTo(_extractIdNumber(b.id)));
+    final questions = _dedupeItems(
+      contributions.questions,
+    )..sort((a, b) => _extractIdNumber(a.id).compareTo(_extractIdNumber(b.id)));
+    final answers = _dedupeItems(
+      contributions.answers,
+    )..sort((a, b) => _extractIdNumber(a.id).compareTo(_extractIdNumber(b.id)));
+    final notes = _dedupeItems(
+      contributions.notes,
+    )..sort((a, b) => _extractIdNumber(a.id).compareTo(_extractIdNumber(b.id)));
 
     contributions.questions
       ..clear()
@@ -599,14 +567,21 @@ class KBStructureBuilder {
     return 0;
   }
 
-  String _updateFrontmatterField(String content, String fieldName, String newValue) {
+  String _updateFrontmatterField(
+    String content,
+    String fieldName,
+    String newValue,
+  ) {
     return content.replaceFirstMapped(
       RegExp('($fieldName:\\s*)([^\\n]+)'),
       (m) => '${m.group(1)}$newValue',
     );
   }
 
-  String _updateFrontmatterSourcesAndTags(String content, List<String> sources) {
+  String _updateFrontmatterSourcesAndTags(
+    String content,
+    List<String> sources,
+  ) {
     final sourcesYaml = '[${sources.map((s) => '"$s"').join(', ')}]';
     content = content.replaceFirstMapped(
       RegExp(r'(sources?:\s*)(?:\[[^\]]+\]|"[^"]+"|[^\n]+)'),
@@ -720,7 +695,9 @@ class KBStructureBuilder {
     final notesInTopic = Set<String>.from(data.notes);
 
     for (final q in analysis.questions) {
-      if (questionsInTopic.contains(q.id) && q.answeredBy != null && q.answeredBy!.isNotEmpty) {
+      if (questionsInTopic.contains(q.id) &&
+          q.answeredBy != null &&
+          q.answeredBy!.isNotEmpty) {
         qToA[q.id] = q.answeredBy!;
       }
     }
@@ -736,12 +713,17 @@ class KBStructureBuilder {
 
     final answersToExclude = <String>{};
     for (final answerId in answersInTopic) {
-      final answer = analysis.answers.where((a) => a.id == answerId).firstOrNull;
-      if (answer != null && answer.answersQuestion != null && questionsInTopic.contains(answer.answersQuestion)) {
+      final answer = analysis.answers
+          .where((a) => a.id == answerId)
+          .firstOrNull;
+      if (answer != null &&
+          answer.answersQuestion != null &&
+          questionsInTopic.contains(answer.answersQuestion)) {
         answersToExclude.add(answerId);
       } else if (data.linkedAnswers.contains(answerId)) {
         final qId = data.aToQ[answerId];
-        if (qId != null && questionsInTopic.contains(qId)) answersToExclude.add(answerId);
+        if (qId != null && questionsInTopic.contains(qId))
+          answersToExclude.add(answerId);
       }
     }
 
@@ -760,8 +742,11 @@ class KBStructureBuilder {
 
     final standaloneAnswers = answersInTopic.difference(answersToExclude);
     final standaloneNotes = notesInTopic.difference(notesToExclude);
-    final allQuestionsWithContent = Set<String>.from(qToA.keys)..addAll(qToN.keys);
-    final questionsWithoutAnswers = questionsInTopic.difference(allQuestionsWithContent);
+    final allQuestionsWithContent = Set<String>.from(qToA.keys)
+      ..addAll(qToN.keys);
+    final questionsWithoutAnswers = questionsInTopic.difference(
+      allQuestionsWithContent,
+    );
 
     if (standaloneNotes.isNotEmpty) {
       buffer.writeln('## Notes');
@@ -809,7 +794,11 @@ class KBStructureBuilder {
     }
   }
 
-  StringBuffer _startEntityFileBuffer(Frontmatter fm, String title, String id) => StringBuffer()
+  StringBuffer _startEntityFileBuffer(
+    Frontmatter fm,
+    String title,
+    String id,
+  ) => StringBuffer()
     ..writeln('---')
     ..write(fm.serialize())
     ..writeln('---')
@@ -819,7 +808,9 @@ class KBStructureBuilder {
     ..writeln('![[$id-desc]]')
     ..writeln();
 
-  ({List<String> sources, String? created}) _loadExistingSourcesAndCreated(File file) {
+  ({List<String> sources, String? created}) _loadExistingSourcesAndCreated(
+    File file,
+  ) {
     final sources = <String>[];
     String? created;
     if (file.existsSync()) {
@@ -831,13 +822,6 @@ class KBStructureBuilder {
     }
     return (sources: sources, created: created);
   }
-
-  List<String> _buildEntityTags(List<String> originalTags, String source, String entityTag) =>
-      <String>[
-        if (!originalTags.any((t) => t == entityTag)) entityTag,
-        if (!originalTags.any((t) => t.startsWith('#source_'))) _formatSourceTag(source),
-        ...originalTags.where((t) => t != entityTag && !t.startsWith('#source_')),
-      ];
 
   String _path(Directory dir) => dir.path;
 }

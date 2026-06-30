@@ -51,7 +51,9 @@ class KBFileParser {
     final rawLevel = base.frontmatter['level'];
     final level = rawLevel is int
         ? rawLevel
-        : (rawLevel is String ? int.tryParse(rawLevel) ?? MemoryLevel.raw : MemoryLevel.raw);
+        : (rawLevel is String
+              ? int.tryParse(rawLevel) ?? MemoryLevel.raw
+              : MemoryLevel.raw);
     final relations = base.frontmatter
         .getStringList('relations')
         .where((s) => s.isNotEmpty)
@@ -112,8 +114,8 @@ class KBFileParser {
     final separator = entityType == 'Question'
         ? '**Asked by:**'
         : entityType == 'Answer'
-            ? '**Provided by:**'
-            : '**By:**';
+        ? '**Provided by:**'
+        : '**By:**';
 
     final parts = withoutHeading.split('\n\n$separator');
     return parts.first.trim();
@@ -121,7 +123,10 @@ class KBFileParser {
 
   List<Link> _parseLinks(String body) {
     final links = <Link>[];
-    final linksMatch = RegExp(r'\*\*Links:\*\*\s*\n(.+?)(?=\n\n|\*\*|\Z)', dotAll: true).firstMatch(body);
+    final linksMatch = RegExp(
+      r'\*\*Links:\*\*\s*\n(.+?)(?=\n\n|\*\*|\Z)',
+      dotAll: true,
+    ).firstMatch(body);
     if (linksMatch == null) return links;
 
     final linkRegex = RegExp(r'\[([^\]]+)\]\(([^)]+)\)');

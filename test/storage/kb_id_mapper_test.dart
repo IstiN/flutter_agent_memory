@@ -10,13 +10,44 @@ void main() {
   test('maps temporary ids to permanent ids and updates references', () {
     final analysis = AnalysisResult(
       questions: [
-        Question(id: 'q_1', author: 'A', text: 'Q?', date: '2024-01-01', area: 'dev', topics: [], tags: [], answeredBy: 'a_1', links: []),
+        Question(
+          id: 'q_1',
+          author: 'A',
+          text: 'Q?',
+          date: '2024-01-01',
+          area: 'dev',
+          topics: [],
+          tags: [],
+          answeredBy: 'a_1',
+          links: [],
+        ),
       ],
       answers: [
-        Answer(id: 'a_1', author: 'B', text: 'A', date: '2024-01-01', area: 'dev', topics: [], tags: [], answersQuestion: 'q_1', quality: 0.8, links: []),
+        Answer(
+          id: 'a_1',
+          author: 'B',
+          text: 'A',
+          date: '2024-01-01',
+          area: 'dev',
+          topics: [],
+          tags: [],
+          answersQuestion: 'q_1',
+          quality: 0.8,
+          links: [],
+        ),
       ],
       notes: [
-        Note(id: 'n_1', text: 'N', area: 'dev', topics: [], tags: [], author: 'C', date: '2024-01-01', answersQuestions: ['q_1'], links: []),
+        Note(
+          id: 'n_1',
+          text: 'N',
+          area: 'dev',
+          topics: [],
+          tags: [],
+          author: 'C',
+          date: '2024-01-01',
+          answersQuestions: ['q_1'],
+          links: [],
+        ),
       ],
     );
 

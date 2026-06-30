@@ -4,15 +4,16 @@ class QAMappingResult {
 
   const QAMappingResult({required this.mappings});
 
-  factory QAMappingResult.fromJson(Map<String, dynamic> json) => QAMappingResult(
+  factory QAMappingResult.fromJson(Map<String, dynamic> json) =>
+      QAMappingResult(
         mappings: (json['mappings'] as List? ?? [])
             .map((e) => Mapping.fromJson(e as Map<String, dynamic>))
             .toList(),
       );
 
   Map<String, dynamic> toJson() => {
-        'mappings': mappings.map((m) => m.toJson()).toList(),
-      };
+    'mappings': mappings.map((m) => m.toJson()).toList(),
+  };
 }
 
 class Mapping {
@@ -27,14 +28,14 @@ class Mapping {
   });
 
   factory Mapping.fromJson(Map<String, dynamic> json) => Mapping(
-        answerId: json['answerId'] as String? ?? '',
-        questionId: json['questionId'] as String? ?? '',
-        confidence: (json['confidence'] as num?)?.toDouble() ?? 0.0,
-      );
+    answerId: json['answerId'] as String? ?? '',
+    questionId: json['questionId'] as String? ?? '',
+    confidence: (json['confidence'] as num?)?.toDouble() ?? 0.0,
+  );
 
   Map<String, dynamic> toJson() => {
-        'answerId': answerId,
-        'questionId': questionId,
-        'confidence': confidence,
-      };
+    'answerId': answerId,
+    'questionId': questionId,
+    'confidence': confidence,
+  };
 }

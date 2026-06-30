@@ -26,8 +26,10 @@ class _FakeProvider implements LlmProvider {
   }
 
   @override
-  Future<String> chatMessages(List<LlmMessage> messages, {String? model}) async =>
-      chat(messages.last.content);
+  Future<String> chatMessages(
+    List<LlmMessage> messages, {
+    String? model,
+  }) async => chat(messages.last.content);
 }
 
 void main() {

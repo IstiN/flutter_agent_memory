@@ -12,7 +12,7 @@ void main() {
 
   setUp(() {
     tmpDir = Directory.systemTemp.createTempSync('kb_graph_');
-    store = KBMemoryStore(tmpDir, source: 'agent');
+    store = KBMemoryStore.file(tmpDir, source: 'agent');
   });
 
   tearDown(() {
@@ -20,7 +20,11 @@ void main() {
   });
 
   test('GRAPH.md is generated with nodes, edges and mermaid block', () async {
-    await store.addQuestion(text: 'What is Dart?', area: 'development', tags: ['dart']);
+    await store.addQuestion(
+      text: 'What is Dart?',
+      area: 'development',
+      tags: ['dart'],
+    );
     await store.addAnswer(
       text: 'Dart is a programming language.',
       area: 'development',
@@ -34,7 +38,7 @@ void main() {
       answersQuestions: ['q_0001'],
     );
 
-    KBGraphBuilder(tmpDir).build();
+    await KBGraphBuilder.file(tmpDir).build();
 
     final graphFile = File('${tmpDir.path}/GRAPH.md');
     expect(graphFile.existsSync(), isTrue);
@@ -54,12 +58,25 @@ void main() {
   });
 
   test('explicit relations are rendered as typed edges', () async {
-    final source = await store.addNote(text: 'Source note', area: 'dev', tags: ['x']);
-    final target = await store.addNote(text: 'Target note', area: 'dev', tags: ['y']);
+    final source = await store.addNote(
+      text: 'Source note',
+      area: 'dev',
+      tags: ['x'],
+    );
+    final target = await store.addNote(
+      text: 'Target note',
+      area: 'dev',
+      tags: ['y'],
+    );
 
-    await store.addRelation(source.id, target.id, RelationType.supports, weight: 2.0);
+    await store.addRelation(
+      source.id,
+      target.id,
+      RelationType.supports,
+      weight: 2.0,
+    );
 
-    KBGraphBuilder(tmpDir).build();
+    await KBGraphBuilder.file(tmpDir).build();
 
     final content = File('${tmpDir.path}/GRAPH.md').readAsStringSync();
     expect(content, contains('### supports'));
@@ -68,14 +85,18 @@ void main() {
   });
 
   test('wiki-links are discovered as edges', () async {
-    final target = await store.addNote(text: 'Target', area: 'dev', tags: ['x']);
+    final target = await store.addNote(
+      text: 'Target',
+      area: 'dev',
+      tags: ['x'],
+    );
     await store.addNote(
       text: 'See also [[${target.id}]].',
       area: 'dev',
       tags: ['x'],
     );
 
-    KBGraphBuilder(tmpDir).build();
+    await KBGraphBuilder.file(tmpDir).build();
 
     final content = File('${tmpDir.path}/GRAPH.md').readAsStringSync();
     expect(content, contains('### links_to'));
@@ -95,7 +116,7 @@ void main() {
       level: MemoryLevel.concept,
     );
 
-    KBGraphBuilder(tmpDir).build(maxMermaidNodes: 10);
+    await KBGraphBuilder.file(tmpDir).build(maxMermaidNodes: 10);
 
     final content = File('${tmpDir.path}/GRAPH.md').readAsStringSync();
     // The concept-level note should be included in the mermaid diagram.

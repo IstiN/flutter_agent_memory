@@ -10,7 +10,12 @@ class OllamaConfig {
   final String model;
   final bool configured;
 
-  OllamaConfig._({required this.baseUrl, required this.apiKey, required this.model, required this.configured});
+  OllamaConfig._({
+    required this.baseUrl,
+    required this.apiKey,
+    required this.model,
+    required this.configured,
+  });
 
   static const String _defaultFilePath =
       '/var/folders/rb/mdj9k7w532d7s78dzhr0b1dm0000gn/T/yoloit_clip/clip_1782685098728.txt';
@@ -25,7 +30,9 @@ class OllamaConfig {
         if (trimmed.isEmpty || trimmed.startsWith('#')) continue;
         final idx = trimmed.indexOf('=');
         if (idx == -1) continue;
-        values[trimmed.substring(0, idx).trim()] = trimmed.substring(idx + 1).trim();
+        values[trimmed.substring(0, idx).trim()] = trimmed
+            .substring(idx + 1)
+            .trim();
       }
     }
 
@@ -49,7 +56,13 @@ class OllamaConfig {
       base = '${base.replaceAll(RegExp(r'/+$'), '')}/v1/chat/completions';
     }
 
-    final configured = base != null && key != null && model != null && base.isNotEmpty && key.isNotEmpty && model.isNotEmpty;
+    final configured =
+        base != null &&
+        key != null &&
+        model != null &&
+        base.isNotEmpty &&
+        key.isNotEmpty &&
+        model.isNotEmpty;
 
     return OllamaConfig._(
       baseUrl: base ?? '',

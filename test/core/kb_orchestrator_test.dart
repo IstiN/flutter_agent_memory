@@ -53,11 +53,14 @@ void main() {
 
     final provider = FakeLlmProvider({'Analyze': fakeResponse});
     final orchestrator = KBOrchestrator(provider);
-    final result = await orchestrator.run(KBOrchestratorParams(
-      sourceName: 'chat',
-      inputText: 'Alice: How do I test Dart code?\nBob: Use the test package.',
-      outputPath: tmpDir.path,
-    ));
+    final result = await orchestrator.run(
+      KBOrchestratorParams(
+        sourceName: 'chat',
+        inputText:
+            'Alice: How do I test Dart code?\nBob: Use the test package.',
+        outputPath: tmpDir.path,
+      ),
+    );
 
     expect(result.success, isTrue);
     expect(result.questionsCount, 1);

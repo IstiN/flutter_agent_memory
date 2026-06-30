@@ -18,7 +18,10 @@ class FakeLlmProvider implements LlmProvider {
   }
 
   @override
-  Future<String> chatMessages(List<LlmMessage> messages, {String? model}) async {
+  Future<String> chatMessages(
+    List<LlmMessage> messages, {
+    String? model,
+  }) async {
     return _match(messages.map((m) => m.content).join('\n'));
   }
 
@@ -28,10 +31,6 @@ class FakeLlmProvider implements LlmProvider {
     }
     return _responses.values.isNotEmpty
         ? _responses.values.first
-        : jsonEncode({
-            'questions': [],
-            'answers': [],
-            'notes': [],
-          });
+        : jsonEncode({'questions': [], 'answers': [], 'notes': []});
   }
 }

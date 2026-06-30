@@ -24,17 +24,53 @@ void main() {
   test('writes question, answer and note files', () {
     final analysis = AnalysisResult(
       questions: [
-        Question(id: 'q_0001', author: 'Alice', text: 'Q?', date: '2024-01-01', area: 'dev', topics: ['dart-testing'], tags: [], answeredBy: 'a_0001', links: []),
+        Question(
+          id: 'q_0001',
+          author: 'Alice',
+          text: 'Q?',
+          date: '2024-01-01',
+          area: 'dev',
+          topics: ['dart-testing'],
+          tags: [],
+          answeredBy: 'a_0001',
+          links: [],
+        ),
       ],
       answers: [
-        Answer(id: 'a_0001', author: 'Bob', text: 'A', date: '2024-01-01', area: 'dev', topics: ['dart-testing'], tags: [], answersQuestion: 'q_0001', quality: 0.9, links: []),
+        Answer(
+          id: 'a_0001',
+          author: 'Bob',
+          text: 'A',
+          date: '2024-01-01',
+          area: 'dev',
+          topics: ['dart-testing'],
+          tags: [],
+          answersQuestion: 'q_0001',
+          quality: 0.9,
+          links: [],
+        ),
       ],
       notes: [
-        Note(id: 'n_0001', text: 'N', area: 'dev', topics: ['dart-testing'], tags: [], author: 'Alice', date: '2024-01-01', answersQuestions: [], links: []),
+        Note(
+          id: 'n_0001',
+          text: 'N',
+          area: 'dev',
+          topics: ['dart-testing'],
+          tags: [],
+          author: 'Alice',
+          date: '2024-01-01',
+          answersQuestions: [],
+          links: [],
+        ),
       ],
     );
 
-    builder.buildQuestionFile(analysis.questions.first, tmpDir, 'test_source', analysis);
+    builder.buildQuestionFile(
+      analysis.questions.first,
+      tmpDir,
+      'test_source',
+      analysis,
+    );
     builder.buildAnswerFile(analysis.answers.first, tmpDir, 'test_source');
     builder.buildNoteFile(analysis.notes.first, tmpDir, 'test_source');
 
@@ -42,7 +78,9 @@ void main() {
     expect(File('${tmpDir.path}/answers/a_0001.md').existsSync(), isTrue);
     expect(File('${tmpDir.path}/notes/n_0001.md').existsSync(), isTrue);
 
-    final qContent = File('${tmpDir.path}/questions/q_0001.md').readAsStringSync();
+    final qContent = File(
+      '${tmpDir.path}/questions/q_0001.md',
+    ).readAsStringSync();
     expect(qContent, contains('**Asked by:** [[Alice]]'));
     expect(qContent, contains('![[a_0001]]'));
   });
@@ -50,7 +88,17 @@ void main() {
   test('builds area and topic files', () {
     final analysis = AnalysisResult(
       questions: [
-        Question(id: 'q_0001', author: 'Alice', text: 'Q?', date: '2024-01-01', area: 'development', topics: ['dart-testing'], tags: [], answeredBy: '', links: []),
+        Question(
+          id: 'q_0001',
+          author: 'Alice',
+          text: 'Q?',
+          date: '2024-01-01',
+          area: 'development',
+          topics: ['dart-testing'],
+          tags: [],
+          answeredBy: '',
+          links: [],
+        ),
       ],
       answers: [],
       notes: [],
@@ -59,15 +107,32 @@ void main() {
     builder.buildAreaStructure(analysis, tmpDir, 'src');
     builder.buildTopicFiles(analysis, tmpDir, 'src');
 
-    expect(File('${tmpDir.path}/areas/development/development.md').existsSync(), isTrue);
+    expect(
+      File('${tmpDir.path}/areas/development/development.md').existsSync(),
+      isTrue,
+    );
     expect(File('${tmpDir.path}/topics/dart-testing.md').existsSync(), isTrue);
   });
 
   test('builds person profile', () {
     final contributions = PersonContributions()
-      ..questions.add(const ContributionItem(id: 'q_0001', topic: 'dart-testing', date: '2024-01-01'));
+      ..questions.add(
+        const ContributionItem(
+          id: 'q_0001',
+          topic: 'dart-testing',
+          date: '2024-01-01',
+        ),
+      );
 
-    builder.buildPersonProfile('Alice Smith', tmpDir, 'src', 1, 0, 0, contributions);
+    builder.buildPersonProfile(
+      'Alice Smith',
+      tmpDir,
+      'src',
+      1,
+      0,
+      0,
+      contributions,
+    );
 
     final file = File('${tmpDir.path}/people/alice_smith/alice_smith.md');
     expect(file.existsSync(), isTrue);

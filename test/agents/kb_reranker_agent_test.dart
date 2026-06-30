@@ -19,8 +19,10 @@ class _FakeProvider implements LlmProvider {
   }
 
   @override
-  Future<String> chatMessages(List<LlmMessage> messages, {String? model}) async =>
-      chat(messages.last.content);
+  Future<String> chatMessages(
+    List<LlmMessage> messages, {
+    String? model,
+  }) async => chat(messages.last.content);
 }
 
 MemoryRecord _noteRecord(String id, String text) {
@@ -56,9 +58,7 @@ void main() {
 
   test('preserves single candidate', () async {
     final agent = KBRerankerAgent(_FakeProvider());
-    final candidates = [
-      _noteRecord('n_0001', 'Only one'),
-    ];
+    final candidates = [_noteRecord('n_0001', 'Only one')];
 
     final ranked = await agent.rerank('anything', candidates);
 

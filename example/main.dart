@@ -16,24 +16,27 @@ Future<void> main(List<String> args) async {
   final provider = ProviderFactory.create(config);
 
   // 2. Process an input file (or pass raw text).
-  final inputText = '''
+  final inputText =
+      '''
 Dart is a client-optimized language for fast apps on any platform.
 How do I handle async errors in Dart?
 Use try/catch or Result/AsyncError wrappers.
 '''
-      .trim();
+          .trim();
 
   final orchestrator = KBOrchestrator(provider);
-  final result = await orchestrator.run(KBOrchestratorParams(
-    sourceName: 'example',
-    inputText: inputText,
-    outputPath: outputPath,
-  ));
+  final result = await orchestrator.run(
+    KBOrchestratorParams(
+      sourceName: 'example',
+      inputText: inputText,
+      outputPath: outputPath,
+    ),
+  );
 
   stdout.writeln('Processing result: ${result.success} – ${result.message}');
 
   // 3. Search the generated knowledge base.
-  final engine = KBSearchEngine(outputDir, provider: provider);
+  final engine = KBSearchEngine.file(outputDir, provider: provider);
   final searchResult = await engine.searchByText(
     'async errors in Dart',
     matchAll: false,

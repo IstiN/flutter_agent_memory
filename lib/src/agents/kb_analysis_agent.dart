@@ -21,7 +21,13 @@ class KBAnalysisAgent {
     String extraInstructions = '',
     List<String>? images,
   }) async {
-    final prompt = await _buildPrompt(inputText, context, sourceName, extraInstructions, hasImages: images != null && images.isNotEmpty);
+    final prompt = await _buildPrompt(
+      inputText,
+      context,
+      sourceName,
+      extraInstructions,
+      hasImages: images != null && images.isNotEmpty,
+    );
     final response = images != null && images.isNotEmpty
         ? await _provider.chatMessages([
             LlmMessage(role: 'system', content: _systemPrompt(context)),
@@ -66,6 +72,7 @@ class KBAnalysisAgent {
 You are a knowledge-base extraction assistant.
 Return only valid JSON matching the requested schema.
 Be concise but complete.
-'''.trim();
+'''
+        .trim();
   }
 }

@@ -14,9 +14,9 @@ class KBContext {
     this.maxQuestionId = 0,
     this.maxAnswerId = 0,
     this.maxNoteId = 0,
-  })  : existingPeople = existingPeople ?? <String>{},
-        existingTopics = existingTopics ?? <String>{},
-        existingQuestions = existingQuestions ?? <QuestionSummary>[];
+  }) : existingPeople = existingPeople ?? <String>{},
+       existingTopics = existingTopics ?? <String>{},
+       existingQuestions = existingQuestions ?? <QuestionSummary>[];
 
   int nextQuestionId() => ++maxQuestionId;
   int nextAnswerId() => ++maxAnswerId;

@@ -31,7 +31,9 @@ class KBTagGeneratorAgent {
     final response = await _provider.chat(prompt);
     final jsonText = extractJsonFromMarkdown(response);
     final json = jsonDecode(jsonText) as Map<String, dynamic>;
-    final tags = (json['tags'] as List? ?? []).map((e) => e.toString()).toList();
+    final tags = (json['tags'] as List? ?? [])
+        .map((e) => e.toString())
+        .toList();
     return tags.where((t) => t.isNotEmpty).toList();
   }
 }

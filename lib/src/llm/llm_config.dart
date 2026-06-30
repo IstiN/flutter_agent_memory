@@ -53,10 +53,12 @@ class LlmConfig {
 
     String? envKey(String key) {
       final prefix = providerPrefix(key);
-      final envValue = env['${prefix}_$key'] ?? env['${prefix}_${key.toUpperCase()}'];
+      final envValue =
+          env['${prefix}_$key'] ?? env['${prefix}_${key.toUpperCase()}'];
       if (envValue != null && envValue.isNotEmpty) return envValue;
 
-      final dotEnvValue = dotEnv['${prefix}_$key'] ?? dotEnv['${prefix}_${key.toUpperCase()}'];
+      final dotEnvValue =
+          dotEnv['${prefix}_$key'] ?? dotEnv['${prefix}_${key.toUpperCase()}'];
       if (dotEnvValue != null && dotEnvValue.isNotEmpty) return dotEnvValue;
 
       return null;
@@ -74,9 +76,15 @@ class LlmConfig {
       }
     }
 
-    var resolvedBaseUrl = baseUrl ?? envKey('BASE_PATH') ?? envKey('BASE_URL') ?? defaultBaseUrl();
-    if (resolvedProvider == 'ollama' && !resolvedBaseUrl.endsWith('/v1/chat/completions')) {
-      resolvedBaseUrl = '${resolvedBaseUrl.replaceAll(RegExp(r'/+$'), '')}/v1/chat/completions';
+    var resolvedBaseUrl =
+        baseUrl ??
+        envKey('BASE_PATH') ??
+        envKey('BASE_URL') ??
+        defaultBaseUrl();
+    if (resolvedProvider == 'ollama' &&
+        !resolvedBaseUrl.endsWith('/v1/chat/completions')) {
+      resolvedBaseUrl =
+          '${resolvedBaseUrl.replaceAll(RegExp(r'/+$'), '')}/v1/chat/completions';
     }
 
     return LlmConfig(
@@ -85,8 +93,10 @@ class LlmConfig {
       baseUrl: resolvedBaseUrl,
       model: model ?? envKey('MODEL') ?? '',
       maxTokens: maxTokens ?? int.tryParse(envKey('MAX_TOKENS') ?? '') ?? 4096,
-      temperature: temperature ?? double.tryParse(envKey('TEMPERATURE') ?? '') ?? -1,
-      maxTokensParamName: maxTokensParamName ??
+      temperature:
+          temperature ?? double.tryParse(envKey('TEMPERATURE') ?? '') ?? -1,
+      maxTokensParamName:
+          maxTokensParamName ??
           (envKey('MAX_TOKENS_PARAM_NAME')?.isNotEmpty == true
               ? envKey('MAX_TOKENS_PARAM_NAME')!
               : 'max_completion_tokens'),

@@ -15,10 +15,5 @@ class OpenRouterProvider extends OpenAiProvider {
     super.client,
     String referer = 'https://github.com/IstiN/flutter_agent_memory',
     String appTitle = 'flutter_agent_memory',
-  }) : super(
-          customHeaders: {
-            'HTTP-Referer': referer,
-            'X-Title': appTitle,
-          },
-        );
+  }) : super(customHeaders: {'HTTP-Referer': referer, 'X-Title': appTitle});
 }

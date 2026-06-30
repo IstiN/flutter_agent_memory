@@ -27,22 +27,29 @@ class KBOrchestrator {
   final SourceConfigManager _sourceConfigManager;
 
   KBOrchestrator(this.provider)
-      : _analysisAgent = KBAnalysisAgent(provider),
-        _aggregationAgent = KBAggregationAgent(provider),
-        _qaMappingService = KBQAMappingService(KBQuestionAnswerMappingAgent(provider)),
-        _structureManager = KBStructureManager(),
-        _contextLoader = KBContextLoader(),
-        _validator = KBAnalysisValidator(),
-        _sourceConfigManager = SourceConfigManager();
+    : _analysisAgent = KBAnalysisAgent(provider),
+      _aggregationAgent = KBAggregationAgent(provider),
+      _qaMappingService = KBQAMappingService(
+        KBQuestionAnswerMappingAgent(provider),
+      ),
+      _structureManager = KBStructureManager(),
+      _contextLoader = KBContextLoader(),
+      _validator = KBAnalysisValidator(),
+      _sourceConfigManager = SourceConfigManager();
 
   /// Runs the full pipeline.
   Future<KBResult> run(KBOrchestratorParams params) async {
     final outputDir = Directory(params.outputPath);
-    _contextLoader.initializeOutputDirectories(outputDir, clean: params.cleanOutput);
+    _contextLoader.initializeOutputDirectories(
+      outputDir,
+      clean: params.cleanOutput,
+    );
 
     // Save raw input. Skip binary images.
     if (params.inputText.isNotEmpty && params.inputImages.isEmpty) {
-      final rawFile = File('${outputDir.path}/inbox/raw/${params.sourceName}.md');
+      final rawFile = File(
+        '${outputDir.path}/inbox/raw/${params.sourceName}.md',
+      );
       rawFile.writeAsStringSync(params.inputText);
     }
 
@@ -67,12 +74,20 @@ class KBOrchestrator {
     }
 
     // Persist the raw AI result for traceability.
-    final analyzedFile = File('${outputDir.path}/inbox/analyzed/${params.sourceName}_analyzed.json');
+    final analyzedFile = File(
+      '${outputDir.path}/inbox/analyzed/${params.sourceName}_analyzed.json',
+    );
     analyzedFile.writeAsStringSync(jsonEncode(analysis.toJson()));
 
     final mappedAnalysis = _structureManager.mapIds(analysis, context);
-    final personContributions = _structureManager.collectPersonContributionsFromAnalysis(mappedAnalysis);
-    _structureManager.buildStructure(mappedAnalysis, outputDir, params.sourceName, personContributions);
+    final personContributions = _structureManager
+        .collectPersonContributionsFromAnalysis(mappedAnalysis);
+    _structureManager.buildStructure(
+      mappedAnalysis,
+      outputDir,
+      params.sourceName,
+      personContributions,
+    );
 
     if (params.processingMode == KBProcessingMode.full) {
       await _runAggregation(outputDir, params);
@@ -101,18 +116,27 @@ class KBOrchestrator {
     );
   }
 
-  Future<void> _runAggregation(Directory outputDir, KBOrchestratorParams params) async {
+  Future<void> _runAggregation(
+    Directory outputDir,
+    KBOrchestratorParams params,
+  ) async {
     await _aggregatePeople(outputDir, params);
     await _aggregateTopics(outputDir, params);
     await _aggregateAreas(outputDir, params);
   }
 
-  Future<void> _aggregatePeople(Directory outputDir, KBOrchestratorParams params) async {
+  Future<void> _aggregatePeople(
+    Directory outputDir,
+    KBOrchestratorParams params,
+  ) async {
     final peopleDir = Directory('${outputDir.path}/people');
     if (!peopleDir.existsSync()) return;
 
     for (final dir in peopleDir.listSync().whereType<Directory>()) {
-      final personId = dir.uri.pathSegments.reversed.firstWhere((s) => s.isNotEmpty, orElse: () => '');
+      final personId = dir.uri.pathSegments.reversed.firstWhere(
+        (s) => s.isNotEmpty,
+        orElse: () => '',
+      );
       if (personId.isEmpty) continue;
       final profileFile = File('${dir.path}/$personId.md');
       final descFile = File('${dir.path}/$personId-desc.md');
@@ -126,7 +150,8 @@ class KBOrchestrator {
         final notesContributed = fm.getString('notesContributed') ?? '0';
         final body = extractBody(profileFile.readAsStringSync());
 
-        final data = '''
+        final data =
+            '''
 name: $name
 questionsAsked: $questionsAsked
 answersProvided: $answersProvided
@@ -145,18 +170,24 @@ $body
     }
   }
 
-  Future<void> _aggregateTopics(Directory outputDir, KBOrchestratorParams params) async {
+  Future<void> _aggregateTopics(
+    Directory outputDir,
+    KBOrchestratorParams params,
+  ) async {
     final topicsDir = Directory('${outputDir.path}/topics');
     if (!topicsDir.existsSync()) return;
 
-    for (final file in topicsDir.listSync().whereType<File>().where((f) => f.path.endsWith('.md') && !f.path.endsWith('-desc.md'))) {
+    for (final file in topicsDir.listSync().whereType<File>().where(
+      (f) => f.path.endsWith('.md') && !f.path.endsWith('-desc.md'),
+    )) {
       final id = file.uri.pathSegments.last.replaceAll('.md', '');
       final descFile = File('${topicsDir.path}/$id-desc.md');
       try {
         final fm = parseFrontmatter(file.readAsStringSync());
         final title = fm.getString('title') ?? id;
         final body = extractBody(file.readAsStringSync());
-        final data = '''
+        final data =
+            '''
 title: $title
 Content:
 $body
@@ -172,12 +203,18 @@ $body
     }
   }
 
-  Future<void> _aggregateAreas(Directory outputDir, KBOrchestratorParams params) async {
+  Future<void> _aggregateAreas(
+    Directory outputDir,
+    KBOrchestratorParams params,
+  ) async {
     final areasDir = Directory('${outputDir.path}/areas');
     if (!areasDir.existsSync()) return;
 
     for (final dir in areasDir.listSync().whereType<Directory>()) {
-      final areaId = dir.uri.pathSegments.reversed.firstWhere((s) => s.isNotEmpty, orElse: () => '');
+      final areaId = dir.uri.pathSegments.reversed.firstWhere(
+        (s) => s.isNotEmpty,
+        orElse: () => '',
+      );
       if (areaId.isEmpty) continue;
       final areaFile = File('${dir.path}/$areaId.md');
       final descFile = File('${dir.path}/$areaId-desc.md');
@@ -187,7 +224,8 @@ $body
         final fm = parseFrontmatter(areaFile.readAsStringSync());
         final title = fm.getString('title') ?? areaId;
         final body = extractBody(areaFile.readAsStringSync());
-        final data = '''
+        final data =
+            '''
 title: $title
 Content:
 $body
@@ -217,7 +255,13 @@ $body
   int _countTopics(Directory dir) {
     final d = Directory('${dir.path}/topics');
     return d.existsSync()
-        ? d.listSync().whereType<File>().where((f) => f.path.endsWith('.md') && !f.path.endsWith('-desc.md')).length
+        ? d
+              .listSync()
+              .whereType<File>()
+              .where(
+                (f) => f.path.endsWith('.md') && !f.path.endsWith('-desc.md'),
+              )
+              .length
         : 0;
   }
 

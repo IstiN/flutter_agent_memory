@@ -23,12 +23,16 @@ class KBConsolidationAgent {
       return const ConsolidationResult(summary: '', skills: []);
     }
 
-    final recordsText = records.asMap().entries.map((e) {
-      final i = e.key + 1;
-      final r = e.value;
-      final tags = r.tags.isEmpty ? '' : ' tags: ${r.tags.join(', ')}';
-      return '$i. [${r.entityType}] ${r.title}\n${r.text}$tags';
-    }).join('\n\n');
+    final recordsText = records
+        .asMap()
+        .entries
+        .map((e) {
+          final i = e.key + 1;
+          final r = e.value;
+          final tags = r.tags.isEmpty ? '' : ' tags: ${r.tags.join(', ')}';
+          return '$i. [${r.entityType}] ${r.title}\n${r.text}$tags';
+        })
+        .join('\n\n');
 
     final prompt = await PromptLoader.load('kb_consolidation.xml', {
       'recordsText': recordsText,

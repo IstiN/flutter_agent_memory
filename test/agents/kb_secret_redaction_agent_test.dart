@@ -12,10 +12,7 @@ void main() {
 
   test('redacts password assignment', () {
     final text = 'password = "superSecret123"';
-    expect(
-      KBSecretRedactionAgent.redact(text),
-      '[REDACTED_SECRET]',
-    );
+    expect(KBSecretRedactionAgent.redact(text), '[REDACTED_SECRET]');
   });
 
   test('redacts private key block', () {

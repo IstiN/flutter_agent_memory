@@ -42,8 +42,12 @@ void main() {
   test('loads all supported files from a directory', () async {
     File('${tmpDir.path}/a.md').writeAsStringSync('text a');
     File('${tmpDir.path}/b.txt').writeAsStringSync('text b');
-    File('${tmpDir.path}/c.png').writeAsBytesSync(Uint8List.fromList([0x89, 0x50]));
-    File('${tmpDir.path}/ignored.exe').writeAsBytesSync(Uint8List.fromList([0x00]));
+    File(
+      '${tmpDir.path}/c.png',
+    ).writeAsBytesSync(Uint8List.fromList([0x89, 0x50]));
+    File(
+      '${tmpDir.path}/ignored.exe',
+    ).writeAsBytesSync(Uint8List.fromList([0x00]));
 
     final awaited = await loader.load(tmpDir.path);
     expect(awaited.length, 3);

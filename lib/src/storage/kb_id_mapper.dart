@@ -21,33 +21,40 @@ class KBIdMapper {
 
     final mappedQuestions = <Question>[];
     for (final q in result.questions) {
-      mappedQuestions.add(q.copyWith(
-        id: mapping[q.id]!,
-        answeredBy: q.answeredBy != null && q.answeredBy!.isNotEmpty
-            ? mapping[q.answeredBy]
-            : null,
-      ));
+      mappedQuestions.add(
+        q.copyWith(
+          id: mapping[q.id]!,
+          answeredBy: q.answeredBy != null && q.answeredBy!.isNotEmpty
+              ? mapping[q.answeredBy]
+              : null,
+        ),
+      );
     }
 
     final mappedAnswers = <Answer>[];
     for (final a in result.answers) {
-      mappedAnswers.add(a.copyWith(
-        id: mapping[a.id]!,
-        answersQuestion: a.answersQuestion != null && a.answersQuestion!.isNotEmpty
-            ? mapping[a.answersQuestion]
-            : null,
-      ));
+      mappedAnswers.add(
+        a.copyWith(
+          id: mapping[a.id]!,
+          answersQuestion:
+              a.answersQuestion != null && a.answersQuestion!.isNotEmpty
+              ? mapping[a.answersQuestion]
+              : null,
+        ),
+      );
     }
 
     final mappedNotes = <Note>[];
     for (final n in result.notes) {
-      mappedNotes.add(n.copyWith(
-        id: mapping[n.id]!,
-        answersQuestions: n.answersQuestions
-            .where((id) => mapping.containsKey(id))
-            .map((id) => mapping[id]!)
-            .toList(),
-      ));
+      mappedNotes.add(
+        n.copyWith(
+          id: mapping[n.id]!,
+          answersQuestions: n.answersQuestions
+              .where((id) => mapping.containsKey(id))
+              .map((id) => mapping[id]!)
+              .toList(),
+        ),
+      );
     }
 
     return AnalysisResult(

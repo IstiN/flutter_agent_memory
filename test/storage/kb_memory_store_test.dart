@@ -11,7 +11,7 @@ void main() {
 
   setUp(() {
     tmpDir = Directory.systemTemp.createTempSync('memory_store_');
-    store = KBMemoryStore(tmpDir, source: 'agent');
+    store = KBMemoryStore.file(tmpDir, source: 'agent');
   });
 
   tearDown(() {
@@ -19,7 +19,11 @@ void main() {
   });
 
   test('adds a question and assigns sequential id', () async {
-    final record = await store.addQuestion(text: 'How to test?', area: 'development', tags: ['dart', 'testing']);
+    final record = await store.addQuestion(
+      text: 'How to test?',
+      area: 'development',
+      tags: ['dart', 'testing'],
+    );
     expect(record.entityType, 'question');
     expect(record.id, 'q_0001');
     expect(File('${tmpDir.path}/questions/q_0001.md').existsSync(), isTrue);
@@ -43,27 +47,38 @@ void main() {
   });
 
   test('recordAccess increments counter and sets lastAccessedAt', () async {
-    final record = await store.addQuestion(text: 'Q?', area: 'dev', tags: ['x']);
-    store.recordAccess(record.id);
+    final record = await store.addQuestion(
+      text: 'Q?',
+      area: 'dev',
+      tags: ['x'],
+    );
+    await store.recordAccess(record.id);
 
-    final updated = store.findById(record.id);
+    final updated = await store.findById(record.id);
     expect(updated, isNotNull);
     expect(updated!.accessCount, 1);
     expect(updated.lastAccessedAt, isNotNull);
   });
 
   test('deleteRecord removes file', () async {
-    final record = await store.addQuestion(text: 'Q?', area: 'dev', tags: ['x']);
-    store.deleteRecord(record.id);
-    expect(File('${tmpDir.path}/questions/${record.id}.md').existsSync(), isFalse);
-    expect(store.findById(record.id), isNull);
+    final record = await store.addQuestion(
+      text: 'Q?',
+      area: 'dev',
+      tags: ['x'],
+    );
+    await store.deleteRecord(record.id);
+    expect(
+      File('${tmpDir.path}/questions/${record.id}.md').existsSync(),
+      isFalse,
+    );
+    expect(await store.findById(record.id), isNull);
   });
 
   test('list returns records sorted by lastAccessed', () async {
     await store.addQuestion(text: 'Q1', area: 'dev', tags: ['x']);
     await store.addAnswer(text: 'A1', area: 'dev', tags: ['y']);
 
-    final records = store.list();
+    final records = await store.list();
     expect(records.length, 2);
     expect(records.first.entityType, 'answer'); // last created has later date
   });
@@ -71,24 +86,35 @@ void main() {
   test('rank lists records by accessCount', () async {
     final q = await store.addQuestion(text: 'Q?', area: 'dev', tags: ['x']);
     await store.addAnswer(text: 'A?', area: 'dev', tags: ['y']);
-    store.recordAccess(q.id);
-    store.recordAccess(q.id);
+    await store.recordAccess(q.id);
+    await store.recordAccess(q.id);
 
-    final ranked = store.list(sortBy: 'accessCount');
+    final ranked = await store.list(sortBy: 'accessCount');
     expect(ranked.first.id, q.id);
     expect(ranked.first.accessCount, 2);
   });
 
-  test('updateRecord modifies text and tags without duplicating system tags', () async {
-    final record = await store.addQuestion(text: 'Original', area: 'dev', tags: ['old']);
-    final updated = await store.updateRecord(record.id, text: 'Updated', tags: ['new']);
+  test(
+    'updateRecord modifies text and tags without duplicating system tags',
+    () async {
+      final record = await store.addQuestion(
+        text: 'Original',
+        area: 'dev',
+        tags: ['old'],
+      );
+      final updated = await store.updateRecord(
+        record.id,
+        text: 'Updated',
+        tags: ['new'],
+      );
 
-    expect(updated.title, 'Updated');
-    expect(updated.tags, contains('#question'));
-    expect(updated.tags, contains('#source_agent'));
-    expect(updated.tags, contains('new'));
-    expect(updated.tags.where((t) => t == '#question').length, 1);
-  });
+      expect(updated.title, 'Updated');
+      expect(updated.tags, contains('#question'));
+      expect(updated.tags, contains('#source_agent'));
+      expect(updated.tags, contains('new'));
+      expect(updated.tags.where((t) => t == '#question').length, 1);
+    },
+  );
 
   test('addNote persists memory level and relations', () async {
     final record = await store.addNote(
@@ -97,7 +123,11 @@ void main() {
       tags: ['x'],
       level: MemoryLevel.consolidated,
       relations: const [
-        Relation(source: 'placeholder', target: 'n_0002', type: RelationType.supports),
+        Relation(
+          source: 'placeholder',
+          target: 'n_0002',
+          type: RelationType.supports,
+        ),
       ],
     );
 
@@ -109,7 +139,11 @@ void main() {
   });
 
   test('promote raises note memory level', () async {
-    final record = await store.addNote(text: 'Raw idea.', area: 'dev', tags: ['x']);
+    final record = await store.addNote(
+      text: 'Raw idea.',
+      area: 'dev',
+      tags: ['x'],
+    );
     expect(record.note!.level, MemoryLevel.raw);
 
     final promoted = await store.promote(record.id, MemoryLevel.concept);
@@ -120,12 +154,25 @@ void main() {
   });
 
   test('addRelation appends typed relation to note frontmatter', () async {
-    final source = await store.addNote(text: 'Source.', area: 'dev', tags: ['x']);
-    final target = await store.addNote(text: 'Target.', area: 'dev', tags: ['y']);
+    final source = await store.addNote(
+      text: 'Source.',
+      area: 'dev',
+      tags: ['x'],
+    );
+    final target = await store.addNote(
+      text: 'Target.',
+      area: 'dev',
+      tags: ['y'],
+    );
 
-    await store.addRelation(source.id, target.id, RelationType.supports, weight: 1.5);
+    await store.addRelation(
+      source.id,
+      target.id,
+      RelationType.supports,
+      weight: 1.5,
+    );
 
-    final updated = store.findById(source.id);
+    final updated = await store.findById(source.id);
     expect(updated, isNotNull);
     expect(updated!.note!.relations, hasLength(1));
     expect(updated.note!.relations.first.type, RelationType.supports);
@@ -137,13 +184,21 @@ void main() {
   });
 
   test('addRelation is idempotent for duplicate relations', () async {
-    final source = await store.addNote(text: 'Source.', area: 'dev', tags: ['x']);
-    final target = await store.addNote(text: 'Target.', area: 'dev', tags: ['y']);
+    final source = await store.addNote(
+      text: 'Source.',
+      area: 'dev',
+      tags: ['x'],
+    );
+    final target = await store.addNote(
+      text: 'Target.',
+      area: 'dev',
+      tags: ['y'],
+    );
 
     await store.addRelation(source.id, target.id, RelationType.supports);
     await store.addRelation(source.id, target.id, RelationType.supports);
 
-    final updated = store.findById(source.id);
+    final updated = await store.findById(source.id);
     expect(updated!.note!.relations, hasLength(1));
   });
 }

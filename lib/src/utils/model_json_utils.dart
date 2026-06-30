@@ -8,6 +8,7 @@ List<String> stringListFromJson(dynamic value) {
 
 /// Parses a JSON value into a list of [Link]s.
 List<Link> linkListFromJson(dynamic value) {
-  if (value is List) return value.map((e) => Link.fromJson(e as Map<String, dynamic>)).toList();
+  if (value is List)
+    return value.map((e) => Link.fromJson(e as Map<String, dynamic>)).toList();
   return const <Link>[];
 }

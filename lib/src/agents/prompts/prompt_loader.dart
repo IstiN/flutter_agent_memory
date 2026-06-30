@@ -51,25 +51,22 @@ class PromptLoader {
   }
 
   static Future<File> _resolvePromptFile(String name) async {
-    final packageUri = Uri.parse(
-      'package:flutter_agent_memory/src/agents/prompts/$name',
-    );
+    final packageUri = _promptUri(name);
     final resolved = await Isolate.resolvePackageUri(packageUri);
-    if (resolved == null) {
-      throw StateError('Could not resolve prompt asset: $packageUri');
-    }
-    final file = File.fromUri(resolved);
-    if (!file.existsSync()) {
-      throw StateError('Prompt file not found: ${file.path}');
-    }
-    return file;
+    return _fileFromResolved(resolved, packageUri);
   }
 
   static File _resolvePromptFileSync(String name) {
-    final packageUri = Uri.parse(
-      'package:flutter_agent_memory/src/agents/prompts/$name',
-    );
+    final packageUri = _promptUri(name);
     final resolved = Isolate.resolvePackageUriSync(packageUri);
+    return _fileFromResolved(resolved, packageUri);
+  }
+
+  static Uri _promptUri(String name) => Uri.parse(
+    'package:flutter_agent_memory/src/agents/prompts/$name',
+  );
+
+  static File _fileFromResolved(Uri? resolved, Uri packageUri) {
     if (resolved == null) {
       throw StateError('Could not resolve prompt asset: $packageUri');
     }
@@ -92,14 +89,15 @@ class PromptLoader {
     return _replacePlaceholders(text, variables).trim();
   }
 
-  static void _processConditionals(XmlNode node, Map<String, String> variables) {
+  static void _processConditionals(
+    XmlNode node,
+    Map<String, String> variables,
+  ) {
     for (final element in List<XmlElement>.from(node.descendantElements)) {
-      final attr = element.attributes
-          .cast<XmlAttribute?>()
-          .firstWhere(
-            (a) => a != null && a.name.local == 'if',
-            orElse: () => null,
-          );
+      final attr = element.attributes.cast<XmlAttribute?>().firstWhere(
+        (a) => a != null && a.name.local == 'if',
+        orElse: () => null,
+      );
       if (attr == null) continue;
 
       final key = attr.value;
@@ -128,8 +126,13 @@ class PromptLoader {
     return buffer.toString();
   }
 
-  static String _replacePlaceholders(String text, Map<String, String> variables) {
-    return text.replaceAllMapped(RegExp(r'\$\{([a-zA-Z_][a-zA-Z0-9_]*)\}'), (match) {
+  static String _replacePlaceholders(
+    String text,
+    Map<String, String> variables,
+  ) {
+    return text.replaceAllMapped(RegExp(r'\$\{([a-zA-Z_][a-zA-Z0-9_]*)\}'), (
+      match,
+    ) {
       final key = match.group(1)!;
       return variables[key] ?? '';
     });

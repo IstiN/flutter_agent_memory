@@ -18,10 +18,10 @@ class KBStructureManager {
   final KBIdMapper _idMapper;
 
   KBStructureManager()
-      : _builder = KBStructureBuilder(),
-        _statistics = KBStatistics(),
-        _parser = KBFileParser(),
-        _idMapper = KBIdMapper();
+    : _builder = KBStructureBuilder(),
+      _statistics = KBStatistics(),
+      _parser = KBFileParser(),
+      _idMapper = KBIdMapper();
 
   KBResult buildResult(AnalysisResult analysisResult, Directory outputDir) {
     return KBResult(
@@ -65,7 +65,15 @@ class KBStructureManager {
       final personName = entry.key;
       final contributions = entry.value;
       final s = stats[personName] ?? _Counts();
-      _builder.buildPersonProfile(personName, outputDir, sourceName, s.questions, s.answers, s.notes, contributions);
+      _builder.buildPersonProfile(
+        personName,
+        outputDir,
+        sourceName,
+        s.questions,
+        s.answers,
+        s.notes,
+        contributions,
+      );
     }
 
     // Write area and topic files.
@@ -79,7 +87,15 @@ class KBStructureManager {
     for (final entry in contributions.entries) {
       final personName = entry.key;
       final s = stats[personName] ?? _Counts();
-      _builder.buildPersonProfile(personName, outputDir, sourceName, s.questions, s.answers, s.notes, entry.value);
+      _builder.buildPersonProfile(
+        personName,
+        outputDir,
+        sourceName,
+        s.questions,
+        s.answers,
+        s.notes,
+        entry.value,
+      );
     }
   }
 
@@ -88,34 +104,50 @@ class KBStructureManager {
     _statistics.generateStatistics(outputDir);
   }
 
-  Map<String, PersonContributions> collectPersonContributionsFromAnalysis(AnalysisResult analysis) {
+  Map<String, PersonContributions> collectPersonContributionsFromAnalysis(
+    AnalysisResult analysis,
+  ) {
     final result = <String, PersonContributions>{};
 
     for (final q in analysis.questions) {
       result.putIfAbsent(q.author, () => PersonContributions());
       for (final topic in q.topics) {
-        result[q.author]!.questions.add(ContributionItem(id: q.id, topic: topic, date: q.date));
+        result[q.author]!.questions.add(
+          ContributionItem(id: q.id, topic: topic, date: q.date),
+        );
       }
     }
     for (final a in analysis.answers) {
       result.putIfAbsent(a.author, () => PersonContributions());
       for (final topic in a.topics) {
-        result[a.author]!.answers.add(ContributionItem(id: a.id, topic: topic, date: a.date));
+        result[a.author]!.answers.add(
+          ContributionItem(id: a.id, topic: topic, date: a.date),
+        );
       }
     }
     for (final n in analysis.notes) {
       result.putIfAbsent(n.author, () => PersonContributions());
       for (final topic in n.topics) {
-        result[n.author]!.notes.add(ContributionItem(id: n.id, topic: topic, date: n.date));
+        result[n.author]!.notes.add(
+          ContributionItem(id: n.id, topic: topic, date: n.date),
+        );
       }
     }
     return result;
   }
 
-  Map<String, PersonContributions> _collectPersonContributionsFromFiles(Directory outputDir) {
+  Map<String, PersonContributions> _collectPersonContributionsFromFiles(
+    Directory outputDir,
+  ) {
     final result = <String, PersonContributions>{};
 
-    void addContribution(String type, String author, String id, List<String> topics, String date) {
+    void addContribution(
+      String type,
+      String author,
+      String id,
+      List<String> topics,
+      String date,
+    ) {
       result.putIfAbsent(author, () => PersonContributions());
       final contributions = result[author]!;
       for (final topic in topics) {
@@ -145,7 +177,10 @@ class KBStructureManager {
     return result;
   }
 
-  void _recalculateTopicContributions(Map<String, PersonContributions> contributions, Directory outputDir) {
+  void _recalculateTopicContributions(
+    Map<String, PersonContributions> contributions,
+    Directory outputDir,
+  ) {
     final topicCounts = <String, Map<String, int>>{};
 
     void countTopics(String author, List<String> topics) {
@@ -156,9 +191,24 @@ class KBStructureManager {
       }
     }
 
-    _scanEntityFiles(outputDir, 'questions', _parser.parseQuestion, (q) => countTopics(q.author, q.topics));
-    _scanEntityFiles(outputDir, 'answers', _parser.parseAnswer, (a) => countTopics(a.author, a.topics));
-    _scanEntityFiles(outputDir, 'notes', _parser.parseNote, (n) => countTopics(n.author, n.topics));
+    _scanEntityFiles(
+      outputDir,
+      'questions',
+      _parser.parseQuestion,
+      (q) => countTopics(q.author, q.topics),
+    );
+    _scanEntityFiles(
+      outputDir,
+      'answers',
+      _parser.parseAnswer,
+      (a) => countTopics(a.author, a.topics),
+    );
+    _scanEntityFiles(
+      outputDir,
+      'notes',
+      _parser.parseNote,
+      (n) => countTopics(n.author, n.topics),
+    );
 
     for (final entry in contributions.entries) {
       final person = entry.key;
@@ -166,7 +216,9 @@ class KBStructureManager {
       topics.clear();
       final counts = topicCounts[person] ?? {};
       for (final topicEntry in counts.entries) {
-        topics.add(TopicContribution(topicId: topicEntry.key, count: topicEntry.value));
+        topics.add(
+          TopicContribution(topicId: topicEntry.key, count: topicEntry.value),
+        );
       }
     }
   }
@@ -199,7 +251,13 @@ class KBStructureManager {
   int _countTopics(Directory outputDir) {
     final dir = Directory('${outputDir.path}/topics');
     return dir.existsSync()
-        ? dir.listSync().whereType<File>().where((f) => f.path.endsWith('.md') && !f.path.endsWith('-desc.md')).length
+        ? dir
+              .listSync()
+              .whereType<File>()
+              .where(
+                (f) => f.path.endsWith('.md') && !f.path.endsWith('-desc.md'),
+              )
+              .length
         : 0;
   }
 
@@ -216,7 +274,9 @@ class KBStructureManager {
   ) {
     final dir = Directory('${outputDir.path}/$dirName');
     if (!dir.existsSync()) return;
-    for (final file in dir.listSync().whereType<File>().where((f) => f.path.endsWith('.md'))) {
+    for (final file in dir.listSync().whereType<File>().where(
+      (f) => f.path.endsWith('.md'),
+    )) {
       try {
         onEntity(parse(file.readAsStringSync()));
       } catch (_) {}

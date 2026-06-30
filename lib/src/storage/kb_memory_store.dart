@@ -4,42 +4,53 @@ import '../agents/kb_consolidation_agent.dart';
 import '../agents/kb_secret_redaction_agent.dart';
 import '../agents/kb_tag_generator_agent.dart';
 import '../llm/llm_provider.dart';
-import '../models/analysis_result.dart';
 import '../models/answer.dart';
 import '../models/consolidation_result.dart';
-import '../models/kb_context.dart';
 import '../models/memory_level.dart';
 import '../models/memory_type.dart';
 import '../models/note.dart';
-import '../models/relation.dart';
 import '../models/question.dart';
+import '../models/relation.dart';
 import '../utils/date_utils.dart';
-import '../utils/frontmatter.dart';
 import '../utils/slugify.dart';
-import 'kb_context_loader.dart';
+import 'file_kb_storage.dart';
 import 'kb_file_parser.dart';
 import 'kb_graph_builder.dart';
-import 'kb_structure_builder.dart';
+import 'kb_markdown_renderer.dart';
+import 'kb_storage.dart';
 
-/// Persistent agent memory store backed by Markdown files.
+/// Agent memory store backed by a pluggable [KbStorage] backend.
 ///
 /// Provides CRUD operations for questions, answers, and notes, plus access
 /// tracking (last used, access count) that feeds into search ranking.
+///
+/// The default constructor accepts any [KbStorage] implementation. Use
+/// [KBMemoryStore.file] for the classic Markdown file backend.
 class KBMemoryStore {
-  final Directory kbDir;
+  final KbStorage storage;
   final LlmProvider? provider;
   final String source;
-  final KBStructureBuilder _builder;
   final KBFileParser _parser;
-  final KBContextLoader _contextLoader;
+  final KbMarkdownRenderer _renderer;
 
-  KBMemoryStore(
-    this.kbDir, {
-    this.provider,
-    this.source = 'agent',
-  })  : _builder = KBStructureBuilder(),
-        _parser = KBFileParser(),
-        _contextLoader = KBContextLoader();
+  KBMemoryStore(this.storage, {this.provider, this.source = 'agent'})
+    : _parser = KBFileParser(),
+      _renderer = const KbMarkdownRenderer();
+
+  /// Creates a store backed by the file-system Markdown directory layout.
+  factory KBMemoryStore.file(
+    dynamic kbDir, {
+    LlmProvider? provider,
+    String source = 'agent',
+  }) {
+    // Accept either a Directory or a path string for convenience.
+    final directory = kbDir is String ? Directory(kbDir) : kbDir;
+    return KBMemoryStore(
+      FileKbStorage(directory),
+      provider: provider,
+      source: source,
+    );
+  }
 
   /// Adds a new question to the memory store.
   Future<MemoryRecord> addQuestion({
@@ -51,13 +62,14 @@ class KBMemoryStore {
     String? answeredBy,
     double importance = 0.5,
   }) async {
+    final context = await storage.loadContext();
     final prepared = await _prepareAdd(
       text,
       area: area,
       topics: topics,
       tags: tags,
       prefix: 'q',
-      nextId: _loadContext().nextQuestionId,
+      nextId: context.nextQuestionId(),
     );
 
     final question = Question(
@@ -73,7 +85,7 @@ class KBMemoryStore {
       importance: importance,
     );
 
-    _builder.buildQuestionFile(question, kbDir, source, const AnalysisResult(questions: [], answers: [], notes: []));
+    await _writeQuestion(question);
     return _toRecord(question: question);
   }
 
@@ -88,13 +100,14 @@ class KBMemoryStore {
     double quality = 0.8,
     double importance = 0.5,
   }) async {
+    final context = await storage.loadContext();
     final prepared = await _prepareAdd(
       text,
       area: area,
       topics: topics,
       tags: tags,
       prefix: 'a',
-      nextId: _loadContext().nextAnswerId,
+      nextId: context.nextAnswerId(),
     );
 
     final answer = Answer(
@@ -111,7 +124,7 @@ class KBMemoryStore {
       importance: importance,
     );
 
-    _builder.buildAnswerFile(answer, kbDir, source);
+    await _writeAnswer(answer);
     return _toRecord(answer: answer);
   }
 
@@ -130,13 +143,14 @@ class KBMemoryStore {
     int? level,
     List<Relation>? relations,
   }) async {
+    final context = await storage.loadContext();
     final prepared = await _prepareAdd(
       text,
       area: area,
       topics: topics,
       tags: tags,
       prefix: 'n',
-      nextId: _loadContext().nextNoteId,
+      nextId: context.nextNoteId(),
     );
 
     final note = Note(
@@ -157,16 +171,15 @@ class KBMemoryStore {
       relations: relations ?? const [],
     );
 
-    _builder.buildNoteFile(note, kbDir, source);
+    await _writeNote(note);
     return _toRecord(note: note);
   }
 
   /// Deletes a record by id.
-  void deleteRecord(String id) {
-    final record = findById(id);
-    if (record == null) return;
-    final file = File(record.path);
-    if (file.existsSync()) file.deleteSync();
+  Future<void> deleteRecord(String id) async {
+    final type = _typeFromId(id);
+    if (type == null) return;
+    await storage.deleteEntity(type, id);
   }
 
   /// Updates the text and/or tags of an existing record.
@@ -181,15 +194,25 @@ class KBMemoryStore {
     int? level,
     List<Relation>? relations,
   }) async {
-    final record = findById(id);
+    final record = await findById(id);
     if (record == null) throw ArgumentError('Record not found: $id');
 
     switch (record.entityType) {
       case 'question':
         final q = record.question!;
         final updatedTags = tags ?? q.tags;
+        final mergedTags = _renderer.buildEntityTags(
+          updatedTags,
+          source,
+          '#question',
+        );
         final updatedText = KBSecretRedactionAgent.redact(text ?? q.text);
-        final enriched = await _enrich(updatedText, area: q.area, topics: q.topics, tags: updatedTags);
+        final enriched = await _enrich(
+          updatedText,
+          area: q.area,
+          topics: q.topics,
+          tags: mergedTags,
+        );
         final updated = q.copyWith(
           text: updatedText,
           tags: enriched.tags,
@@ -197,13 +220,23 @@ class KBMemoryStore {
           area: enriched.area,
           importance: importance ?? q.importance,
         );
-        _builder.buildQuestionFile(updated, kbDir, source, const AnalysisResult(questions: [], answers: [], notes: []));
+        await _writeQuestion(updated);
         return _toRecord(question: updated);
       case 'answer':
         final a = record.answer!;
         final updatedTags = tags ?? a.tags;
+        final mergedTags = _renderer.buildEntityTags(
+          updatedTags,
+          source,
+          '#answer',
+        );
         final updatedText = KBSecretRedactionAgent.redact(text ?? a.text);
-        final enriched = await _enrich(updatedText, area: a.area, topics: a.topics, tags: updatedTags);
+        final enriched = await _enrich(
+          updatedText,
+          area: a.area,
+          topics: a.topics,
+          tags: mergedTags,
+        );
         final updated = a.copyWith(
           text: updatedText,
           tags: enriched.tags,
@@ -211,26 +244,38 @@ class KBMemoryStore {
           area: enriched.area,
           importance: importance ?? a.importance,
         );
-        _builder.buildAnswerFile(updated, kbDir, source);
+        await _writeAnswer(updated);
         return _toRecord(answer: updated);
       case 'note':
         final n = record.note!;
         final updatedTags = tags ?? n.tags;
+        final mergedTags = _renderer.buildEntityTags(
+          updatedTags,
+          source,
+          '#note',
+        );
         final updatedText = KBSecretRedactionAgent.redact(text ?? n.text);
-        final enriched = await _enrich(updatedText, area: n.area, topics: n.topics, tags: updatedTags);
+        final enriched = await _enrich(
+          updatedText,
+          area: n.area,
+          topics: n.topics,
+          tags: mergedTags,
+        );
         final updated = n.copyWith(
           text: updatedText,
           tags: enriched.tags,
           topics: enriched.topics,
           area: enriched.area,
           importance: importance ?? n.importance,
-          memoryType: memoryType != null ? MemoryType.normalize(memoryType) : n.memoryType,
+          memoryType: memoryType != null
+              ? MemoryType.normalize(memoryType)
+              : n.memoryType,
           validFrom: validFrom ?? n.validFrom,
           validUntil: validUntil ?? n.validUntil,
           level: level != null ? MemoryLevel.normalize(level) : n.level,
           relations: relations ?? n.relations,
         );
-        _builder.buildNoteFile(updated, kbDir, source);
+        await _writeNote(updated);
         return _toRecord(note: updated);
       default:
         throw UnsupportedError('Unsupported entity type: ${record.entityType}');
@@ -238,8 +283,8 @@ class KBMemoryStore {
   }
 
   /// Records that a record was accessed, incrementing its counter.
-  void recordAccess(String id) {
-    final record = findById(id);
+  Future<void> recordAccess(String id) async {
+    final record = await findById(id);
     if (record == null) return;
 
     final now = currentUtcTimestamp();
@@ -249,67 +294,66 @@ class KBMemoryStore {
           accessCount: record.question!.accessCount + 1,
           lastAccessedAt: now,
         );
-        _builder.buildQuestionFile(updated, kbDir, source, const AnalysisResult(questions: [], answers: [], notes: []));
+        await _writeQuestion(updated);
       case 'answer':
         final updated = record.answer!.copyWith(
           accessCount: record.answer!.accessCount + 1,
           lastAccessedAt: now,
         );
-        _builder.buildAnswerFile(updated, kbDir, source);
+        await _writeAnswer(updated);
       case 'note':
         final updated = record.note!.copyWith(
           accessCount: record.note!.accessCount + 1,
           lastAccessedAt: now,
         );
-        _builder.buildNoteFile(updated, kbDir, source);
+        await _writeNote(updated);
     }
   }
 
   /// Finds a single record by id.
-  MemoryRecord? findById(String id) {
-    final lowerId = id.toLowerCase();
-    final dirs = {
-      'q': Directory('${kbDir.path}/questions'),
-      'a': Directory('${kbDir.path}/answers'),
-      'n': Directory('${kbDir.path}/notes'),
-    };
-
-    for (final entry in dirs.entries) {
-      if (!lowerId.startsWith(entry.key)) continue;
-      final file = File('${entry.value.path}/$id.md');
-      if (!file.existsSync()) continue;
-      try {
-        return _parseFile(file);
-      } catch (_) {}
+  Future<MemoryRecord?> findById(String id) async {
+    final type = _typeFromId(id);
+    if (type == null) return null;
+    final content = await storage.readEntity(type, id);
+    if (content == null) return null;
+    try {
+      return _parseContent(type, content);
+    } catch (_) {
+      return null;
     }
-    return null;
   }
 
   /// Lists records, optionally filtered and sorted.
   ///
   /// [asOf] returns only records whose [date] is on or before the given time,
   /// useful for answering "what did I know at date X?".
-  List<MemoryRecord> list({
+  Future<List<MemoryRecord>> list({
     String? type,
     List<String>? tags,
     String sortBy = 'lastAccessed',
     int? limit,
     DateTime? asOf,
-  }) {
+  }) async {
     final records = <MemoryRecord>[];
-    final types = type != null ? [type.toLowerCase()] : ['question', 'answer', 'note'];
+    final types = type != null
+        ? [type.toLowerCase()]
+        : ['question', 'answer', 'note'];
 
     for (final t in types) {
-      final dirName = t == 'question' ? 'questions' : t == 'answer' ? 'answers' : 'notes';
-      final dir = Directory('${kbDir.path}/$dirName');
-      if (!dir.existsSync()) continue;
-      for (final file in dir.listSync().whereType<File>().where((f) => f.path.endsWith('.md'))) {
+      for (final id in await storage.listEntityIds(t)) {
         try {
-          final record = _parseFile(file);
+          final content = await storage.readEntity(t, id);
+          if (content == null) continue;
+          final record = _parseContent(t, content);
           if (tags != null && tags.isNotEmpty) {
-            final normalizedRecordTags = record.tags.map((x) => x.toLowerCase()).toSet();
-            final normalizedRequested = tags.map((x) => x.toLowerCase()).toSet();
-            if (!normalizedRequested.any(normalizedRecordTags.contains)) continue;
+            final normalizedRecordTags = record.tags
+                .map((x) => x.toLowerCase())
+                .toSet();
+            final normalizedRequested = tags
+                .map((x) => x.toLowerCase())
+                .toSet();
+            if (!normalizedRequested.any(normalizedRecordTags.contains))
+              continue;
           }
           if (asOf != null && !_isRecordActiveAt(record, asOf)) continue;
           records.add(record);
@@ -337,13 +381,14 @@ class KBMemoryStore {
     return records;
   }
 
-  Future<({String id, String text, String now, _Enriched enriched})> _prepareAdd(
+  Future<({String id, String text, String now, _Enriched enriched})>
+  _prepareAdd(
     String text, {
     String? area,
     List<String>? topics,
     List<String>? tags,
     required String prefix,
-    required int Function() nextId,
+    required int nextId,
   }) async {
     final safeText = KBSecretRedactionAgent.redact(text);
     final enriched = await _enrich(
@@ -352,7 +397,7 @@ class KBMemoryStore {
       topics: topics ?? const [],
       tags: tags ?? const [],
     );
-    final id = '${prefix}_${_pad(nextId())}';
+    final id = '${prefix}_${_pad(nextId)}';
     final now = currentUtcTimestamp();
     return (id: id, text: safeText, now: now, enriched: enriched);
   }
@@ -364,10 +409,13 @@ class KBMemoryStore {
     List<String>? tags,
   }) async {
     var resolvedArea = area != null && area.isNotEmpty ? area : 'general';
-    var resolvedTopics = topics != null && topics.isNotEmpty ? topics : <String>[];
+    var resolvedTopics = topics != null && topics.isNotEmpty
+        ? topics
+        : <String>[];
     var resolvedTags = tags != null && tags.isNotEmpty ? tags : <String>[];
 
-    if (provider != null && (resolvedArea == 'general' || resolvedTags.isEmpty)) {
+    if (provider != null &&
+        (resolvedArea == 'general' || resolvedTags.isEmpty)) {
       final generator = KBTagGeneratorAgent(provider!);
       final generated = await generator.generateTags(text, maxTags: 5);
       if (resolvedTags.isEmpty) resolvedTags = generated;
@@ -389,8 +437,22 @@ class KBMemoryStore {
   String _guessArea(List<String> tags) {
     final lowered = tags.map((t) => t.toLowerCase()).toSet();
     final areaHints = <String, List<String>>{
-      'development': ['dart', 'flutter', 'test', 'testing', 'unit-tests', 'riverpod', 'bloc'],
-      'infrastructure': ['docker', 'kubernetes', 'ci/cd', 'github-actions', 'deploy'],
+      'development': [
+        'dart',
+        'flutter',
+        'test',
+        'testing',
+        'unit-tests',
+        'riverpod',
+        'bloc',
+      ],
+      'infrastructure': [
+        'docker',
+        'kubernetes',
+        'ci/cd',
+        'github-actions',
+        'deploy',
+      ],
       'security': ['auth', 'security', 'oauth', 'jwt'],
       'business': ['product', 'requirements', 'meeting'],
     };
@@ -400,98 +462,82 @@ class KBMemoryStore {
     return 'general';
   }
 
-  KBContext _loadContext() => _contextLoader.loadContext(kbDir);
-
-  MemoryRecord _parseFile(File file) {
-    final content = file.readAsStringSync();
-    final fm = parseFrontmatter(content);
-    final type = fm.getString('type') ?? '';
-
+  MemoryRecord _parseContent(String type, String content) {
     switch (type) {
       case 'question':
         final q = _parser.parseQuestion(content);
-        return _toRecord(question: q, path: file.path);
+        return _toRecord(question: q);
       case 'answer':
         final a = _parser.parseAnswer(content);
-        return _toRecord(answer: a, path: file.path);
+        return _toRecord(answer: a);
       case 'note':
         final n = _parser.parseNote(content);
-        return _toRecord(note: n, path: file.path);
+        return _toRecord(note: n);
       default:
         throw FormatException('Unknown record type: $type');
     }
   }
 
-  MemoryRecord _toRecord({
-    Question? question,
-    Answer? answer,
-    Note? note,
-    String? path,
-  }) {
+  MemoryRecord _toRecord({Question? question, Answer? answer, Note? note}) {
     if (question != null) {
-      final filePath = path ?? '${kbDir.path}/questions/${question.id}.md';
-      final parsed = _tryParseQuestion(File(filePath)) ?? question;
       return MemoryRecord(
         entityType: 'question',
-        path: filePath,
-        question: parsed,
-        accessCount: parsed.accessCount,
-        lastAccessedAt: parsed.lastAccessedAt,
-        importance: parsed.importance,
+        path: storage.describeLocation('question', question.id),
+        question: question,
+        accessCount: question.accessCount,
+        lastAccessedAt: question.lastAccessedAt,
+        importance: question.importance,
       );
     }
     if (answer != null) {
-      final filePath = path ?? '${kbDir.path}/answers/${answer.id}.md';
-      final parsed = _tryParseAnswer(File(filePath)) ?? answer;
       return MemoryRecord(
         entityType: 'answer',
-        path: filePath,
-        answer: parsed,
-        accessCount: parsed.accessCount,
-        lastAccessedAt: parsed.lastAccessedAt,
-        importance: parsed.importance,
+        path: storage.describeLocation('answer', answer.id),
+        answer: answer,
+        accessCount: answer.accessCount,
+        lastAccessedAt: answer.lastAccessedAt,
+        importance: answer.importance,
       );
     }
     if (note != null) {
-      final filePath = path ?? '${kbDir.path}/notes/${note.id}.md';
-      final parsed = _tryParseNote(File(filePath)) ?? note;
       return MemoryRecord(
         entityType: 'note',
-        path: filePath,
-        note: parsed,
-        accessCount: parsed.accessCount,
-        lastAccessedAt: parsed.lastAccessedAt,
-        importance: parsed.importance,
+        path: storage.describeLocation('note', note.id),
+        note: note,
+        accessCount: note.accessCount,
+        lastAccessedAt: note.lastAccessedAt,
+        importance: note.importance,
       );
     }
     throw ArgumentError('At least one entity must be provided');
   }
 
-  Question? _tryParseQuestion(File file) {
-    try {
-      if (!file.existsSync()) return null;
-      return _parser.parseQuestion(file.readAsStringSync());
-    } catch (_) {
-      return null;
-    }
+  Future<void> _writeQuestion(Question q) async {
+    await storage.writeEntity(
+      'question',
+      q.id,
+      _renderer.renderQuestion(q, source),
+    );
   }
 
-  Answer? _tryParseAnswer(File file) {
-    try {
-      if (!file.existsSync()) return null;
-      return _parser.parseAnswer(file.readAsStringSync());
-    } catch (_) {
-      return null;
-    }
+  Future<void> _writeAnswer(Answer a) async {
+    await storage.writeEntity(
+      'answer',
+      a.id,
+      _renderer.renderAnswer(a, source),
+    );
   }
 
-  Note? _tryParseNote(File file) {
-    try {
-      if (!file.existsSync()) return null;
-      return _parser.parseNote(file.readAsStringSync());
-    } catch (_) {
-      return null;
-    }
+  Future<void> _writeNote(Note n) async {
+    await storage.writeEntity('note', n.id, _renderer.renderNote(n, source));
+  }
+
+  String? _typeFromId(String id) {
+    final lower = id.toLowerCase();
+    if (lower.startsWith('q_')) return 'question';
+    if (lower.startsWith('a_')) return 'answer';
+    if (lower.startsWith('n_')) return 'note';
+    return null;
   }
 
   /// Adds a typed relation from [sourceId] to [targetId].
@@ -503,43 +549,59 @@ class KBMemoryStore {
     String type, {
     double weight = 1.0,
   }) async {
-    final record = findById(sourceId);
-    if (record == null) throw ArgumentError('Source record not found: $sourceId');
-    if (record.note == null) throw ArgumentError('Relations are currently supported only for notes: $sourceId');
+    final record = await findById(sourceId);
+    if (record == null)
+      throw ArgumentError('Source record not found: $sourceId');
+    if (record.note == null)
+      throw ArgumentError(
+        'Relations are currently supported only for notes: $sourceId',
+      );
 
     final normalizedType = RelationType.normalize(type);
-    final existing = record.note!.relations.where((r) => r.target == targetId && r.type == normalizedType);
+    final existing = record.note!.relations.where(
+      (r) => r.target == targetId && r.type == normalizedType,
+    );
     if (existing.isNotEmpty) return record;
 
     final updated = record.note!.copyWith(
       relations: [
         ...record.note!.relations,
-        Relation(source: sourceId, target: targetId, type: normalizedType, weight: weight),
+        Relation(
+          source: sourceId,
+          target: targetId,
+          type: normalizedType,
+          weight: weight,
+        ),
       ],
     );
-    _builder.buildNoteFile(updated, kbDir, source);
+    await _writeNote(updated);
     return _toRecord(note: updated);
   }
 
   /// Promotes a note to a higher memory level (1 raw → 2 consolidated → 3 concept).
   Future<MemoryRecord> promote(String id, int targetLevel) async {
-    final record = findById(id);
+    final record = await findById(id);
     if (record == null) throw ArgumentError('Record not found: $id');
-    if (record.note == null) throw ArgumentError('Promotion is currently supported only for notes: $id');
+    if (record.note == null)
+      throw ArgumentError(
+        'Promotion is currently supported only for notes: $id',
+      );
 
     final newLevel = MemoryLevel.normalize(targetLevel);
     if (newLevel <= record.note!.level) {
-      throw ArgumentError('Target level $targetLevel is not higher than current level ${record.note!.level}');
+      throw ArgumentError(
+        'Target level $targetLevel is not higher than current level ${record.note!.level}',
+      );
     }
 
     final updated = record.note!.copyWith(level: newLevel);
-    _builder.buildNoteFile(updated, kbDir, source);
+    await _writeNote(updated);
     return _toRecord(note: updated);
   }
 
   /// Regenerates `GRAPH.md` from the current knowledge base.
-  void buildGraph() {
-    KBGraphBuilder(kbDir).build();
+  Future<void> buildGraph() async {
+    await KBGraphBuilder(storage).build();
   }
 
   /// Consolidates the top [limit] memory records into a high-level summary and
@@ -553,8 +615,8 @@ class KBMemoryStore {
     }
 
     final agent = KBConsolidationAgent(provider!);
-    final records = list(limit: limit);
-    final existingSummary = _readExistingSummary();
+    final records = await list(limit: limit);
+    final existingSummary = await _readExistingSummary();
 
     final result = await agent.consolidate(
       records,
@@ -562,36 +624,26 @@ class KBMemoryStore {
       extraInstructions: extraInstructions,
     );
 
-    _writeConsolidation(result);
+    await _writeConsolidation(result);
     return result;
   }
 
-  String? _readExistingSummary() {
-    final file = File('${kbDir.path}/MEMORY.md');
-    if (!file.existsSync()) return null;
-    final text = file.readAsStringSync().trim();
-    return text.isEmpty ? null : text;
+  Future<String?> _readExistingSummary() async {
+    return (await storage.readFile('MEMORY.md'))?.trim();
   }
 
-  void _writeConsolidation(ConsolidationResult result) {
-    final memoryFile = File('${kbDir.path}/MEMORY.md');
-    memoryFile.writeAsStringSync(result.summary);
+  Future<void> _writeConsolidation(ConsolidationResult result) async {
+    await storage.writeFile('MEMORY.md', result.summary);
 
-    final skillsDir = Directory('${kbDir.path}/skills');
     if (result.skills.isEmpty) {
-      if (skillsDir.existsSync()) {
-        for (final f in skillsDir.listSync().whereType<File>()) {
-          f.deleteSync();
-        }
-      }
+      await _clearSkills();
       return;
     }
 
-    skillsDir.createSync(recursive: true);
+    await _clearSkills();
     for (var i = 0; i < result.skills.length; i++) {
       final skill = result.skills[i];
       final id = 'sk_${(i + 1).toString().padLeft(4, '0')}';
-      final file = File('${skillsDir.path}/$id.md');
       final buffer = StringBuffer()
         ..writeln('---')
         ..writeln('id: $id')
@@ -600,7 +652,20 @@ class KBMemoryStore {
         ..writeln('---')
         ..writeln()
         ..writeln(skill.instruction);
-      file.writeAsStringSync(buffer.toString());
+      await storage.writeFile('skills/$id.md', buffer.toString());
+    }
+  }
+
+  Future<void> _clearSkills() async {
+    // Best-effort removal: storage backends may not support listing arbitrary
+    // files, so we simply overwrite known skill slots with empty content for
+    // backends that do. For file storage the old files remain; this is left as
+    // a known limitation for non-file backends.
+    for (var i = 1; i <= 9999; i++) {
+      final id = 'sk_${i.toString().padLeft(4, '0')}';
+      final path = 'skills/$id.md';
+      if (await storage.readFile(path) == null) break;
+      await storage.writeFile(path, '');
     }
   }
 
@@ -675,7 +740,8 @@ class MemoryRecord {
 
   String get date => question?.date ?? answer?.date ?? note?.date ?? '';
 
-  List<String> get tags => question?.tags ?? answer?.tags ?? note?.tags ?? const [];
+  List<String> get tags =>
+      question?.tags ?? answer?.tags ?? note?.tags ?? const [];
 
   String get area => question?.area ?? answer?.area ?? note?.area ?? '';
 

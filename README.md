@@ -529,11 +529,11 @@ final question = KBFileParser().parseQuestion(
 import 'dart:io';
 import 'package:flutter_agent_memory/flutter_agent_memory.dart';
 
-final engine = KBSearchEngine(Directory('kb'));
+final engine = KBSearchEngine.file('kb');
 
-final exact = engine.searchByTags(['dart', 'unit-tests']);
-final broad = engine.searchByTags(['dart', 'flutter'], matchAll: false);
-final answersOnly = engine.searchByTags(['dart'], entityTypes: ['answer']);
+final exact = await engine.searchByTags(['dart', 'unit-tests']);
+final broad = await engine.searchByTags(['dart', 'flutter'], matchAll: false);
+final answersOnly = await engine.searchByTags(['dart'], entityTypes: ['answer']);
 ```
 
 ### Natural-language search
@@ -541,7 +541,7 @@ final answersOnly = engine.searchByTags(['dart'], entityTypes: ['answer']);
 ```dart
 final config = LlmConfig.fromEnvironment();
 final provider = ProviderFactory.create(config);
-final engine = KBSearchEngine(Directory('kb'), provider: provider);
+final engine = KBSearchEngine.file('kb', provider: provider);
 
 final result = await engine.searchByText(
   'How do I write unit tests in Dart?',
@@ -575,7 +575,7 @@ re-running the full analysis pipeline.
 import 'dart:io';
 import 'package:flutter_agent_memory/flutter_agent_memory.dart';
 
-final store = KBMemoryStore(Directory('kb'), source: 'my_agent');
+final store = KBMemoryStore.file('kb', source: 'my_agent');
 
 // Add records
 final question = await store.addQuestion(
@@ -599,15 +599,15 @@ final note = await store.addNote(
 );
 
 // Record access (updates ranking)
-store.recordAccess(question.id);
+await store.recordAccess(question.id);
 
 // List and rank
-final recent = store.list(sortBy: 'lastAccessed', limit: 10);
-final top = store.list(sortBy: 'accessCount', limit: 10);
+final recent = await store.list(sortBy: 'lastAccessed', limit: 10);
+final top = await store.list(sortBy: 'accessCount', limit: 10);
 
 // Update / delete
 await store.updateRecord(question.id, text: 'How do I cache images?');
-store.deleteRecord(question.id);
+await store.deleteRecord(question.id);
 ```
 
 ### CLI
@@ -847,6 +847,42 @@ KEEP_OUTPUT=true dart test --tags integration
 
 ---
 
+## Storage backends
+
+The knowledge base is persisted through the `KbStorage` interface. The default
+CLI/backend uses the Markdown file layout, but you can plug in other backends:
+
+```dart
+// Classic Markdown directory layout.
+final fileStorage = FileKbStorage(Directory('kb'));
+
+// Pure in-memory (great for tests or sandboxes).
+final memoryStorage = InMemoryKbStorage();
+
+// SQLite single-file database.
+import 'package:sqlite3/sqlite3.dart';
+final sqliteStorage = SqliteKbStorage(sqlite3.openInMemory());
+
+// Browser localStorage (web only).
+final webStorage = WebKbStorage();
+
+// Remote HTTP server speaking the KB REST convention.
+final httpStorage = HttpKbStorage('https://api.example.com/kb');
+```
+
+All higher-level classes accept any `KbStorage`:
+
+```dart
+final store = KBMemoryStore(memoryStorage, source: 'agent');
+final engine = KBSearchEngine(sqliteStorage, provider: provider);
+await KBGraphBuilder(httpStorage).build();
+```
+
+You can also implement `KbStorage` yourself to target a custom endpoint or
+database.
+
+---
+
 ## Troubleshooting
 
 ### `Provider is not configured`
@@ -859,7 +895,7 @@ Set the provider environment variables or pass `--api-key` and `--model`.
 generate tags. Pass one:
 
 ```dart
-KBSearchEngine(Directory('kb'), provider: provider)
+KBSearchEngine.file('kb', provider: provider)
 ```
 
 ### Empty analysis results

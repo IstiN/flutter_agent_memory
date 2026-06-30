@@ -33,18 +33,20 @@ class Relation {
     final rawType = parts.isNotEmpty ? parts[0].trim() : '';
     final type = rawType.isEmpty ? RelationType.relatedTo : rawType;
     final target = parts.length > 1 ? parts[1].trim() : '';
-    final weight = parts.length > 2 ? double.tryParse(parts[2].trim()) ?? 1.0 : 1.0;
+    final weight = parts.length > 2
+        ? double.tryParse(parts[2].trim()) ?? 1.0
+        : 1.0;
     return Relation(source: source, target: target, type: type, weight: weight);
   }
 
   Map<String, dynamic> toJson() => {
-        'source': source,
-        'target': target,
-        'type': type,
-        'weight': weight,
-        if (validFrom != null) 'validFrom': validFrom,
-        if (validUntil != null) 'validUntil': validUntil,
-      };
+    'source': source,
+    'target': target,
+    'type': type,
+    'weight': weight,
+    if (validFrom != null) 'validFrom': validFrom,
+    if (validUntil != null) 'validUntil': validUntil,
+  };
 
   @override
   String toString() => 'Relation($source -[$type]-> $target)';

@@ -12,7 +12,7 @@ answered: true
 quality: 0.85
 ---
 # Body
-''';  // Corrected: removed stray `
+'''; // Corrected: removed stray `
     final fm = parseFrontmatter(content);
     expect(fm.getString('id'), 'q_0001');
     expect(fm.getStringList('topics'), ['docker-build', 'ci-cd']);

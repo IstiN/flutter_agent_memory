@@ -9,7 +9,8 @@ class Frontmatter {
 
   Frontmatter() : _data = LinkedHashMap<String, dynamic>();
 
-  Frontmatter.from(Map<String, dynamic> data) : _data = LinkedHashMap<String, dynamic>.from(data);
+  Frontmatter.from(Map<String, dynamic> data)
+    : _data = LinkedHashMap<String, dynamic>.from(data);
 
   dynamic operator [](String key) => _data[key];
   void operator []=(String key, dynamic value) => _data[key] = value;
@@ -129,7 +130,9 @@ List<String> _parseInlineList(String raw) {
         var value = s.trim();
         if (value.startsWith('"') && value.endsWith('"') && value.length >= 2) {
           value = value.substring(1, value.length - 1).replaceAll('\\"', '"');
-        } else if (value.startsWith("'") && value.endsWith("'") && value.length >= 2) {
+        } else if (value.startsWith("'") &&
+            value.endsWith("'") &&
+            value.length >= 2) {
           value = value.substring(1, value.length - 1);
         }
         return value;

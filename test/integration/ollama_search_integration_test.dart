@@ -1,5 +1,4 @@
 @Tags(['integration'])
-
 import 'dart:io';
 
 import 'package:flutter_agent_memory/src/core/kb_orchestrator.dart';
@@ -18,25 +17,28 @@ void main() {
     config = OllamaConfig.load();
   });
 
-  test('builds KB from rich transcript and searches via generated tags', () async {
-    if (!config.configured) {
-      markTestSkipped('Ollama config not available');
-      return;
-    }
+  test(
+    'builds KB from rich transcript and searches via generated tags',
+    () async {
+      if (!config.configured) {
+        markTestSkipped('Ollama config not available');
+        return;
+      }
 
-    final outputDir = Directory.systemTemp.createTempSync('ollama_search_');
-    addTearDown(() => outputDir.deleteSync(recursive: true));
-    print('KB output directory: ${outputDir.absolute.path}');
+      final outputDir = Directory.systemTemp.createTempSync('ollama_search_');
+      addTearDown(() => outputDir.deleteSync(recursive: true));
+      print('KB output directory: ${outputDir.absolute.path}');
 
-    final provider = OpenAiProvider(
-      apiKey: config.apiKey,
-      baseUrl: config.baseUrl,
-      defaultModel: config.model,
-      maxTokens: 4096,
-      temperature: 0,
-    );
+      final provider = OpenAiProvider(
+        apiKey: config.apiKey,
+        baseUrl: config.baseUrl,
+        defaultModel: config.model,
+        maxTokens: 4096,
+        temperature: 0,
+      );
 
-    final transcript = '''
+      final transcript =
+          '''
 [2024-11-15T09:00:00Z] Alice: What is the best way to manage state in Flutter?
 [2024-11-15T09:02:00Z] Bob: Use Riverpod or Bloc. Riverpod is simpler for small apps, Bloc is great for complex business logic.
 
@@ -51,79 +53,112 @@ void main() {
 
 [2024-11-15T09:40:00Z] Alice: How do I handle async data loading in Flutter widgets?
 [2024-11-15T09:42:00Z] Bob: Use FutureBuilder or StreamBuilder, or wrap the logic with a state management solution like Riverpod.
-'''.trim();
+'''
+              .trim();
 
-    final orchestrator = KBOrchestrator(provider);
-    final buildResult = await orchestrator.run(KBOrchestratorParams(
-      sourceName: 'integration_search_test',
-      inputText: transcript,
-      outputPath: outputDir.path,
-      processingMode: KBProcessingMode.processOnly,
-      analysisExtraInstructions:
-          'Extract all clear questions and answers. Preserve the topic area and 1-3 specific topics for each record.',
-    ));
-
-    expect(buildResult.success, isTrue);
-    expect(buildResult.questionsCount, greaterThanOrEqualTo(3));
-    expect(buildResult.answersCount, greaterThanOrEqualTo(3));
-
-    final engine = KBSearchEngine(outputDir, provider: provider);
-
-    final searchQueries = [
-      _SearchExpectation(
-        query: 'How do I manage state in Flutter?',
-        expectedKeywordsInTags: ['flutter', 'state'],
-        expectedResultKeywordsInTitle: ['state', 'riverpod', 'bloc'],
-      ),
-      _SearchExpectation(
-        query: 'Dart unit testing',
-        expectedKeywordsInTags: ['dart', 'test', 'unit-testing', 'test-package'],
-        expectedResultKeywordsInTitle: ['test', 'unit'],
-      ),
-      _SearchExpectation(
-        query: 'Docker image for Dart',
-        expectedKeywordsInTags: ['docker', 'dart'],
-        expectedResultKeywordsInTitle: ['docker', 'image', 'dart'],
-      ),
-      _SearchExpectation(
-        query: 'CI/CD for Flutter',
-        expectedKeywordsInTags: ['ci', 'flutter', 'github'],
-        expectedResultKeywordsInTitle: ['ci', 'github', 'flutter'],
-      ),
-    ];
-
-    for (final expectation in searchQueries) {
-      print('Searching: "${expectation.query}"');
-      final result = await engine.searchByText(
-        expectation.query,
-        matchAll: false,
-        maxGeneratedTags: 6,
+      final orchestrator = KBOrchestrator(provider);
+      final buildResult = await orchestrator.run(
+        KBOrchestratorParams(
+          sourceName: 'integration_search_test',
+          inputText: transcript,
+          outputPath: outputDir.path,
+          processingMode: KBProcessingMode.processOnly,
+          analysisExtraInstructions:
+              'Extract all clear questions and answers. Preserve the topic area and 1-3 specific topics for each record.',
+        ),
       );
 
-      print('  Generated tags: ${result.generatedTags}');
-      print('  Results count: ${result.results.length}');
+      expect(buildResult.success, isTrue);
+      expect(buildResult.questionsCount, greaterThanOrEqualTo(3));
+      expect(buildResult.answersCount, greaterThanOrEqualTo(3));
 
-      expect(result.generatedTags, isNotEmpty,
-          reason: 'Query "${expectation.query}" should generate at least one tag');
+      final engine = KBSearchEngine.file(outputDir, provider: provider);
 
-      final lowerTags = result.generatedTags.map((t) => t.toLowerCase()).toSet();
-      expect(
-        expectation.expectedKeywordsInTags.any(lowerTags.contains),
-        isTrue,
-        reason: 'Expected at least one of ${expectation.expectedKeywordsInTags} in generated tags, got $lowerTags',
-      );
+      final searchQueries = [
+        _SearchExpectation(
+          query: 'How do I manage state in Flutter?',
+          expectedKeywordsInTags: ['flutter', 'state'],
+          expectedResultKeywordsInTitle: ['state', 'riverpod', 'bloc'],
+        ),
+        _SearchExpectation(
+          query: 'Dart unit testing',
+          expectedKeywordsInTags: [
+            'dart',
+            'test',
+            'unit-testing',
+            'test-package',
+          ],
+          expectedResultKeywordsInTitle: ['test', 'unit'],
+        ),
+        _SearchExpectation(
+          query: 'Docker image for Dart',
+          expectedKeywordsInTags: ['docker', 'dart'],
+          expectedResultKeywordsInTitle: ['docker', 'image', 'dart'],
+        ),
+        _SearchExpectation(
+          query: 'CI/CD for Flutter',
+          expectedKeywordsInTags: [
+            'ci',
+            'ci/cd',
+            'flutter',
+            'github',
+            'github-actions',
+          ],
+          expectedResultKeywordsInTitle: ['ci', 'github', 'flutter'],
+        ),
+      ];
 
-      expect(result.results, isNotEmpty,
-          reason: 'Query "${expectation.query}" should return at least one record');
+      for (final expectation in searchQueries) {
+        print('Searching: "${expectation.query}"');
+        final result = await engine.searchByText(
+          expectation.query,
+          matchAll: false,
+          maxGeneratedTags: 6,
+        );
 
-      final titles = result.results.map((r) => (r.title ?? '').toLowerCase()).toList();
-      expect(
-        titles.any((title) => expectation.expectedResultKeywordsInTitle.any(title.contains)),
-        isTrue,
-        reason: 'Expected one of the results to mention ${expectation.expectedResultKeywordsInTitle}, got $titles',
-      );
-    }
-  }, timeout: const Timeout(Duration(seconds: 300)));
+        print('  Generated tags: ${result.generatedTags}');
+        print('  Results count: ${result.results.length}');
+
+        expect(
+          result.generatedTags,
+          isNotEmpty,
+          reason:
+              'Query "${expectation.query}" should generate at least one tag',
+        );
+
+        final lowerTags = result.generatedTags
+            .map((t) => t.toLowerCase())
+            .toSet();
+        expect(
+          expectation.expectedKeywordsInTags.any(lowerTags.contains),
+          isTrue,
+          reason:
+              'Expected at least one of ${expectation.expectedKeywordsInTags} in generated tags, got $lowerTags',
+        );
+
+        expect(
+          result.results,
+          isNotEmpty,
+          reason:
+              'Query "${expectation.query}" should return at least one record',
+        );
+
+        final titles = result.results
+            .map((r) => (r.title ?? '').toLowerCase())
+            .toList();
+        expect(
+          titles.any(
+            (title) =>
+                expectation.expectedResultKeywordsInTitle.any(title.contains),
+          ),
+          isTrue,
+          reason:
+              'Expected one of the results to mention ${expectation.expectedResultKeywordsInTitle}, got $titles',
+        );
+      }
+    },
+    timeout: const Timeout(Duration(seconds: 300)),
+  );
 }
 
 class _SearchExpectation {

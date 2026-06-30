@@ -47,44 +47,52 @@ class KBContextLoader {
   }
 
   void _scanQuestions(Directory dir, KBContext context) {
-    if (!dir.existsSync()) return;
-    for (final file in dir.listSync().whereType<File>().where((f) => f.path.endsWith('.md'))) {
-      try {
-        final question = _parser.parseQuestion(file.readAsStringSync());
-        context.existingPeople.add(question.author);
-        context.existingTopics.addAll(question.topics);
-        context.existingQuestions.add(QuestionSummary(
+    _scanMarkdownFiles(dir, (content) {
+      final question = _parser.parseQuestion(content);
+      context.existingPeople.add(question.author);
+      context.existingTopics.addAll(question.topics);
+      context.existingQuestions.add(
+        QuestionSummary(
           id: question.id,
           author: question.author,
           text: question.text,
           area: question.area,
-          answered: question.answeredBy != null && question.answeredBy!.isNotEmpty,
-        ));
-      } catch (_) {
-        // Skip malformed files.
-      }
-    }
+          answered:
+              question.answeredBy != null && question.answeredBy!.isNotEmpty,
+        ),
+      );
+    });
   }
 
   void _scanAnswers(Directory dir, KBContext context) {
-    if (!dir.existsSync()) return;
-    for (final file in dir.listSync().whereType<File>().where((f) => f.path.endsWith('.md'))) {
-      try {
-        final answer = _parser.parseAnswer(file.readAsStringSync());
-        context.existingPeople.add(answer.author);
-        context.existingTopics.addAll(answer.topics);
-      } catch (_) {}
-    }
+    _scanMarkdownFiles(dir, (content) {
+      final answer = _parser.parseAnswer(content);
+      context.existingPeople.add(answer.author);
+      context.existingTopics.addAll(answer.topics);
+    });
   }
 
   void _scanNotes(Directory dir, KBContext context) {
+    _scanMarkdownFiles(dir, (content) {
+      final note = _parser.parseNote(content);
+      context.existingPeople.add(note.author);
+      context.existingTopics.addAll(note.topics);
+    });
+  }
+
+  void _scanMarkdownFiles(
+    Directory dir,
+    void Function(String content) onContent,
+  ) {
     if (!dir.existsSync()) return;
-    for (final file in dir.listSync().whereType<File>().where((f) => f.path.endsWith('.md'))) {
+    for (final file in dir.listSync().whereType<File>().where(
+      (f) => f.path.endsWith('.md'),
+    )) {
       try {
-        final note = _parser.parseNote(file.readAsStringSync());
-        context.existingPeople.add(note.author);
-        context.existingTopics.addAll(note.topics);
-      } catch (_) {}
+        onContent(file.readAsStringSync());
+      } catch (_) {
+        // Skip malformed files.
+      }
     }
   }
 

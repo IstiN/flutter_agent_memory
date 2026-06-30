@@ -3,47 +3,48 @@ import 'dart:io';
 import '../agents/kb_reranker_agent.dart';
 import '../agents/kb_tag_generator_agent.dart';
 import '../llm/llm_provider.dart';
+import '../storage/file_kb_storage.dart';
 import '../storage/kb_file_parser.dart';
 import '../storage/kb_memory_store.dart' show MemoryRecord;
+import '../storage/kb_storage.dart';
 import 'kb_search_result.dart';
 import 'kb_text_search_result.dart';
 
 /// Searches the knowledge base by tags, text, or entity type.
 class KBSearchEngine {
-  final Directory kbDir;
+  final KbStorage storage;
   final LlmProvider? provider;
   final KBFileParser _parser;
 
-  KBSearchEngine(this.kbDir, {this.provider}) : _parser = KBFileParser();
+  KBSearchEngine(this.storage, {this.provider}) : _parser = KBFileParser();
+
+  /// Creates a search engine for the classic Markdown file backend.
+  factory KBSearchEngine.file(dynamic kbDir, {LlmProvider? provider}) {
+    final directory = kbDir is String ? Directory(kbDir) : kbDir;
+    return KBSearchEngine(FileKbStorage(directory), provider: provider);
+  }
 
   /// Returns records whose tags contain all (matchAll=true) or any
   /// (matchAll=false) of the requested tags.
-  List<KBSearchResult> searchByTags(
+  Future<List<KBSearchResult>> searchByTags(
     List<String> tags, {
     bool matchAll = true,
     List<String>? entityTypes,
-  }) {
+  }) async {
     if (tags.isEmpty) return const [];
 
     final requested = tags.map((t) => t.toLowerCase()).toSet();
-    final types = entityTypes?.map((t) => t.toLowerCase()).toSet() ??
+    final types =
+        entityTypes?.map((t) => t.toLowerCase()).toSet() ??
         const {'question', 'answer', 'note'};
     final results = <KBSearchResult>[];
 
-    void scan(String type, String dirName) {
-      if (!types.contains(type.toLowerCase())) return;
-      _forEachEntityFile(dirName, (file, content) {
-        final result = _parseSearchResult(type, file.path, content);
-        if (result == null) return;
-        final matched = _matchingTags(requested, result.tags, matchAll);
-        if (matched == null) return;
+    await _forEachResult(types, (type, id, content, result) {
+      final matched = _matchingTags(requested, result.tags, matchAll);
+      if (matched != null) {
         results.add(result.withMatchedTags(matched));
-      });
-    }
-
-    scan('question', 'questions');
-    scan('answer', 'answers');
-    scan('note', 'notes');
+      }
+    });
 
     return _rankAndSort(results);
   }
@@ -72,17 +73,28 @@ class KBSearchEngine {
       final n = r.note;
       final matchedTags = r.matchedTags.length;
       final keywordScore = keywordHits[r.path] ?? 0;
-      final accessCount = q?.accessCount ?? a?.accessCount ?? n?.accessCount ?? 0;
+      final accessCount =
+          q?.accessCount ?? a?.accessCount ?? n?.accessCount ?? 0;
       final importance = q?.importance ?? a?.importance ?? n?.importance ?? 0.5;
-      final lastUsedDays = daysAgo(q?.lastAccessedAt ?? a?.lastAccessedAt ?? n?.lastAccessedAt);
+      final lastUsedDays = daysAgo(
+        q?.lastAccessedAt ?? a?.lastAccessedAt ?? n?.lastAccessedAt,
+      );
 
       double recency = 0;
-      if (lastUsedDays <= 1) recency = 10;
-      else if (lastUsedDays <= 7) recency = 7;
-      else if (lastUsedDays <= 30) recency = 4;
-      else if (lastUsedDays <= 90) recency = 2;
+      if (lastUsedDays <= 1)
+        recency = 10;
+      else if (lastUsedDays <= 7)
+        recency = 7;
+      else if (lastUsedDays <= 30)
+        recency = 4;
+      else if (lastUsedDays <= 90)
+        recency = 2;
 
-      return matchedTags * 10 + keywordScore * 4 + accessCount * 2 + importance * 5 + recency;
+      return matchedTags * 10 +
+          keywordScore * 4 +
+          accessCount * 2 +
+          importance * 5 +
+          recency;
     }
 
     final scored = results.map((r) => (r, score(r))).toList()
@@ -110,7 +122,7 @@ class KBSearchEngine {
       );
     }
 
-    final existingTags = _collectExistingTags();
+    final existingTags = await _collectExistingTags();
     final generator = KBTagGeneratorAgent(provider!);
     final generatedTags = await generator.generateTags(
       query,
@@ -120,9 +132,16 @@ class KBSearchEngine {
 
     final tagResults = generatedTags.isEmpty
         ? <KBSearchResult>[]
-        : searchByTags(generatedTags, matchAll: matchAll, entityTypes: entityTypes);
+        : await searchByTags(
+            generatedTags,
+            matchAll: matchAll,
+            entityTypes: entityTypes,
+          );
 
-    final (keywordResults, keywordHits) = _searchByKeywords(query, entityTypes);
+    final (keywordResults, keywordHits) = await _searchByKeywords(
+      query,
+      entityTypes,
+    );
     var merged = _mergeResults(tagResults, keywordResults);
     merged = _rankAndSort(merged, keywordHits: keywordHits);
 
@@ -130,56 +149,87 @@ class KBSearchEngine {
       final take = merged.length < rerankTopN ? merged.length : rerankTopN;
       final top = merged.sublist(0, take);
       final candidates = top
-          .map((r) => MemoryRecord(
-                entityType: r.entityType,
-                path: r.path,
-                question: r.question,
-                answer: r.answer,
-                note: r.note,
-              ))
+          .map(
+            (r) => MemoryRecord(
+              entityType: r.entityType,
+              path: r.path,
+              question: r.question,
+              answer: r.answer,
+              note: r.note,
+            ),
+          )
           .toList();
       final agent = KBRerankerAgent(provider!);
       final rankedIds = await agent.rerank(query, candidates);
       final byId = {for (final r in top) r.id!: r};
-      final reranked = rankedIds.map((id) => byId[id]).whereType<KBSearchResult>().toList();
+      final reranked = rankedIds
+          .map((id) => byId[id])
+          .whereType<KBSearchResult>()
+          .toList();
       // Append any remaining results in their original order.
       final rerankedIds = rankedIds.toSet();
-      final tail = merged.sublist(take).where((r) => !rerankedIds.contains(r.id)).toList();
+      final tail = merged
+          .sublist(take)
+          .where((r) => !rerankedIds.contains(r.id))
+          .toList();
       merged = [...reranked, ...tail];
     }
 
-    return KBTextSearchResult(
-      generatedTags: generatedTags,
-      results: merged,
-    );
+    return KBTextSearchResult(generatedTags: generatedTags, results: merged);
   }
 
   /// Collects all unique tags currently used in the knowledge base.
-  Set<String> _collectExistingTags() {
+  Future<Set<String>> _collectExistingTags() async {
     final tags = <String>{};
 
-    void collect(String type, String dirName) {
-      _forEachEntityFile(dirName, (_, content) {
+    Future<void> collect(String type) async {
+      await _forEachEntity(type, (_, content) {
         final result = _parseSearchResult(type, '', content);
         if (result != null) tags.addAll(result.tags);
       });
     }
 
-    collect('question', 'questions');
-    collect('answer', 'answers');
-    collect('note', 'notes');
+    await collect('question');
+    await collect('answer');
+    await collect('note');
 
     return tags.map((t) => t.toLowerCase()).toSet();
   }
 
-  void _forEachEntityFile(String dirName, void Function(File file, String content) action) {
-    final dir = Directory('${kbDir.path}/$dirName');
-    if (!dir.existsSync()) return;
-    for (final file in dir.listSync().whereType<File>().where((f) => f.path.endsWith('.md'))) {
+  Future<void> _forEachEntity(
+    String type,
+    void Function(String id, String content) action,
+  ) async {
+    for (final id in await storage.listEntityIds(type)) {
       try {
-        action(file, file.readAsStringSync());
+        final content = await storage.readEntity(type, id);
+        if (content == null) continue;
+        action(id, content);
       } catch (_) {}
     }
+  }
+
+  Future<void> _forEachResult(
+    Set<String> types,
+    void Function(String type, String id, String content, KBSearchResult result)
+    action,
+  ) async {
+    Future<void> scan(String type) async {
+      if (!types.contains(type.toLowerCase())) return;
+      await _forEachEntity(type, (id, content) {
+        final result = _parseSearchResult(
+          type,
+          storage.describeLocation(type, id),
+          content,
+        );
+        if (result == null) return;
+        action(type, id, content, result);
+      });
+    }
+
+    await scan('question');
+    await scan('answer');
+    await scan('note');
   }
 
   KBSearchResult? _parseSearchResult(String type, String path, String content) {
@@ -212,7 +262,11 @@ class KBSearchEngine {
     return null;
   }
 
-  List<String>? _matchingTags(Set<String> requested, List<String> recordTags, bool matchAll) {
+  List<String>? _matchingTags(
+    Set<String> requested,
+    List<String> recordTags,
+    bool matchAll,
+  ) {
     final normalized = recordTags.map((t) => t.toLowerCase()).toSet();
     final matched = requested.intersection(normalized).toList();
     if (matched.isEmpty) return null;
@@ -221,38 +275,30 @@ class KBSearchEngine {
   }
 
   /// Tokenizes [query] into searchable keywords and scans record text for hits.
-  (List<KBSearchResult>, Map<String, int>) _searchByKeywords(
+  Future<(List<KBSearchResult>, Map<String, int>)> _searchByKeywords(
     String query,
     List<String>? entityTypes,
-  ) {
+  ) async {
     final tokens = _tokenize(query);
     if (tokens.isEmpty) return (<KBSearchResult>[], <String, int>{});
 
-    final types = entityTypes?.map((t) => t.toLowerCase()).toSet() ??
+    final types =
+        entityTypes?.map((t) => t.toLowerCase()).toSet() ??
         const {'question', 'answer', 'note'};
     final results = <KBSearchResult>[];
     final hits = <String, int>{};
 
-    void scan(String type, String dirName) {
-      if (!types.contains(type.toLowerCase())) return;
-      _forEachEntityFile(dirName, (file, content) {
-        final result = _parseSearchResult(type, file.path, content);
-        if (result == null) return;
-        final text = _recordText(result).toLowerCase();
-        var count = 0;
-        for (final token in tokens) {
-          if (text.contains(token)) count++;
-        }
-        if (count > 0) {
-          results.add(result);
-          hits[result.path] = count;
-        }
-      });
-    }
-
-    scan('question', 'questions');
-    scan('answer', 'answers');
-    scan('note', 'notes');
+    await _forEachResult(types, (type, id, content, result) {
+      final text = _recordText(result).toLowerCase();
+      var count = 0;
+      for (final token in tokens) {
+        if (text.contains(token)) count++;
+      }
+      if (count > 0) {
+        results.add(result);
+        hits[result.path] = count;
+      }
+    });
 
     return (results, hits);
   }

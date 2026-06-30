@@ -15,8 +15,10 @@ class _FakeTagProvider implements LlmProvider {
   }
 
   @override
-  Future<String> chatMessages(List<LlmMessage> messages, {String? model}) async =>
-      chat(messages.first.content);
+  Future<String> chatMessages(
+    List<LlmMessage> messages, {
+    String? model,
+  }) async => chat(messages.first.content);
 }
 
 void main() {
@@ -25,7 +27,7 @@ void main() {
 
   setUp(() {
     tmpDir = Directory.systemTemp.createTempSync('kb_text_search_');
-    engine = KBSearchEngine(tmpDir, provider: _FakeTagProvider());
+    engine = KBSearchEngine.file(tmpDir, provider: _FakeTagProvider());
 
     Directory('${tmpDir.path}/questions').createSync(recursive: true);
     Directory('${tmpDir.path}/answers').createSync(recursive: true);
@@ -69,21 +71,29 @@ Use the test package.
   });
 
   test('searchByText generates tags and returns matching records', () async {
-    final result = await engine.searchByText('How do I write unit tests in Dart?');
+    final result = await engine.searchByText(
+      'How do I write unit tests in Dart?',
+    );
     expect(result.generatedTags, containsAll(['unit-tests', 'dart']));
     expect(result.results.length, greaterThanOrEqualTo(1));
     expect(result.results.map((r) => r.id).toSet(), contains('q_0001'));
   });
 
   test('searchByText returns empty result when no tags match', () async {
-    final engine2 = KBSearchEngine(tmpDir, provider: _AlwaysUnknownTagsProvider());
+    final engine2 = KBSearchEngine.file(
+      tmpDir,
+      provider: _AlwaysUnknownTagsProvider(),
+    );
     final result = await engine2.searchByText('kubernetes deployments');
     expect(result.results, isEmpty);
   });
 
   test('searchByText throws when provider is missing', () async {
-    final engineWithoutProvider = KBSearchEngine(tmpDir);
-    expect(() => engineWithoutProvider.searchByText('dart tests'), throwsStateError);
+    final engineWithoutProvider = KBSearchEngine.file(tmpDir);
+    expect(
+      () => engineWithoutProvider.searchByText('dart tests'),
+      throwsStateError,
+    );
   });
 }
 
@@ -92,9 +102,12 @@ class _AlwaysUnknownTagsProvider implements LlmProvider {
   String get defaultModel => 'fake';
 
   @override
-  Future<String> chat(String prompt, {String? model}) async => '{"tags": ["kubernetes"]}';
+  Future<String> chat(String prompt, {String? model}) async =>
+      '{"tags": ["kubernetes"]}';
 
   @override
-  Future<String> chatMessages(List<LlmMessage> messages, {String? model}) async =>
-      chat(messages.first.content);
+  Future<String> chatMessages(
+    List<LlmMessage> messages, {
+    String? model,
+  }) async => chat(messages.first.content);
 }

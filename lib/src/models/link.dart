@@ -6,9 +6,9 @@ class Link {
   const Link({required this.url, required this.title});
 
   factory Link.fromJson(Map<String, dynamic> json) => Link(
-        url: json['url'] as String? ?? '',
-        title: json['title'] as String? ?? '',
-      );
+    url: json['url'] as String? ?? '',
+    title: json['title'] as String? ?? '',
+  );
 
   Map<String, dynamic> toJson() => {'url': url, 'title': title};
 

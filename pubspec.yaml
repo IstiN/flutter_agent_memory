@@ -19,6 +19,7 @@ dependencies:
   http: ^1.6.0
   path: ^1.9.1
   meta: ^1.18.3
+  sqlite3: ^2.4.0
   xml: ^7.0.0
 
 dev_dependencies:

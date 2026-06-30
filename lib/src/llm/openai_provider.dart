@@ -37,7 +37,10 @@ class OpenAiProvider implements LlmProvider {
       chatMessages([LlmMessage(role: 'user', content: prompt)], model: model);
 
   @override
-  Future<String> chatMessages(List<LlmMessage> messages, {String? model}) async {
+  Future<String> chatMessages(
+    List<LlmMessage> messages, {
+    String? model,
+  }) async {
     final payload = _buildPayload(messages, model ?? defaultModel);
     final response = await _client.post(
       Uri.parse(baseUrl),

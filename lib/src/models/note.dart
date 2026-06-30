@@ -50,26 +50,32 @@ class Note with KbEntityJson {
   });
 
   factory Note.fromJson(Map<String, dynamic> json) => Note(
-        id: json['id'] as String? ?? '',
-        text: json['text'] as String? ?? '',
-        area: json['area'] as String? ?? '',
-        topics: stringListFromJson(json['topics']),
-        tags: stringListFromJson(json['tags']),
-        author: json['author'] as String? ?? '',
-        date: json['date'] as String? ?? '',
-        answersQuestions: stringListFromJson(json['answersQuestions']),
-        links: linkListFromJson(json['links']),
-        accessCount: (json['accessCount'] as num?)?.toInt() ?? 0,
-        lastAccessedAt: json['lastAccessedAt'] as String?,
-        importance: (json['importance'] as num?)?.toDouble() ?? 0.5,
-        memoryType: MemoryType.normalize(json['memoryType'] as String?),
-        validFrom: json['validFrom'] as String?,
-        validUntil: json['validUntil'] as String?,
-        level: (json['level'] as num?)?.toInt() ?? MemoryLevel.raw,
-        relations: _relationsFromJson(json['relations'] as List<dynamic>? ?? [], json['id'] as String? ?? ''),
-      );
+    id: json['id'] as String? ?? '',
+    text: json['text'] as String? ?? '',
+    area: json['area'] as String? ?? '',
+    topics: stringListFromJson(json['topics']),
+    tags: stringListFromJson(json['tags']),
+    author: json['author'] as String? ?? '',
+    date: json['date'] as String? ?? '',
+    answersQuestions: stringListFromJson(json['answersQuestions']),
+    links: linkListFromJson(json['links']),
+    accessCount: (json['accessCount'] as num?)?.toInt() ?? 0,
+    lastAccessedAt: json['lastAccessedAt'] as String?,
+    importance: (json['importance'] as num?)?.toDouble() ?? 0.5,
+    memoryType: MemoryType.normalize(json['memoryType'] as String?),
+    validFrom: json['validFrom'] as String?,
+    validUntil: json['validUntil'] as String?,
+    level: (json['level'] as num?)?.toInt() ?? MemoryLevel.raw,
+    relations: _relationsFromJson(
+      json['relations'] as List<dynamic>? ?? [],
+      json['id'] as String? ?? '',
+    ),
+  );
 
-  static List<Relation> _relationsFromJson(List<dynamic> json, String sourceId) {
+  static List<Relation> _relationsFromJson(
+    List<dynamic> json,
+    String sourceId,
+  ) {
     return json
         .map((e) => e.toString())
         .where((s) => s.isNotEmpty)
@@ -78,15 +84,15 @@ class Note with KbEntityJson {
   }
 
   Map<String, dynamic> toJson() => {
-        ...toBaseJson(),
-        if (answersQuestions.isNotEmpty) 'answersQuestions': answersQuestions,
-        if (memoryType != null && memoryType!.isNotEmpty) 'memoryType': memoryType,
-        if (validFrom != null && validFrom!.isNotEmpty) 'validFrom': validFrom,
-        if (validUntil != null && validUntil!.isNotEmpty) 'validUntil': validUntil,
-        if (level != MemoryLevel.raw) 'level': level,
-        if (relations.isNotEmpty)
-          'relations': relations.map((r) => r.toFrontmatterString()).toList(),
-      };
+    ...toBaseJson(),
+    if (answersQuestions.isNotEmpty) 'answersQuestions': answersQuestions,
+    if (memoryType != null && memoryType!.isNotEmpty) 'memoryType': memoryType,
+    if (validFrom != null && validFrom!.isNotEmpty) 'validFrom': validFrom,
+    if (validUntil != null && validUntil!.isNotEmpty) 'validUntil': validUntil,
+    if (level != MemoryLevel.raw) 'level': level,
+    if (relations.isNotEmpty)
+      'relations': relations.map((r) => r.toFrontmatterString()).toList(),
+  };
 
   Note copyWith({
     String? id,
@@ -106,27 +112,27 @@ class Note with KbEntityJson {
     String? validUntil,
     int? level,
     List<Relation>? relations,
-  }) =>
-      Note(
-        id: id ?? this.id,
-        text: text ?? this.text,
-        area: area ?? this.area,
-        topics: topics ?? this.topics,
-        tags: tags ?? this.tags,
-        author: author ?? this.author,
-        date: date ?? this.date,
-        answersQuestions: answersQuestions ?? this.answersQuestions,
-        links: links ?? this.links,
-        accessCount: accessCount ?? this.accessCount,
-        lastAccessedAt: lastAccessedAt ?? this.lastAccessedAt,
-        importance: importance ?? this.importance,
-        memoryType: memoryType ?? this.memoryType,
-        validFrom: validFrom ?? this.validFrom,
-        validUntil: validUntil ?? this.validUntil,
-        level: level ?? this.level,
-        relations: relations ?? this.relations,
-      );
+  }) => Note(
+    id: id ?? this.id,
+    text: text ?? this.text,
+    area: area ?? this.area,
+    topics: topics ?? this.topics,
+    tags: tags ?? this.tags,
+    author: author ?? this.author,
+    date: date ?? this.date,
+    answersQuestions: answersQuestions ?? this.answersQuestions,
+    links: links ?? this.links,
+    accessCount: accessCount ?? this.accessCount,
+    lastAccessedAt: lastAccessedAt ?? this.lastAccessedAt,
+    importance: importance ?? this.importance,
+    memoryType: memoryType ?? this.memoryType,
+    validFrom: validFrom ?? this.validFrom,
+    validUntil: validUntil ?? this.validUntil,
+    level: level ?? this.level,
+    relations: relations ?? this.relations,
+  );
 
   @override
-  String toString() => 'Note($id L$level${memoryType != null ? ' $memoryType' : ''} by $author)';
+  String toString() =>
+      'Note($id L$level${memoryType != null ? ' $memoryType' : ''} by $author)';
 }

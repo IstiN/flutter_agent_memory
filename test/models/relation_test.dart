@@ -4,7 +4,11 @@ import 'package:test/test.dart';
 void main() {
   group('Relation', () {
     test('serializes relation without weight', () {
-      const relation = Relation(source: 'n_0001', target: 'n_0002', type: RelationType.supports);
+      const relation = Relation(
+        source: 'n_0001',
+        target: 'n_0002',
+        type: RelationType.supports,
+      );
       expect(relation.toFrontmatterString(), 'supports|n_0002');
     });
 
@@ -19,7 +23,10 @@ void main() {
     });
 
     test('parses compact frontmatter string', () {
-      final relation = Relation.fromFrontmatterString('n_0001', 'contradicts|n_0003');
+      final relation = Relation.fromFrontmatterString(
+        'n_0001',
+        'contradicts|n_0003',
+      );
       expect(relation.source, 'n_0001');
       expect(relation.target, 'n_0003');
       expect(relation.type, 'contradicts');
@@ -27,7 +34,10 @@ void main() {
     });
 
     test('parses compact frontmatter string with weight', () {
-      final relation = Relation.fromFrontmatterString('n_0001', 'supports|n_0002|1.50');
+      final relation = Relation.fromFrontmatterString(
+        'n_0001',
+        'supports|n_0002|1.50',
+      );
       expect(relation.type, 'supports');
       expect(relation.target, 'n_0002');
       expect(relation.weight, 1.5);

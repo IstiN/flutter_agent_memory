@@ -10,15 +10,18 @@ void main() {
   test('sends correct OpenAI chat completions payload', () async {
     late Map<String, dynamic> capturedBody;
     final client = MockClient((request) async {
-      expect(request.headers[HttpHeaders.authorizationHeader], 'Bearer test-key');
+      expect(
+        request.headers[HttpHeaders.authorizationHeader],
+        'Bearer test-key',
+      );
       capturedBody = jsonDecode(request.body) as Map<String, dynamic>;
       return http.Response(
         jsonEncode({
           'choices': [
             {
-              'message': {'role': 'assistant', 'content': 'Hello'}
-            }
-          ]
+              'message': {'role': 'assistant', 'content': 'Hello'},
+            },
+          ],
         }),
         200,
       );
@@ -38,7 +41,7 @@ void main() {
     expect(capturedBody['temperature'], 0.5);
     expect(capturedBody['max_completion_tokens'], 1024);
     expect(capturedBody['messages'], [
-      {'role': 'user', 'content': 'Say hi'}
+      {'role': 'user', 'content': 'Say hi'},
     ]);
   });
 
@@ -50,9 +53,9 @@ void main() {
         jsonEncode({
           'choices': [
             {
-              'message': {'role': 'assistant', 'content': ''}
-            }
-          ]
+              'message': {'role': 'assistant', 'content': ''},
+            },
+          ],
         }),
         200,
       );

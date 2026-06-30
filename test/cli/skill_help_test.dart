@@ -9,10 +9,16 @@ void main() {
       final markdown = buildSkillHelp(format: 'markdown');
 
       for (final command in agentMemoryCommands) {
-        expect(markdown, contains('`${command.name}`'),
-            reason: 'Skill help should reference command "${command.name}"');
-        expect(markdown, contains(command.description),
-            reason: 'Skill help should describe command "${command.name}"');
+        expect(
+          markdown,
+          contains('`${command.name}`'),
+          reason: 'Skill help should reference command "${command.name}"',
+        );
+        expect(
+          markdown,
+          contains(command.description),
+          reason: 'Skill help should describe command "${command.name}"',
+        );
       }
 
       expect(markdown, contains('What the framework does'));
@@ -35,8 +41,11 @@ void main() {
           .toSet();
 
       for (final command in agentMemoryCommands) {
-        expect(commandNames, contains(command.name),
-            reason: 'JSON skill help should contain command "${command.name}"');
+        expect(
+          commandNames,
+          contains(command.name),
+          reason: 'JSON skill help should contain command "${command.name}"',
+        );
       }
     });
   });
