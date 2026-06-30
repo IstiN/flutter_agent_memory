@@ -4,7 +4,7 @@ version: 0.1.0
 repository: https://github.com/IstiN/flutter_agent_memory
 
 environment:
-  sdk: '>=3.6.0 <4.0.0'
+  sdk: '>=3.12.0 <4.0.0'
 
 dependencies:
   args: ^2.7.0

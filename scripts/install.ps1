@@ -12,7 +12,7 @@ $RepoDir = "$InstallDir\repo"
 $BinaryPath = "$BinDir\agent_memory.exe"
 $WrapperPath = "$BinDir\agent_memory.bat"
 
-$DartVersion = if ($env:FAM_DART_VERSION) { $env:FAM_DART_VERSION } else { "3.10.8" }
+$DartVersion = if ($env:FAM_DART_VERSION) { $env:FAM_DART_VERSION } else { "3.12.2" }
 
 $Arch = switch ($env:PROCESSOR_ARCHITECTURE) {
     "ARM64" { "arm64" }

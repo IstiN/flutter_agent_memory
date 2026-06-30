@@ -20,7 +20,7 @@ DART_SDK_DIR="$INSTALL_DIR/dart-sdk"
 REPO_DIR="$INSTALL_DIR/repo"
 BINARY_PATH="$INTERNAL_BIN_DIR/agent_memory-bin"
 
-DART_VERSION="${FAM_DART_VERSION:-3.10.8}"
+DART_VERSION="${FAM_DART_VERSION:-3.12.2}"
 
 info() { echo -e "${GREEN}$1${NC}"; }
 warn() { echo -e "${YELLOW}$1${NC}"; }

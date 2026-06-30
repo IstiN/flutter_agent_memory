@@ -21,7 +21,7 @@ jobs:
       - name: Setup Dart
         uses: dart-lang/setup-dart@v1
         with:
-          sdk: '3.10.8'
+          sdk: stable
 
       - name: Install dependencies
         run: dart pub get
@@ -47,7 +47,7 @@ jobs:
       - name: Setup Dart
         uses: dart-lang/setup-dart@v1
         with:
-          sdk: '3.10.8'
+          sdk: stable
 
       - name: Run installer with local repo
         run: FAM_INSTALL_DIR=/tmp/fam_ci FAM_BIN_DIR=/tmp/fam_ci/bin FAM_REPO_DIR="$GITHUB_WORKSPACE" bash scripts/install.sh
@@ -76,7 +76,7 @@ jobs:
       - name: Setup Dart
         uses: dart-lang/setup-dart@v1
         with:
-          sdk: '3.10.8'
+          sdk: stable
 
       - name: Install dependencies
         run: dart pub get
