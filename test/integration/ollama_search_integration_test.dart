@@ -77,7 +77,7 @@ void main() {
       final searchQueries = [
         _SearchExpectation(
           query: 'How do I manage state in Flutter?',
-          expectedKeywordsInTags: ['flutter', 'state'],
+          expectedKeywordsInTags: ['flutter', 'state', 'state-management'],
           expectedResultKeywordsInTitle: ['state', 'riverpod', 'bloc'],
         ),
         _SearchExpectation(

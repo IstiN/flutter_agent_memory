@@ -8,6 +8,7 @@ import 'pages/graph_page.dart';
 import 'pages/records_page.dart';
 import 'pages/search_page.dart';
 import 'pages/settings_page.dart';
+import 'theme/app_theme.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -29,17 +30,9 @@ class DemoApp extends StatelessWidget {
     return MaterialApp(
       title: 'flutter_agent_memory demo',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
-        useMaterial3: true,
-      ),
-      darkTheme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: Colors.blue,
-          brightness: Brightness.dark,
-        ),
-        useMaterial3: true,
-      ),
+      themeMode: ThemeMode.dark,
+      theme: AppTheme.dark,
+      darkTheme: AppTheme.dark,
       home: HomePage(kbService: kbService),
     );
   }
@@ -67,32 +60,111 @@ class _HomePageState extends State<HomePage> {
     ];
 
     return Scaffold(
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text('flutter_agent_memory demo'),
+        title: Row(
+          children: [
+            Container(
+              width: 10,
+              height: 10,
+              decoration: const BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: LinearGradient(
+                  colors: [AppColors.primary, AppColors.secondary],
+                ),
+              ),
+            ),
+            const SizedBox(width: 10),
+            ShaderMask(
+              shaderCallback: (bounds) => const LinearGradient(
+                colors: [AppColors.primaryGlow, AppColors.secondaryGlow],
+              ).createShader(bounds),
+              child: const Text(
+                'flutter_agent_memory',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+            const Text(
+              ' demo',
+              style: TextStyle(
+                color: AppColors.textMuted,
+                fontWeight: FontWeight.w400,
+              ),
+            ),
+          ],
+        ),
         actions: [
           ListenableBuilder(
             listenable: widget.kbService,
             builder: (context, _) {
               final configured = widget.kbService.providerService.provider != null;
-              return Icon(
-                Icons.circle,
-                color: configured ? Colors.green : Colors.orange,
-                size: 12,
+              return Container(
+                margin: const EdgeInsets.only(right: 16),
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                decoration: BoxDecoration(
+                  color: configured
+                      ? AppColors.success.withValues(alpha: 0.12)
+                      : AppColors.warning.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: configured
+                        ? AppColors.success.withValues(alpha: 0.4)
+                        : AppColors.warning.withValues(alpha: 0.4),
+                  ),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      configured ? Icons.bolt : Icons.bolt_outlined,
+                      size: 14,
+                      color: configured ? AppColors.success : AppColors.warning,
+                    ),
+                    const SizedBox(width: 5),
+                    Text(
+                      configured ? 'LLM ready' : 'LLM off',
+                      style: TextStyle(
+                        color: configured ? AppColors.success : AppColors.warning,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
               );
             },
           ),
-          const SizedBox(width: 16),
         ],
       ),
       body: pages[_index],
       bottomNavigationBar: NavigationBar(
+        backgroundColor: AppColors.surface.withValues(alpha: 0.95),
         selectedIndex: _index,
         onDestinationSelected: (i) => setState(() => _index = i),
         destinations: const [
-          NavigationDestination(icon: Icon(Icons.library_books), label: 'Records'),
-          NavigationDestination(icon: Icon(Icons.search), label: 'Search'),
-          NavigationDestination(icon: Icon(Icons.account_tree), label: 'Graph'),
-          NavigationDestination(icon: Icon(Icons.settings), label: 'Settings'),
+          NavigationDestination(
+            icon: Icon(Icons.library_books_outlined),
+            selectedIcon: Icon(Icons.library_books),
+            label: 'Records',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.search_outlined),
+            selectedIcon: Icon(Icons.search),
+            label: 'Search',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.account_tree_outlined),
+            selectedIcon: Icon(Icons.account_tree),
+            label: 'Graph',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.settings_outlined),
+            selectedIcon: Icon(Icons.settings),
+            label: 'Settings',
+          ),
         ],
       ),
     );

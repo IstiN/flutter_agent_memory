@@ -7,11 +7,11 @@ import 'settings_service.dart';
 /// Holds the active memory store, search engine, and graph builder.
 ///
 /// Recreates the store/engine when the provider settings change while keeping
-/// the same browser storage backend.
+/// the same storage backend.
 class KbService extends ChangeNotifier {
   final SettingsService settings;
   final ProviderService providerService;
-  final WebKbStorage _storage = WebKbStorage();
+  final KbStorage _storage;
 
   late KBMemoryStore store;
   late KBSearchEngine engine;
@@ -19,7 +19,11 @@ class KbService extends ChangeNotifier {
 
   KbStorage get storage => _storage;
 
-  KbService(this.settings, this.providerService) {
+  KbService(
+    this.settings,
+    this.providerService, {
+    KbStorage? storage,
+  }) : _storage = storage ?? WebKbStorage() {
     _rebuild();
   }
 
