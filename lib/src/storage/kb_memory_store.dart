@@ -1,9 +1,11 @@
 import 'dart:io';
 
+import '../agents/kb_consolidation_agent.dart';
 import '../agents/kb_tag_generator_agent.dart';
 import '../llm/llm_provider.dart';
 import '../models/analysis_result.dart';
 import '../models/answer.dart';
+import '../models/consolidation_result.dart';
 import '../models/kb_context.dart';
 import '../models/note.dart';
 import '../models/question.dart';
@@ -461,6 +463,68 @@ class KBMemoryStore {
     }
   }
 
+  /// Consolidates the top [limit] memory records into a high-level summary and
+  /// reusable skill cards using an LLM.
+  Future<ConsolidationResult> consolidate({
+    String extraInstructions = '',
+    int limit = 100,
+  }) async {
+    if (provider == null) {
+      throw StateError('An LLM provider is required for consolidation.');
+    }
+
+    final agent = KBConsolidationAgent(provider!);
+    final records = list(limit: limit);
+    final existingSummary = _readExistingSummary();
+
+    final result = await agent.consolidate(
+      records,
+      existingSummary: existingSummary,
+      extraInstructions: extraInstructions,
+    );
+
+    _writeConsolidation(result);
+    return result;
+  }
+
+  String? _readExistingSummary() {
+    final file = File('${kbDir.path}/MEMORY.md');
+    if (!file.existsSync()) return null;
+    final text = file.readAsStringSync().trim();
+    return text.isEmpty ? null : text;
+  }
+
+  void _writeConsolidation(ConsolidationResult result) {
+    final memoryFile = File('${kbDir.path}/MEMORY.md');
+    memoryFile.writeAsStringSync(result.summary);
+
+    final skillsDir = Directory('${kbDir.path}/skills');
+    if (result.skills.isEmpty) {
+      if (skillsDir.existsSync()) {
+        for (final f in skillsDir.listSync().whereType<File>()) {
+          f.deleteSync();
+        }
+      }
+      return;
+    }
+
+    skillsDir.createSync(recursive: true);
+    for (var i = 0; i < result.skills.length; i++) {
+      final skill = result.skills[i];
+      final id = 'sk_${(i + 1).toString().padLeft(4, '0')}';
+      final file = File('${skillsDir.path}/$id.md');
+      final buffer = StringBuffer()
+        ..writeln('---')
+        ..writeln('id: $id')
+        ..writeln('title: ${skill.title}')
+        ..writeln('tags: ${skill.tags.join(', ')}')
+        ..writeln('---')
+        ..writeln()
+        ..writeln(skill.instruction);
+      file.writeAsStringSync(buffer.toString());
+    }
+  }
+
   String _pad(int value) => value.toString().padLeft(4, '0');
 }
 
@@ -497,6 +561,8 @@ class MemoryRecord {
   String get id => question?.id ?? answer?.id ?? note?.id ?? '';
 
   String get title => question?.text ?? answer?.text ?? note?.text ?? '';
+
+  String get text => title;
 
   String get author => question?.author ?? answer?.author ?? note?.author ?? '';
 

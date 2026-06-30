@@ -193,6 +193,26 @@ Future<void> _memory(ArgResults args) async {
       await _memoryRank(sub);
     case 'update':
       await _memoryUpdate(sub);
+    case 'consolidate':
+      await _memoryConsolidate(sub);
+  }
+}
+
+Future<void> _memoryConsolidate(ArgResults args) async {
+  final outputPath = args['output'] as String;
+  final limit = int.tryParse(args['limit'] as String) ?? 100;
+  final extraInstructions = args['instructions'] as String? ?? '';
+
+  final provider = _createProvider(args, args['provider'] as String);
+  final store = KBMemoryStore(Directory(outputPath), provider: provider, source: 'agent');
+  final result = await store.consolidate(
+    extraInstructions: extraInstructions,
+    limit: limit,
+  );
+
+  stdout.writeln('Consolidated ${result.skills.length} skill(s) into $outputPath/MEMORY.md');
+  for (final skill in result.skills) {
+    stdout.writeln('  - ${skill.id}: ${skill.title}');
   }
 }
 

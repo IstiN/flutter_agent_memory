@@ -1,5 +1,6 @@
 export 'analysis_result.dart';
 export 'answer.dart';
+export 'consolidation_result.dart';
 export 'kb_context.dart';
 export 'kb_processing_mode.dart';
 export 'kb_result.dart';

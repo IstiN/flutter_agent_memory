@@ -90,6 +90,11 @@ final List<CliCommand> agentMemoryCommands = [
         description: 'Update text, tags, or importance of an existing memory record.',
         buildParser: _memoryUpdateCommandParser,
       ),
+      CliCommand(
+        name: 'consolidate',
+        description: 'Consolidate memory records into a high-level MEMORY.md summary and skill cards.',
+        buildParser: _memoryConsolidateCommandParser,
+      ),
     ],
   ),
 ];
@@ -249,6 +254,15 @@ ArgParser _memoryUpdateCommandParser() => ArgParser()
   ..addOption('api-key', help: 'API key')
   ..addOption('base-url', help: 'Base URL')
   ..addOption('model', help: 'Model name');
+
+ArgParser _memoryConsolidateCommandParser() => ArgParser()
+  ..addOption('output', abbr: 'o', defaultsTo: 'kb', help: 'Knowledge-base directory')
+  ..addOption('limit', defaultsTo: '100', help: 'Max records to consolidate')
+  ..addOption('provider', defaultsTo: 'openai', help: 'LLM provider: openai, openrouter or ollama')
+  ..addOption('api-key', help: 'API key')
+  ..addOption('base-url', help: 'Base URL')
+  ..addOption('model', help: 'Model name')
+  ..addOption('instructions', help: 'Extra instructions for the consolidation agent');
 
 ArgParser _skillCommandParser() => ArgParser()
   ..addOption('format', abbr: 'f', defaultsTo: 'markdown', help: 'Output format: markdown or json');
