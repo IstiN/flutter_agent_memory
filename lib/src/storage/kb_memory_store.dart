@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import '../agents/kb_consolidation_agent.dart';
 import '../agents/kb_secret_redaction_agent.dart';
 import '../agents/kb_tag_generator_agent.dart';
@@ -13,7 +11,8 @@ import '../models/question.dart';
 import '../models/relation.dart';
 import '../utils/date_utils.dart';
 import '../utils/slugify.dart';
-import 'file_kb_storage.dart';
+import 'file_kb_storage_factory.dart'
+    if (dart.library.html) 'file_kb_storage_factory_stub.dart';
 import 'kb_file_parser.dart';
 import 'kb_graph_builder.dart';
 import 'kb_markdown_renderer.dart';
@@ -43,10 +42,8 @@ class KBMemoryStore {
     LlmProvider? provider,
     String source = 'agent',
   }) {
-    // Accept either a Directory or a path string for convenience.
-    final directory = kbDir is String ? Directory(kbDir) : kbDir;
     return KBMemoryStore(
-      FileKbStorage(directory),
+      createFileKbStorage(kbDir),
       provider: provider,
       source: source,
     );

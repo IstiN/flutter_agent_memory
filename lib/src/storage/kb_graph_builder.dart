@@ -1,10 +1,9 @@
-import 'dart:io';
-
 import '../models/memory_level.dart';
 import '../models/relation.dart';
 import '../utils/frontmatter.dart';
 import '../utils/slugify.dart';
-import 'file_kb_storage.dart';
+import 'file_kb_storage_factory.dart'
+    if (dart.library.html) 'file_kb_storage_factory_stub.dart';
 import 'kb_storage.dart';
 
 /// Builds an Obsidian-compatible graph view over the Markdown knowledge base.
@@ -25,8 +24,7 @@ class KBGraphBuilder {
 
   /// Creates a graph builder for the classic Markdown file backend.
   factory KBGraphBuilder.file(dynamic kbDir) {
-    final directory = kbDir is String ? Directory(kbDir) : kbDir;
-    return KBGraphBuilder(FileKbStorage(directory));
+    return KBGraphBuilder(createFileKbStorage(kbDir));
   }
 
   /// Regenerates `GRAPH.md` in the knowledge-base root.

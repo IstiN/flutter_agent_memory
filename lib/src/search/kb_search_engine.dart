@@ -1,9 +1,8 @@
-import 'dart:io';
-
 import '../agents/kb_reranker_agent.dart';
 import '../agents/kb_tag_generator_agent.dart';
 import '../llm/llm_provider.dart';
-import '../storage/file_kb_storage.dart';
+import '../storage/file_kb_storage_factory.dart'
+    if (dart.library.html) '../storage/file_kb_storage_factory_stub.dart';
 import '../storage/kb_file_parser.dart';
 import '../storage/kb_memory_store.dart' show MemoryRecord;
 import '../storage/kb_storage.dart';
@@ -20,8 +19,7 @@ class KBSearchEngine {
 
   /// Creates a search engine for the classic Markdown file backend.
   factory KBSearchEngine.file(dynamic kbDir, {LlmProvider? provider}) {
-    final directory = kbDir is String ? Directory(kbDir) : kbDir;
-    return KBSearchEngine(FileKbStorage(directory), provider: provider);
+    return KBSearchEngine(createFileKbStorage(kbDir), provider: provider);
   }
 
   /// Returns records whose tags contain all (matchAll=true) or any

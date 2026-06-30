@@ -1,0 +1,34 @@
+name: demo
+description: Flutter web demo for flutter_agent_memory.
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.12.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  cupertino_icons: ^1.0.8
+  flutter_agent_memory:
+    path: ..
+  flutter_markdown: ^0.7.4
+  shared_preferences: ^2.2.3
+  url_launcher: ^6.3.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - packages/flutter_agent_memory/src/agents/prompts/kb_analysis.xml
+    - packages/flutter_agent_memory/src/agents/prompts/kb_aggregation.xml
+    - packages/flutter_agent_memory/src/agents/prompts/kb_consolidation.xml
+    - packages/flutter_agent_memory/src/agents/prompts/kb_qa_mapping.xml
+    - packages/flutter_agent_memory/src/agents/prompts/kb_reranker.xml
+    - packages/flutter_agent_memory/src/agents/prompts/kb_tag_generator.xml

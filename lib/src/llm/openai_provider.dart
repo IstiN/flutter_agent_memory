@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:io';
 
 import 'package:http/http.dart' as http;
 
@@ -45,17 +44,16 @@ class OpenAiProvider implements LlmProvider {
     final response = await _client.post(
       Uri.parse(baseUrl),
       headers: {
-        HttpHeaders.contentTypeHeader: 'application/json',
-        HttpHeaders.authorizationHeader: 'Bearer $apiKey',
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $apiKey',
         ...customHeaders,
       },
       body: jsonEncode(payload),
     );
 
     if (response.statusCode != 200) {
-      throw HttpException(
+      throw Exception(
         'OpenAI request failed: ${response.statusCode} ${response.body}',
-        uri: Uri.parse(baseUrl),
       );
     }
 

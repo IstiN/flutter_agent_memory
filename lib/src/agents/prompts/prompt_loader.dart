@@ -1,7 +1,9 @@
-import 'dart:io';
-import 'dart:isolate';
+import 'dart:async';
 
 import 'package:xml/xml.dart';
+
+import 'prompt_loader_default.dart'
+    if (dart.library.html) 'prompt_loader_default_stub.dart';
 
 /// Loads prompt templates stored as XML files under
 /// `lib/src/agents/prompts/`.
@@ -17,8 +19,24 @@ import 'package:xml/xml.dart';
 ///
 /// The block is included only when the `extraInstructions` variable is present
 /// and non-empty.
+///
+/// On non-VM platforms the default file-based loader is unavailable. Call
+/// [setLoader] at startup to inject a host-provided loader (for example,
+/// Flutter's `rootBundle.loadString`).
 class PromptLoader {
   static final Map<String, String> _cache = {};
+  static Future<String> Function(String name)? _loader;
+
+  /// Overrides the default prompt loader.
+  ///
+  /// The callback receives the XML file name (e.g. `kb_analysis.xml`) and
+  /// should return its raw content.
+  static void setLoader(Future<String> Function(String name) loader) {
+    _loader = loader;
+    _cache.clear();
+  }
+
+  static Future<String> Function(String name) get _defaultLoader => loadPromptFile;
 
   /// Loads and renders the prompt named [name] (e.g. `kb_analysis.xml`).
   ///
@@ -30,51 +48,23 @@ class PromptLoader {
       return _render(cached, variables);
     }
 
-    final file = await _resolvePromptFile(name);
-    final raw = await file.readAsString();
+    final raw = await (_loader ?? _defaultLoader)(name);
     _cache[name] = raw;
     return _render(raw, variables);
   }
 
-  /// Synchronous version. Use when calling from already-async code that prefers
-  /// to avoid an extra await.
+  /// Synchronous version is not supported on all platforms.
+  ///
+  /// Use [load] instead. This method is kept for API compatibility and will
+  /// throw on platforms where the default loader is asynchronous.
   static String loadSync(String name, Map<String, String> variables) {
     final cached = _cache[name];
     if (cached != null) {
       return _render(cached, variables);
     }
-
-    final file = _resolvePromptFileSync(name);
-    final raw = file.readAsStringSync();
-    _cache[name] = raw;
-    return _render(raw, variables);
-  }
-
-  static Future<File> _resolvePromptFile(String name) async {
-    final packageUri = _promptUri(name);
-    final resolved = await Isolate.resolvePackageUri(packageUri);
-    return _fileFromResolved(resolved, packageUri);
-  }
-
-  static File _resolvePromptFileSync(String name) {
-    final packageUri = _promptUri(name);
-    final resolved = Isolate.resolvePackageUriSync(packageUri);
-    return _fileFromResolved(resolved, packageUri);
-  }
-
-  static Uri _promptUri(String name) => Uri.parse(
-    'package:flutter_agent_memory/src/agents/prompts/$name',
-  );
-
-  static File _fileFromResolved(Uri? resolved, Uri packageUri) {
-    if (resolved == null) {
-      throw StateError('Could not resolve prompt asset: $packageUri');
-    }
-    final file = File.fromUri(resolved);
-    if (!file.existsSync()) {
-      throw StateError('Prompt file not found: ${file.path}');
-    }
-    return file;
+    throw UnsupportedError(
+      'PromptLoader.loadSync is not supported on this platform. Use load().',
+    );
   }
 
   static String _render(String raw, Map<String, String> variables) {

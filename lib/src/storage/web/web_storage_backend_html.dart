@@ -1,6 +1,7 @@
 // ignore: deprecated_member_use
 import 'dart:html';
 
+export 'web_storage_backend.dart';
 import 'web_storage_backend.dart';
 
 /// Browser `window.localStorage` implementation of [WebStorageBackend].
