@@ -1,13 +1,65 @@
 #!/bin/bash
 # Pre-commit hook for flutter_agent_memory.
-# Runs static analysis and the full test suite before allowing a commit.
+# Runs static analysis, tests with coverage, coverage ratchet, and code
+# duplication check before allowing a commit.
+# To skip (emergency only): git commit --no-verify
 
-set -e
+set -euo pipefail
 
+cd "$(git rev-parse --show-toplevel)"
+
+unset GIT_DIR GIT_INDEX_FILE GIT_WORK_TREE 2>/dev/null || true
+
+# ═══════════════════════════════════════════════════════════════════════════
+# 1. STATIC ANALYSIS
+# ═══════════════════════════════════════════════════════════════════════════
 echo "[pre-commit] Running dart analyze..."
 dart analyze
 
-echo "[pre-commit] Running dart test..."
-dart test
+# ═══════════════════════════════════════════════════════════════════════════
+# 2. TESTS WITH COVERAGE
+# ═══════════════════════════════════════════════════════════════════════════
+echo "[pre-commit] Running dart test --coverage..."
+rm -rf coverage
+dart test --coverage=coverage
+
+echo "[pre-commit] Formatting coverage to lcov..."
+dart run coverage:format_coverage --lcov -i coverage -o coverage/lcov.info
+
+# ═══════════════════════════════════════════════════════════════════════════
+# 3. COVERAGE RATCHET (lib/ + bin/ only)
+# ═══════════════════════════════════════════════════════════════════════════
+echo "[pre-commit] Checking coverage ratchet..."
+python3 scripts/coverage_check.py
+
+# ═══════════════════════════════════════════════════════════════════════════
+# 4. CODE DUPLICATION GUARD
+# ═══════════════════════════════════════════════════════════════════════════
+DUP_THRESHOLD=5.0
+if command -v jscpd >/dev/null 2>&1; then
+  echo "[pre-commit] Checking code duplication (threshold: < ${DUP_THRESHOLD}%)..."
+  jscpd --min-tokens 50 --min-lines 5 --reporters json --output /tmp/jscpd-precommit lib/ bin/ >/dev/null 2>&1 || true
+  DUP_PCT=$(python3 -c "
+import json,sys
+try:
+    with open('/tmp/jscpd-precommit/jscpd-report.json') as f:
+        d=json.load(f)
+    print(d['statistics']['total']['percentage'])
+except: print('0.0')
+" 2>/dev/null || echo "0.0")
+  if python3 -c "exit(0 if float('$DUP_PCT') < float('$DUP_THRESHOLD') else 1)" 2>/dev/null; then
+    echo "[pre-commit] Duplication check OK ($DUP_PCT% < ${DUP_THRESHOLD}%)"
+  else
+    echo ""
+    echo "ERROR: Code duplication gate failed"
+    echo "Duplication: $DUP_PCT% (max ${DUP_THRESHOLD}%)"
+    echo "Run: jscpd --min-tokens 50 --min-lines 5 lib/ bin/"
+    echo "Use --no-verify to skip (not recommended)."
+    exit 1
+  fi
+else
+  echo "[pre-commit] jscpd not found, skipping duplication check"
+  echo "Install with: npm install -g jscpd"
+fi
 
 echo "[pre-commit] All checks passed."
