@@ -8,6 +8,9 @@ import 'package:flutter_agent_memory/src/llm/provider_factory.dart';
 import 'package:flutter_agent_memory/src/models/memory_level.dart';
 import 'package:flutter_agent_memory/src/models/memory_type.dart';
 import 'package:flutter_agent_memory/src/models/relation.dart';
+import 'package:flutter_agent_memory/src/core/kb_orchestrator.dart';
+import 'package:flutter_agent_memory/src/core/kb_orchestrator_params.dart';
+import 'package:flutter_agent_memory/src/models/kb_processing_mode.dart';
 import 'package:flutter_agent_memory/src/search/kb_search_engine.dart';
 import 'package:flutter_agent_memory/src/storage/kb_memory_store.dart';
 import 'package:test/test.dart';
@@ -23,6 +26,30 @@ void main() {
 
   late Directory tmpDir;
   late LlmProvider provider;
+
+  const _projectMeetingTranscript = '''
+[2025-06-10T09:00:00Z] Alice: What is the recommended state management approach for the new Flutter app?
+[2025-06-10T09:01:00Z] Bob: Use Riverpod. It handles dependency injection and testing well.
+
+[2025-06-10T09:05:00Z] Alice: Should we use BLoC for the checkout flow?
+[2025-06-10T09:06:00Z] Charlie: BLoC is overkill there. Riverpod plus AsyncNotifier is enough.
+
+[2025-06-10T09:15:00Z] Alice: How do we run CI/CD for the Flutter project?
+[2025-06-10T09:16:00Z] Bob: Use GitHub Actions. Run flutter analyze, flutter test, and flutter build on every pull request.
+
+[2025-06-10T09:25:00Z] Alice: Where should we store API keys?
+[2025-06-10T09:26:00Z] Charlie: Use flutter_secure_storage or environment variables. Never commit secrets.
+
+[2025-06-10T09:35:00Z] Alice: How should we structure unit tests?
+[2025-06-10T09:36:00Z] Bob: Group related tests, mock dependencies with mocktail, and keep widget tests separate.
+
+[2025-06-10T09:45:00Z] Alice: Do we need a backend service from day one?
+[2025-06-10T09:46:00Z] Charlie: Start with Firebase Functions for the MVP. Migrate to a Dart shelf service if traffic grows.
+
+[2025-06-10T09:47:00Z] Alice: Note: API keys must never be committed to the repository.
+[2025-06-10T09:55:00Z] Alice: Decision: we will use Riverpod as the primary state management solution.
+[2025-06-10T09:56:00Z] Bob: Note: GitHub Actions should run flutter analyze, flutter test, and flutter build on every pull request.
+''';
 
   setUp(() {
     tmpDir = Directory.systemTemp.createTempSync('fam_memory_features_');
@@ -156,4 +183,106 @@ void main() {
     expect(content, contains('[[${source.id}]]'));
     expect(content, contains('[[${target.id}]]'));
   });
+
+  test('rich project meeting transcript yields searchable KB with graph, levels and relations', () async {
+    final orchestrator = KBOrchestrator(provider);
+    final result = await orchestrator.run(KBOrchestratorParams(
+      sourceName: 'team_meeting_2025_06',
+      inputText: _projectMeetingTranscript,
+      outputPath: tmpDir.path,
+      processingMode: KBProcessingMode.processOnly,
+      analysisExtraInstructions:
+          'Extract explicit questions, answers and key decisions. Preserve area and 1-3 topics for each record.',
+    ));
+
+    expect(result.success, isTrue);
+    expect(result.questionsCount, greaterThanOrEqualTo(4));
+    expect(result.answersCount, greaterThanOrEqualTo(4));
+    expect(result.notesCount, greaterThanOrEqualTo(1));
+
+    // Core output artifacts exist.
+    expect(File('${tmpDir.path}/INDEX.md').existsSync(), isTrue);
+    expect(File('${tmpDir.path}/stats/activity_timeline.md').existsSync(), isTrue);
+    expect(File('${tmpDir.path}/stats/topics_overview.md').existsSync(), isTrue);
+
+    final engine = KBSearchEngine(tmpDir, provider: provider);
+
+    // Search for state-management recommendation.
+    final stateSearch = await engine.searchByText(
+      'Which state management should we use in Flutter?',
+    );
+    expect(stateSearch.results, isNotEmpty);
+    expect(stateSearch.generatedTags, isNotEmpty);
+    final stateTitles = stateSearch.results.map((r) => (r.title ?? '').toLowerCase()).toList();
+    expect(
+      stateTitles.any((t) => t.contains('riverpod') || t.contains('state') || t.contains('bloc')),
+      isTrue,
+      reason: 'Expected state-management result, got $stateTitles',
+    );
+
+    // Search for CI/CD pipeline.
+    final ciSearch = await engine.searchByText('How do we run CI/CD for Flutter?');
+    expect(ciSearch.results, isNotEmpty);
+    final ciTitles = ciSearch.results.map((r) => (r.title ?? '').toLowerCase()).toList();
+    expect(
+      ciTitles.any((t) => t.contains('github') || t.contains('ci') || t.contains('pipeline') || t.contains('action')),
+      isTrue,
+      reason: 'Expected CI/CD result, got $ciTitles',
+    );
+
+    // Search for API-key security.
+    final securitySearch = await engine.searchByText('Where should we store API keys securely?');
+    expect(securitySearch.results, isNotEmpty);
+    final secTitles = securitySearch.results.map((r) => (r.title ?? '').toLowerCase()).toList();
+    expect(
+      secTitles.any((t) => t.contains('secret') || t.contains('secure') || t.contains('key') || t.contains('api')),
+      isTrue,
+      reason: 'Expected security result, got $secTitles',
+    );
+
+    final store = KBMemoryStore(tmpDir, provider: provider, source: 'agent');
+
+    // Notes were extracted from the transcript.
+    final notes = store.list(type: 'note');
+    expect(notes, isNotEmpty);
+
+    // Promote the state-management decision note to a concept.
+    final decisionNote = notes.firstWhere(
+      (n) => n.text.toLowerCase().contains('riverpod') || n.text.toLowerCase().contains('decision'),
+      orElse: () => notes.first,
+    );
+    final promoted = await store.promote(decisionNote.id, MemoryLevel.concept);
+    expect(promoted.note!.level, MemoryLevel.concept);
+
+    // Relate it to a different CI/CD note if one exists.
+    final ciNote = notes.firstWhere(
+      (n) =>
+          n.id != decisionNote.id &&
+          (n.text.toLowerCase().contains('github') || n.text.toLowerCase().contains('ci')),
+      orElse: () => notes.firstWhere((n) => n.id != decisionNote.id, orElse: () => decisionNote),
+    );
+    final relationAdded = ciNote.id != decisionNote.id;
+    if (relationAdded) {
+      await store.addRelation(decisionNote.id, ciNote.id, RelationType.relatedTo, weight: 0.8);
+    }
+
+    store.buildGraph();
+
+    final graphFile = File('${tmpDir.path}/GRAPH.md');
+    expect(graphFile.existsSync(), isTrue);
+    final graphContent = graphFile.readAsStringSync();
+    expect(graphContent, contains('id: graph'));
+    expect(graphContent, contains('nodes:'));
+    expect(graphContent, contains('edges:'));
+    expect(graphContent, contains('```mermaid'));
+
+    if (relationAdded) {
+      expect(graphContent, contains('### related_to'));
+      expect(graphContent, contains('[[${decisionNote.id}]]'));
+      expect(graphContent, contains('[[${ciNote.id}]]'));
+    }
+
+    // The promoted concept node should be included in the Mermaid diagram.
+    expect(graphContent, contains('${decisionNote.id}['));
+  }, timeout: const Timeout(Duration(seconds: 300)));
 }
