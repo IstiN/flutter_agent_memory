@@ -1,6 +1,6 @@
 name: flutter_agent_memory
 description: Dart memory library (questions, answers, notes, people) with LLM-powered analysis and CLI integration.
-version: 0.0.0
+version: 0.0.1
 repository: https://github.com/IstiN/flutter_agent_memory
 
 environment:
