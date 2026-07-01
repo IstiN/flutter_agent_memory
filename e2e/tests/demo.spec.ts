@@ -3,7 +3,11 @@ import path from 'path';
 
 const OLLAMA_BASE_URL = process.env.OLLAMA_BASE_URL || 'http://localhost:11434';
 const OLLAMA_MODEL = process.env.OLLAMA_MODEL || 'llava';
-const HAS_LLM = !!process.env.OLLAMA_BASE_URL || process.env.FORCE_LLM_TESTS === 'true';
+const REAL_LLM = !!process.env.OLLAMA_BASE_URL || process.env.FORCE_LLM_TESTS === 'true';
+// When no real LLM is available, mock the OpenAI-compatible completions endpoint
+// so the text-search and image-analysis code paths are still exercised E2E.
+const USE_MOCK_LLM = !REAL_LLM;
+const HAS_LLM = REAL_LLM || USE_MOCK_LLM;
 
 test.describe.configure({ mode: 'serial' });
 
@@ -20,8 +24,35 @@ async function fillField(page: Page, name: string, value: string) {
 }
 
 test.beforeEach(async ({ page }) => {
-  await page.goto('/');
+  // Playwright treats '/' as the origin root, so use '' to land on baseURL.
+  await page.goto('');
   await page.waitForLoadState('networkidle');
+
+  if (USE_MOCK_LLM) {
+    await page.route('**/v1/chat/completions', async (route, request) => {
+      const body = await request.postDataJSON().catch(() => ({}));
+      const hasImage = JSON.stringify(body).includes('image_url');
+      const content = hasImage
+        ? '{"description": "a sample screenshot", "tags": ["sample", "screenshot"]}'
+        : '{"tags": ["flutter", "state-management"]}';
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          id: 'mock',
+          object: 'chat.completion',
+          choices: [
+            {
+              index: 0,
+              message: { role: 'assistant', content },
+              finish_reason: 'stop',
+            },
+          ],
+        }),
+      });
+    });
+  }
+
   await page.evaluate(() => localStorage.clear());
   await page.reload();
   await page.waitForLoadState('networkidle');
@@ -67,7 +98,7 @@ test('configures Ollama provider and searches by text', async ({ page }) => {
   test.skip(!HAS_LLM, 'Set OLLAMA_BASE_URL to run LLM-backed tests');
 
   await page.getByRole('tab', { name: 'Settings' }).click();
-  await page.getByText('Ollama').click();
+  await page.getByRole('checkbox', { name: 'Ollama' }).click();
   await fillField(page, 'Base URL (optional)', OLLAMA_BASE_URL);
   await fillField(page, 'Model', OLLAMA_MODEL);
   await page.getByRole('button', { name: 'Save settings' }).click();
@@ -104,7 +135,7 @@ test('uploads and analyzes an image', async ({ page }) => {
   test.skip(!HAS_LLM, 'Set OLLAMA_BASE_URL to run LLM-backed image tests');
 
   await page.getByRole('tab', { name: 'Settings' }).click();
-  await page.getByText('Ollama').click();
+  await page.getByRole('checkbox', { name: 'Ollama' }).click();
   await fillField(page, 'Base URL (optional)', OLLAMA_BASE_URL);
   await fillField(page, 'Model', OLLAMA_MODEL);
   await page.getByRole('button', { name: 'Save settings' }).click();
