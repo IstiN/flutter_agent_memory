@@ -260,6 +260,8 @@ class _RecordTile extends StatelessWidget {
                 .toList(),
           ),
           const SizedBox(height: 10),
+          _RelationRow(record: record),
+          const SizedBox(height: 10),
           Row(
             children: [
               Icon(Icons.remove_red_eye_outlined, size: 14, color: AppColors.textMuted.withValues(alpha: 0.7)),
@@ -279,6 +281,63 @@ class _RecordTile extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _RelationRow extends StatelessWidget {
+  final MemoryRecord record;
+
+  const _RelationRow({required this.record});
+
+  @override
+  Widget build(BuildContext context) {
+    final items = <Widget>[];
+
+    void add(String label, String targetId) {
+      items.add(
+        ActionChip(
+          avatar: const Icon(Icons.link, size: 14, color: AppColors.secondary),
+          label: Text(
+            '$label $targetId',
+            style: const TextStyle(color: AppColors.text, fontSize: 12),
+          ),
+          backgroundColor: AppColors.surfaceHigh,
+          side: const BorderSide(color: AppColors.border),
+          visualDensity: VisualDensity.compact,
+          onPressed: () {},
+        ),
+      );
+    }
+
+    final question = record.question;
+    final answeredBy = question?.answeredBy;
+    if (answeredBy != null && answeredBy.isNotEmpty) {
+      add('Answered by', answeredBy);
+    }
+
+    final answer = record.answer;
+    final answersQuestion = answer?.answersQuestion;
+    if (answersQuestion != null && answersQuestion.isNotEmpty) {
+      add('Answers', answersQuestion);
+    }
+
+    final note = record.note;
+    if (note != null) {
+      for (final qid in note.answersQuestions) {
+        add('Answers', qid);
+      }
+      for (final relation in note.relations) {
+        add(relation.type, relation.target);
+      }
+    }
+
+    if (items.isEmpty) return const SizedBox.shrink();
+
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: items,
     );
   }
 }
@@ -638,11 +697,6 @@ class _AddRecordDialogState extends State<AddRecordDialog> {
             final globalArea = (result['area'] as String).isEmpty
                 ? area
                 : result['area'] as String;
-            final globalTags = (result['tags'] as List).map((e) => e.toString()).toList();
-            final globalTopics = (result['topics'] as List? ?? [])
-                .map((e) => e.toString())
-                .where((t) => t.isNotEmpty)
-                .toList();
 
             String itemArea(dynamic item) {
               final a = (item['area'] as String? ?? '').trim();
@@ -658,8 +712,6 @@ class _AddRecordDialogState extends State<AddRecordDialog> {
                   .where((t) => t.isNotEmpty);
               return <String>{
                 ...tags,
-                ...globalTags,
-                ...globalTopics,
                 ...itemTopics,
                 ...itemTags,
               }.toList();

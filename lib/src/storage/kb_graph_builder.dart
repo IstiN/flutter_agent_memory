@@ -28,7 +28,7 @@ class KBGraphBuilder {
   }
 
   /// Regenerates `GRAPH.md` in the knowledge-base root.
-  Future<void> build({int maxMermaidNodes = 50}) async {
+  Future<void> build({int maxMermaidNodes = 100}) async {
     final nodes = await _collectNodes();
     final edges = _collectEdges(nodes);
     await _writeGraphFile(nodes, edges, maxMermaidNodes: maxMermaidNodes);
@@ -228,18 +228,24 @@ class KBGraphBuilder {
     final nodeList = nodes.values.toList();
     final edgeList = edges.toList();
 
-    // For the Mermaid diagram, prefer higher-level nodes plus their neighbors.
-    final priority = nodeList
-        .where((n) => n.level >= MemoryLevel.concept)
-        .map((n) => n.id)
-        .toSet();
-    final seed = priority.take(maxMermaidNodes ~/ 2).toList();
-    for (final e in edgeList) {
-      if (seed.length >= maxMermaidNodes) break;
-      if (priority.contains(e.source)) seed.add(e.target);
-      if (priority.contains(e.target)) seed.add(e.source);
+    // For the Mermaid diagram, show everything when the graph is small.
+    // Otherwise prefer higher-level nodes plus their immediate neighbors.
+    final Set<String> mermaidIds;
+    if (nodeList.length <= maxMermaidNodes) {
+      mermaidIds = nodes.keys.toSet();
+    } else {
+      final priority = nodeList
+          .where((n) => n.level >= MemoryLevel.concept)
+          .map((n) => n.id)
+          .toSet();
+      final seed = priority.take(maxMermaidNodes ~/ 2).toList();
+      for (final e in edgeList) {
+        if (seed.length >= maxMermaidNodes) break;
+        if (priority.contains(e.source)) seed.add(e.target);
+        if (priority.contains(e.target)) seed.add(e.source);
+      }
+      mermaidIds = seed.toSet();
     }
-    final mermaidIds = seed.toSet();
     final mermaidEdges = edgeList
         .where(
           (e) => mermaidIds.contains(e.source) && mermaidIds.contains(e.target),

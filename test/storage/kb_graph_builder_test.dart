@@ -102,7 +102,7 @@ void main() {
     expect(content, contains('### links_to'));
   });
 
-  test('high-level nodes are preferred in the mermaid diagram', () async {
+  test('high-level nodes are preferred when the diagram is truncated', () async {
     await store.addNote(
       text: 'Low level raw note.',
       area: 'dev',
@@ -116,7 +116,9 @@ void main() {
       level: MemoryLevel.concept,
     );
 
-    await KBGraphBuilder.file(tmpDir).build(maxMermaidNodes: 10);
+    // Force truncation (total nodes = 4, limit = 3) so the preference logic
+    // is exercised. Small graphs show everything by default.
+    await KBGraphBuilder.file(tmpDir).build(maxMermaidNodes: 3);
 
     final content = File('${tmpDir.path}/GRAPH.md').readAsStringSync();
     // The concept-level note should be included in the mermaid diagram.
