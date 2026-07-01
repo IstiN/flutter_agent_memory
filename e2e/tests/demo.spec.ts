@@ -54,7 +54,7 @@ test.beforeEach(async ({ page }) => {
       const hasImage = JSON.stringify(body).includes('image_url');
       const content = hasImage
         ? '{"description": "a sample screenshot", "tags": ["sample", "screenshot"]}'
-        : '{"title": "Mock title", "summary": "Mock summary", "tags": ["flutter", "state-management"], "area": "general"}';
+        : '{"area": "development", "topics": ["flutter-state-management"], "tags": ["flutter", "state-management"], "questions": [{"id": "q_1", "author": "", "text": "How do I manage state in Flutter?", "date": "", "area": "development", "topics": [], "tags": [], "answeredBy": "a_1", "links": []}], "answers": [{"id": "a_1", "author": "", "text": "Use a state management solution like Riverpod or Bloc.", "date": "", "area": "development", "topics": [], "tags": [], "answersQuestion": "q_1", "quality": 0.9, "links": []}], "notes": [{"id": "n_1", "author": "", "text": "State management is important for scalable Flutter apps.", "date": "", "area": "development", "topics": [], "tags": [], "links": []}]}';
       await route.fulfill({
         status: 200,
         contentType: 'application/json',
@@ -154,6 +154,25 @@ test('builds graph', async ({ page }) => {
   await page.getByRole('tab', { name: 'Graph' }).click();
   await expect(page.getByText(/Nodes\s*\d+/)).toBeVisible();
   await expect(page.getByText(/Edges\s*\d+/)).toBeVisible();
+});
+
+test('decomposes raw text into questions, answers and notes', async ({ page }) => {
+  test.skip(!USE_MOCK_LLM, 'Deterministic only when LLM responses are mocked');
+
+  await page.getByRole('button', { name: 'Add first record' }).click();
+  await page.getByRole('button', { name: 'Raw text' }).click();
+  await fillField(
+    page,
+    'Paste raw text here',
+    'We need to pick a state management approach for the Flutter app. How do I manage state in Flutter? Use a state management solution like Riverpod or Bloc. State management is important for scalable Flutter apps.',
+  );
+  await page.getByRole('button', { name: 'Add' }).click();
+
+  // The dialog closes and the decomposed records appear.
+  await expect(page.getByRole('button', { name: 'Add record' })).toBeVisible({ timeout: 60000 });
+  await expect(page.locator(byLabel('How do I manage state in Flutter?')).first()).toBeVisible();
+  await expect(page.locator(byLabel('Use a state management solution like Riverpod or Bloc.')).first()).toBeVisible();
+  await expect(page.locator(byLabel('State management is important for scalable Flutter apps.')).first()).toBeVisible();
 });
 
 test('uploads and analyzes an image', async ({ page }) => {
