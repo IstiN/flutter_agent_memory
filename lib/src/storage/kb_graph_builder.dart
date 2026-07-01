@@ -199,7 +199,18 @@ class KBGraphBuilder {
       }
     }
 
-    return edges.toList();
+    final edgeList = edges.toList();
+
+    // If a pair has a typed relation, drop the generic wiki-link duplicate.
+    final typedKeys = edgeList
+        .where((e) => e.type != 'links_to')
+        .map((e) => '${e.source}|${e.target}')
+        .toSet();
+    return edgeList
+        .where(
+          (e) => e.type != 'links_to' || !typedKeys.contains('${e.source}|${e.target}'),
+        )
+        .toList();
   }
 
   String _personId(String name) {
@@ -288,7 +299,9 @@ class KBGraphBuilder {
     for (final id in mermaidIds) {
       final node = nodes[id];
       if (node == null) continue;
-      final label = node.title.replaceAll('"', '\\"');
+      var label = node.title;
+      if (label.length > 60) label = '${label.substring(0, 57)}...';
+      label = label.replaceAll('"', '\\"');
       buffer.writeln('    ${mermaidId(node.id)}["$label"];');
     }
     for (final e in mermaidEdges) {

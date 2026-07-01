@@ -21,6 +21,7 @@ class KbMarkdownRenderer {
     final fm = Frontmatter()
       ..['id'] = q.id
       ..['type'] = 'question'
+      ..['title'] = q.text
       ..['author'] = q.author
       ..['date'] = q.date
       ..['area'] = q.area
@@ -82,6 +83,7 @@ class KbMarkdownRenderer {
     final fm = Frontmatter()
       ..['id'] = a.id
       ..['type'] = 'answer'
+      ..['title'] = a.text
       ..['author'] = a.author
       ..['date'] = a.date
       ..['area'] = a.area
@@ -136,6 +138,7 @@ class KbMarkdownRenderer {
     final fm = Frontmatter()
       ..['id'] = n.id
       ..['type'] = 'note'
+      ..['title'] = n.text
       ..['author'] = n.author
       ..['date'] = n.date
       ..['area'] = n.area
