@@ -363,7 +363,7 @@ class _AddRecordDialogState extends State<AddRecordDialog> {
 
   String? _imageDataUrl;
   bool _analyzing = false;
-  String? _imageError;
+  String? _errorMessage;
 
   Future<void> _pickImage() async {
     final result = await FilePicker.platform.pickFiles(
@@ -375,14 +375,14 @@ class _AddRecordDialogState extends State<AddRecordDialog> {
     final file = result.files.first;
     final bytes = file.bytes;
     if (bytes == null || bytes.isEmpty) {
-      setState(() => _imageError = 'Could not read image bytes');
+      setState(() => _errorMessage = 'Could not read image bytes');
       return;
     }
     final mime = file.extension != null ? 'image/${file.extension}' : 'image/png';
     final b64 = base64Encode(bytes);
     setState(() {
       _imageDataUrl = 'data:$mime;base64,$b64';
-      _imageError = null;
+      _errorMessage = null;
     });
   }
 
@@ -459,10 +459,10 @@ class _AddRecordDialogState extends State<AddRecordDialog> {
                     ),
                   ],
                 ),
-              if (_imageError != null)
+              if (_errorMessage != null)
                 Padding(
                   padding: const EdgeInsets.only(top: 8),
-                  child: Text(_imageError!, style: const TextStyle(color: AppColors.error)),
+                  child: Text(_errorMessage!, style: const TextStyle(color: AppColors.error)),
                 ),
               if (!widget.kbService.imageAnalysis.available)
                 const Padding(
@@ -623,7 +623,7 @@ class _AddRecordDialogState extends State<AddRecordDialog> {
         } catch (e) {
           setState(() {
             _analyzing = false;
-            _imageError = e.toString();
+            _errorMessage = e.toString();
           });
           return;
         }
@@ -633,32 +633,102 @@ class _AddRecordDialogState extends State<AddRecordDialog> {
         if (raw.isEmpty) return;
         setState(() => _analyzing = true);
         try {
-          String noteText;
-          List<String> noteTags;
-          String noteArea;
           if (widget.kbService.rawTextProcessor.available) {
             final result = await widget.kbService.rawTextProcessor.process(raw);
-            final title = result['title'] as String;
-            final summary = result['summary'] as String;
-            noteTags = (result['tags'] as List).map((e) => e.toString()).toList();
-            noteArea = (result['area'] as String).isEmpty ? area : result['area'] as String;
-            noteText = title.isEmpty ? summary : '$title\n\n$summary';
+            final globalArea = (result['area'] as String).isEmpty
+                ? area
+                : result['area'] as String;
+            final globalTags = (result['tags'] as List).map((e) => e.toString()).toList();
+            final globalTopics = (result['topics'] as List? ?? [])
+                .map((e) => e.toString())
+                .where((t) => t.isNotEmpty)
+                .toList();
+
+            String itemArea(dynamic item) {
+              final a = (item['area'] as String? ?? '').trim();
+              return a.isEmpty ? globalArea : a;
+            }
+
+            List<String> itemTags(dynamic item) {
+              final itemTopics = (item['topics'] as List? ?? [])
+                  .map((e) => e.toString())
+                  .where((t) => t.isNotEmpty);
+              final itemTags = (item['tags'] as List? ?? [])
+                  .map((e) => e.toString())
+                  .where((t) => t.isNotEmpty);
+              return <String>{
+                ...tags,
+                ...globalTags,
+                ...globalTopics,
+                ...itemTopics,
+                ...itemTags,
+              }.toList();
+            }
+
+            // Create questions first so answers can be linked by temp id.
+            final questionIds = <String, String>{};
+            final questionEntries = result['questions'] as List? ?? [];
+            for (final q in questionEntries) {
+              final record = await store.addQuestion(
+                text: q['text'] as String,
+                author: (q['author'] as String? ?? '').isEmpty
+                    ? 'agent'
+                    : q['author'] as String,
+                area: itemArea(q),
+                tags: itemTags(q),
+              );
+              questionIds[q['id'] as String] = record.id;
+            }
+
+            final answerEntries = result['answers'] as List? ?? [];
+            for (final a in answerEntries) {
+              final questionTempId = a['answersQuestion'] as String?;
+              await store.addAnswer(
+                text: a['text'] as String,
+                author: (a['author'] as String? ?? '').isEmpty
+                    ? 'agent'
+                    : a['author'] as String,
+                area: itemArea(a),
+                tags: itemTags(a),
+                answersQuestion: questionIds[questionTempId],
+                quality: (a['quality'] as num?)?.toDouble() ?? 0.8,
+              );
+            }
+
+            final noteEntries = result['notes'] as List? ?? [];
+            for (final n in noteEntries) {
+              final links = (n['links'] as List? ?? [])
+                  .whereType<Map<String, dynamic>>()
+                  .map((l) => '[${l['title']}](${l['url']})')
+                  .join('\n');
+              var noteText = (n['text'] as String? ?? '').trim();
+              if (links.isNotEmpty) {
+                noteText = '$noteText\n\n$links';
+              }
+              await store.addNote(
+                text: noteText,
+                author: (n['author'] as String? ?? '').isEmpty
+                    ? 'agent'
+                    : n['author'] as String,
+                area: itemArea(n),
+                tags: itemTags(n),
+                memoryType: 'observation',
+                level: MemoryLevel.raw,
+              );
+            }
           } else {
-            noteText = raw;
-            noteTags = tags;
-            noteArea = area;
+            await store.addNote(
+              text: raw,
+              area: area,
+              tags: tags,
+              memoryType: 'observation',
+              level: MemoryLevel.raw,
+            );
           }
-          await store.addNote(
-            text: noteText,
-            area: noteArea,
-            tags: noteTags,
-            memoryType: 'observation',
-            level: MemoryLevel.raw,
-          );
         } catch (e) {
           setState(() {
             _analyzing = false;
-            _imageError = e.toString();
+            _errorMessage = e.toString();
           });
           return;
         }
