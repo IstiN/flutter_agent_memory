@@ -9,11 +9,12 @@ import 'openrouter_provider.dart';
 /// directly to [KbOrchestrator] or by registering it here.
 class ProviderFactory {
   static LlmProvider create(LlmConfig config) {
+    final baseUrl = _effectiveBaseUrl(config);
     switch (config.providerName) {
       case 'openrouter':
         return OpenRouterProvider(
           apiKey: config.apiKey,
-          baseUrl: config.baseUrl,
+          baseUrl: baseUrl,
           defaultModel: config.model,
           maxTokens: config.maxTokens,
           temperature: config.temperature,
@@ -22,7 +23,7 @@ class ProviderFactory {
       case 'ollama':
         return OpenAiProvider(
           apiKey: config.apiKey,
-          baseUrl: config.baseUrl,
+          baseUrl: baseUrl,
           defaultModel: config.model,
           maxTokens: config.maxTokens,
           temperature: config.temperature,
@@ -32,12 +33,21 @@ class ProviderFactory {
       default:
         return OpenAiProvider(
           apiKey: config.apiKey,
-          baseUrl: config.baseUrl,
+          baseUrl: baseUrl,
           defaultModel: config.model,
           maxTokens: config.maxTokens,
           temperature: config.temperature,
           maxTokensParamName: config.maxTokensParamName,
         );
     }
+  }
+
+  static String _effectiveBaseUrl(LlmConfig config) {
+    if (config.baseUrl.isNotEmpty) return config.baseUrl;
+    return switch (config.providerName) {
+      'openrouter' => 'https://openrouter.ai/api/v1/chat/completions',
+      'ollama' => 'http://localhost:11434/v1/chat/completions',
+      _ => 'https://api.openai.com/v1/chat/completions',
+    };
   }
 }

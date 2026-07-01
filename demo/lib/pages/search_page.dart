@@ -110,32 +110,35 @@ class _SearchPageState extends State<SearchPage> {
                 color: AppColors.surface,
                 borderRadius: BorderRadius.circular(15),
               ),
-              child: TextField(
-                controller: _mode == 'tags' ? _tagsController : _textController,
-                style: const TextStyle(color: AppColors.text, fontSize: 16),
-                decoration: InputDecoration(
-                  hintText: _mode == 'tags'
-                      ? 'Enter tags separated by commas...'
-                      : 'Describe what you are looking for...',
-                  hintStyle: TextStyle(color: AppColors.textMuted.withValues(alpha: 0.7)),
-                  prefixIcon: const Icon(Icons.search, color: AppColors.primaryGlow),
-                  suffixIcon: _loading
-                      ? const Padding(
-                          padding: EdgeInsets.all(12),
-                          child: SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2),
+              child: Semantics(
+                label: _mode == 'tags' ? 'Search by tags' : 'Search by text',
+                child: TextField(
+                  controller: _mode == 'tags' ? _tagsController : _textController,
+                  style: const TextStyle(color: AppColors.text, fontSize: 16),
+                  decoration: InputDecoration(
+                    hintText: _mode == 'tags'
+                        ? 'Enter tags separated by commas...'
+                        : 'Describe what you are looking for...',
+                    hintStyle: TextStyle(color: AppColors.textMuted.withValues(alpha: 0.7)),
+                    prefixIcon: const Icon(Icons.search, color: AppColors.primaryGlow),
+                    suffixIcon: _loading
+                        ? const Padding(
+                            padding: EdgeInsets.all(12),
+                            child: SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            ),
+                          )
+                        : IconButton(
+                            icon: const Icon(Icons.arrow_forward, color: AppColors.primaryGlow),
+                            onPressed: _search,
                           ),
-                        )
-                      : IconButton(
-                          icon: const Icon(Icons.arrow_forward, color: AppColors.primaryGlow),
-                          onPressed: _search,
-                        ),
-                  border: InputBorder.none,
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
+                    border: InputBorder.none,
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
+                  ),
+                  onSubmitted: (_) => _search(),
                 ),
-                onSubmitted: (_) => _search(),
               ),
             ),
           ),
@@ -208,8 +211,10 @@ class _SearchPageState extends State<SearchPage> {
                     itemCount: _results.length,
                     itemBuilder: (context, index) {
                       final r = _results[index];
-                      return NeoCard(
-                        onTap: () => widget.kbService.store.recordAccess(r.id!),
+                      return Semantics(
+                        label: r.title ?? 'Search result',
+                        child: NeoCard(
+                          onTap: () => widget.kbService.store.recordAccess(r.id!),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -262,6 +267,7 @@ class _SearchPageState extends State<SearchPage> {
                               ),
                             ],
                           ],
+                          ),
                         ),
                       );
                     },

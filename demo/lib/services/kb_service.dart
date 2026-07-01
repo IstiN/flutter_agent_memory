@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_agent_memory/flutter_agent_memory_web.dart';
 
+import 'image_analysis_service.dart';
 import 'provider_service.dart';
 import 'settings_service.dart';
 
@@ -16,6 +17,7 @@ class KbService extends ChangeNotifier {
   late KBMemoryStore store;
   late KBSearchEngine engine;
   late KBGraphBuilder graphBuilder;
+  late ImageAnalysisService imageAnalysis;
 
   KbStorage get storage => _storage;
 
@@ -37,6 +39,7 @@ class KbService extends ChangeNotifier {
     store = KBMemoryStore(_storage, provider: provider, source: 'demo');
     engine = KBSearchEngine(_storage, provider: provider);
     graphBuilder = KBGraphBuilder(_storage);
+    imageAnalysis = ImageAnalysisService(provider);
   }
 
   Future<void> updateSettings({

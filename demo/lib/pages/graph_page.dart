@@ -179,9 +179,11 @@ class _StatCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
+    return Semantics(
+      label: '$label $value',
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(16),
         gradient: LinearGradient(
           colors: [color.withValues(alpha: 0.2), color.withValues(alpha: 0.05)],
@@ -207,6 +209,7 @@ class _StatCard extends StatelessWidget {
             ),
           ),
         ],
+        ),
       ),
     );
   }

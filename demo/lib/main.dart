@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/semantics.dart';
 
 import 'services/kb_service.dart';
 import 'services/prompt_asset_loader.dart';
@@ -20,10 +21,21 @@ Future<void> main() async {
   runApp(DemoApp(kbService: kbService));
 }
 
-class DemoApp extends StatelessWidget {
+class DemoApp extends StatefulWidget {
   final KbService kbService;
 
   const DemoApp({super.key, required this.kbService});
+
+  @override
+  State<DemoApp> createState() => _DemoAppState();
+}
+
+class _DemoAppState extends State<DemoApp> {
+  @override
+  void initState() {
+    super.initState();
+    SemanticsBinding.instance.ensureSemantics();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -33,7 +45,7 @@ class DemoApp extends StatelessWidget {
       themeMode: ThemeMode.dark,
       theme: AppTheme.dark,
       darkTheme: AppTheme.dark,
-      home: HomePage(kbService: kbService),
+      home: HomePage(kbService: widget.kbService),
     );
   }
 }

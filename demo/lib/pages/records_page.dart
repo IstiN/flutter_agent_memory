@@ -1,3 +1,6 @@
+import 'dart:convert';
+
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_agent_memory/flutter_agent_memory_web.dart';
 
@@ -43,31 +46,34 @@ class _RecordsPageState extends State<RecordsPage> {
               itemCount: records.length,
               itemBuilder: (context, index) {
                 final r = records[index];
-                return _RecordTile(
-                  record: r,
-                  onDelete: () async {
-                    await widget.kbService.store.deleteRecord(r.id);
-                    _refresh();
-                  },
-                  onPromote: r.note != null
-                      ? () async {
-                          final next = r.note!.level + 1;
-                          if (next > MemoryLevel.concept) return;
-                          await widget.kbService.store.promote(r.id, next);
-                          _refresh();
-                        }
-                      : null,
-                  onRelate: () async {
-                    final target = await _pickTarget(context, r.id);
-                    if (target != null) {
-                      await widget.kbService.store.addRelation(
-                        r.id,
-                        target,
-                        'relatedTo',
-                      );
+                return Semantics(
+                  label: r.title,
+                  child: _RecordTile(
+                    record: r,
+                    onDelete: () async {
+                      await widget.kbService.store.deleteRecord(r.id);
                       _refresh();
-                    }
-                  },
+                    },
+                    onPromote: r.note != null
+                        ? () async {
+                            final next = r.note!.level + 1;
+                            if (next > MemoryLevel.concept) return;
+                            await widget.kbService.store.promote(r.id, next);
+                            _refresh();
+                          }
+                        : null,
+                    onRelate: () async {
+                      final target = await _pickTarget(context, r.id);
+                      if (target != null) {
+                        await widget.kbService.store.addRelation(
+                          r.id,
+                          target,
+                          'relatedTo',
+                        );
+                        _refresh();
+                      }
+                    },
+                  ),
                 );
               },
             );
@@ -135,9 +141,11 @@ class _EmptyState extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
+      child: Semantics(
+        label: 'Empty state',
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
           Icon(
             Icons.auto_stories,
             size: 64,
@@ -160,7 +168,8 @@ class _EmptyState extends StatelessWidget {
           ),
           const SizedBox(height: 24),
           GlowButton(icon: Icons.add, onPressed: onAdd, child: const Text('Add first record')),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -351,6 +360,31 @@ class _AddRecordDialogState extends State<AddRecordDialog> {
   String _memoryType = 'observation';
   int _level = MemoryLevel.raw;
 
+  String? _imageDataUrl;
+  bool _analyzing = false;
+  String? _imageError;
+
+  Future<void> _pickImage() async {
+    final result = await FilePicker.platform.pickFiles(
+      type: FileType.image,
+      allowMultiple: false,
+      withData: true,
+    );
+    if (result == null || result.files.isEmpty) return;
+    final file = result.files.first;
+    final bytes = file.bytes;
+    if (bytes == null || bytes.isEmpty) {
+      setState(() => _imageError = 'Could not read image bytes');
+      return;
+    }
+    final mime = file.extension != null ? 'image/${file.extension}' : 'image/png';
+    final b64 = base64Encode(bytes);
+    setState(() {
+      _imageDataUrl = 'data:$mime;base64,$b64';
+      _imageError = null;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
@@ -366,18 +400,70 @@ class _AddRecordDialogState extends State<AddRecordDialog> {
                 ButtonSegment(value: 'question', label: Text('Question')),
                 ButtonSegment(value: 'answer', label: Text('Answer')),
                 ButtonSegment(value: 'note', label: Text('Note')),
+                ButtonSegment(value: 'image', label: Text('Image')),
               ],
               selected: {_type},
               onSelectionChanged: (s) => setState(() => _type = s.first),
             ),
             const SizedBox(height: 16),
-            TextField(
-              controller: _textController,
-              style: const TextStyle(color: AppColors.text),
-              decoration: const InputDecoration(labelText: 'Text'),
-              maxLines: 4,
-            ),
-            const SizedBox(height: 12),
+            if (_type == 'image') ...[
+              if (_imageDataUrl == null)
+                OutlinedButton.icon(
+                  onPressed: _pickImage,
+                  icon: const Icon(Icons.image, color: AppColors.text),
+                  label: const Text('Pick image', style: TextStyle(color: AppColors.text)),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppColors.text,
+                    side: const BorderSide(color: AppColors.border),
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                )
+              else
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: Image.network(
+                        _imageDataUrl!,
+                        height: 160,
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    TextButton.icon(
+                      onPressed: () => setState(() {
+                        _imageDataUrl = null;
+                      }),
+                      icon: const Icon(Icons.delete_outline, color: AppColors.error),
+                      label: const Text('Remove', style: TextStyle(color: AppColors.error)),
+                    ),
+                  ],
+                ),
+              if (_imageError != null)
+                Padding(
+                  padding: const EdgeInsets.only(top: 8),
+                  child: Text(_imageError!, style: const TextStyle(color: AppColors.error)),
+                ),
+              if (!widget.kbService.imageAnalysis.available)
+                const Padding(
+                  padding: EdgeInsets.only(top: 12),
+                  child: Text(
+                    'Configure an LLM provider in Settings to analyze images.',
+                    style: TextStyle(color: AppColors.warning),
+                  ),
+                ),
+              const SizedBox(height: 12),
+            ] else ...[
+              TextField(
+                controller: _textController,
+                style: const TextStyle(color: AppColors.text),
+                decoration: const InputDecoration(labelText: 'Text'),
+                maxLines: 4,
+              ),
+              const SizedBox(height: 12),
+            ],
             TextField(
               controller: _areaController,
               style: const TextStyle(color: AppColors.text),
@@ -444,43 +530,87 @@ class _AddRecordDialogState extends State<AddRecordDialog> {
           child: const Text('Cancel', style: TextStyle(color: AppColors.textMuted)),
         ),
         GlowButton(
-          onPressed: () async {
-            final text = _textController.text.trim();
-            if (text.isEmpty) return;
-            final tags = _tagsController.text
-                .split(',')
-                .map((t) => t.trim())
-                .where((t) => t.isNotEmpty)
-                .toList();
-            final area = _areaController.text.trim();
-            final navigator = Navigator.of(context);
-            final store = widget.kbService.store;
-            switch (_type) {
-              case 'question':
-                await store.addQuestion(text: text, area: area, tags: tags);
-              case 'answer':
-                await store.addAnswer(
-                  text: text,
-                  area: area,
-                  tags: tags,
-                  answersQuestion: _linkController.text.trim().isEmpty
-                      ? null
-                      : _linkController.text.trim(),
-                );
-              case 'note':
-                await store.addNote(
-                  text: text,
-                  area: area,
-                  tags: tags,
-                  memoryType: _memoryType,
-                  level: _level,
-                );
-            }
-            navigator.pop(true);
-          },
-          child: const Text('Add'),
+          onPressed: _analyzing ? null : _submit,
+          child: _analyzing
+              ? const SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                )
+              : const Text('Add'),
         ),
       ],
     );
+  }
+
+  Future<void> _submit() async {
+    final navigator = Navigator.of(context);
+    final store = widget.kbService.store;
+    final area = _areaController.text.trim();
+    final tags = _tagsController.text
+        .split(',')
+        .map((t) => t.trim())
+        .where((t) => t.isNotEmpty)
+        .toList();
+
+    switch (_type) {
+      case 'question':
+        final text = _textController.text.trim();
+        if (text.isEmpty) return;
+        await store.addQuestion(text: text, area: area, tags: tags);
+      case 'answer':
+        final text = _textController.text.trim();
+        if (text.isEmpty) return;
+        await store.addAnswer(
+          text: text,
+          area: area,
+          tags: tags,
+          answersQuestion: _linkController.text.trim().isEmpty
+              ? null
+              : _linkController.text.trim(),
+        );
+      case 'note':
+        final text = _textController.text.trim();
+        if (text.isEmpty) return;
+        await store.addNote(
+          text: text,
+          area: area,
+          tags: tags,
+          memoryType: _memoryType,
+          level: _level,
+        );
+      case 'image':
+        final dataUrl = _imageDataUrl;
+        if (dataUrl == null) return;
+        setState(() => _analyzing = true);
+        try {
+          String text;
+          List<String> imageTags;
+          if (widget.kbService.imageAnalysis.available) {
+            final result = await widget.kbService.imageAnalysis.analyze(dataUrl);
+            text = 'Image analysis:\n${result['description']}';
+            imageTags = (result['tags'] as List?)?.map((e) => e.toString()).toList() ?? [];
+          } else {
+            text = 'Image note';
+            imageTags = [];
+          }
+          final allTags = <String>{...tags, ...imageTags}.toList();
+          await store.addNote(
+            text: '$text\n\n![image]($dataUrl)',
+            area: area.isEmpty ? 'images' : area,
+            tags: allTags,
+            memoryType: 'observation',
+            level: MemoryLevel.raw,
+          );
+        } catch (e) {
+          setState(() {
+            _analyzing = false;
+            _imageError = e.toString();
+          });
+          return;
+        }
+        setState(() => _analyzing = false);
+    }
+    navigator.pop(true);
   }
 }
