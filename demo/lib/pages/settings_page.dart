@@ -407,25 +407,22 @@ class _StatusRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Semantics(
-      label: label,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 8),
-        child: Row(
-          children: [
-            Icon(icon, size: 18, color: AppColors.textMuted),
-            const SizedBox(width: 12),
-            Text(label, style: const TextStyle(color: AppColors.textMuted)),
-            const Spacer(),
-            Text(
-              value,
-              style: TextStyle(
-                color: valueColor ?? AppColors.text,
-                fontWeight: FontWeight.w600,
-              ),
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        children: [
+          Icon(icon, size: 18, color: AppColors.textMuted),
+          const SizedBox(width: 12),
+          Text(label, style: const TextStyle(color: AppColors.textMuted)),
+          const Spacer(),
+          Text(
+            value,
+            style: TextStyle(
+              color: valueColor ?? AppColors.text,
+              fontWeight: FontWeight.w600,
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

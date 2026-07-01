@@ -103,7 +103,7 @@ test('configures Ollama provider and searches by text', async ({ page }) => {
   await fillField(page, 'Model', OLLAMA_MODEL);
   await page.getByRole('button', { name: 'Save settings' }).click();
 
-  await expect(page.locator(byLabel('LLM ready')).first()).toBeVisible();
+  await expect(page.getByText(/LLM ready\s*yes/)).toBeVisible();
 
   await page.getByRole('tab', { name: 'Records' }).click();
   await page.getByRole('button', { name: 'Add record' }).click();
@@ -139,7 +139,7 @@ test('uploads and analyzes an image', async ({ page }) => {
   await fillField(page, 'Base URL (optional)', OLLAMA_BASE_URL);
   await fillField(page, 'Model', OLLAMA_MODEL);
   await page.getByRole('button', { name: 'Save settings' }).click();
-  await expect(page.locator(byLabel('LLM ready')).first()).toBeVisible();
+  await expect(page.getByText(/LLM ready\s*yes/)).toBeVisible();
 
   await page.getByRole('tab', { name: 'Records' }).click();
   await page.getByRole('button', { name: 'Add record' }).click();
