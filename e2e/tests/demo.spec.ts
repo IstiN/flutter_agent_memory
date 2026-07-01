@@ -1,7 +1,7 @@
 import { test, expect, Page } from '@playwright/test';
 import path from 'path';
 
-const OLLAMA_BASE_URL = process.env.OLLAMA_BASE_URL || 'http://localhost:11434';
+const OLLAMA_BASE_URL = process.env.OLLAMA_BASE_URL || 'http://localhost:11434/v1/chat/completions';
 const OLLAMA_MODEL = process.env.OLLAMA_MODEL || 'llava';
 const REAL_LLM = !!process.env.OLLAMA_BASE_URL || process.env.FORCE_LLM_TESTS === 'true';
 // When no real LLM is available, mock the OpenAI-compatible completions endpoint
@@ -30,7 +30,7 @@ test.beforeEach(async ({ page }) => {
 
   if (USE_MOCK_LLM) {
     await page.route('**/v1/chat/completions', async (route, request) => {
-      const body = await request.postDataJSON().catch(() => ({}));
+      const body = request.postDataJSON() ?? {};
       const hasImage = JSON.stringify(body).includes('image_url');
       const content = hasImage
         ? '{"description": "a sample screenshot", "tags": ["sample", "screenshot"]}'
