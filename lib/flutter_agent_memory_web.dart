@@ -23,6 +23,7 @@ export 'src/llm/openrouter_provider.dart';
 export 'src/llm/provider_factory.dart';
 
 // Models.
+export 'src/models/analysis_result.dart';
 export 'src/models/answer.dart';
 export 'src/models/kb_context.dart';
 export 'src/models/link.dart';
