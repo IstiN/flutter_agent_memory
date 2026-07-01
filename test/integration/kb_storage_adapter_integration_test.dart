@@ -126,7 +126,9 @@ void main() {
         expect(graph, contains('### related_to'));
         expect(graph, contains('### links_to'));
         // Concept-level notes are included in the Mermaid diagram.
-        expect(graph, contains('${stateNote.id}['));
+        final sanitizedNoteId =
+            'n_${stateNote.id.replaceAll(RegExp(r'[^a-zA-Z0-9_]'), '_')}_id';
+        expect(graph, contains('$sanitizedNoteId['));
 
         // Tag-based search works across all backends.
         final engine = KBSearchEngine(storage);

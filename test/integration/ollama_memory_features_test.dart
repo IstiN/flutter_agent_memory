@@ -390,7 +390,9 @@ void main() {
       }
 
       // The promoted concept node should be included in the Mermaid diagram.
-      expect(graphContent, contains('${decisionNote.id}['));
+      final sanitizedDecisionId =
+          'n_${decisionNote.id.replaceAll(RegExp(r'[^a-zA-Z0-9_]'), '_')}_id';
+      expect(graphContent, contains('$sanitizedDecisionId['));
     },
     timeout: const Timeout(Duration(seconds: 300)),
   );

@@ -1,13 +1,33 @@
 import { test, expect, Page } from '@playwright/test';
 import path from 'path';
 
+const LLM_PROVIDER = (process.env.LLM_PROVIDER || 'ollama').toLowerCase();
+const LLM_API_KEY = process.env.LLM_API_KEY || '';
+const LLM_BASE_URL = process.env.LLM_BASE_URL || '';
+const LLM_MODEL = process.env.LLM_MODEL || (LLM_PROVIDER === 'ollama' ? 'llava' : 'gpt-4o-mini');
 const OLLAMA_BASE_URL = process.env.OLLAMA_BASE_URL || 'http://localhost:11434/v1/chat/completions';
 const OLLAMA_MODEL = process.env.OLLAMA_MODEL || 'llava';
-const REAL_LLM = !!process.env.OLLAMA_BASE_URL || process.env.FORCE_LLM_TESTS === 'true';
+
+const REAL_LLM =
+  process.env.FORCE_LLM_TESTS === 'true' ||
+  (LLM_PROVIDER !== 'none' &&
+    (LLM_PROVIDER === 'ollama'
+      ? !!process.env.OLLAMA_BASE_URL
+      : LLM_API_KEY.length > 0));
 // When no real LLM is available, mock the OpenAI-compatible completions endpoint
 // so the text-search and image-analysis code paths are still exercised E2E.
 const USE_MOCK_LLM = !REAL_LLM;
 const HAS_LLM = REAL_LLM || USE_MOCK_LLM;
+
+const PROVIDER_LABEL: Record<string, string> = {
+  ollama: 'Ollama',
+  openrouter: 'OpenRouter',
+  openai: 'OpenAI',
+  none: 'None',
+};
+
+const LLM_BASE_URL_VALUE = LLM_PROVIDER === 'ollama' ? OLLAMA_BASE_URL : LLM_BASE_URL;
+const LLM_MODEL_VALUE = LLM_PROVIDER === 'ollama' ? OLLAMA_MODEL : LLM_MODEL;
 
 test.describe.configure({ mode: 'serial' });
 
@@ -34,7 +54,7 @@ test.beforeEach(async ({ page }) => {
       const hasImage = JSON.stringify(body).includes('image_url');
       const content = hasImage
         ? '{"description": "a sample screenshot", "tags": ["sample", "screenshot"]}'
-        : '{"tags": ["flutter", "state-management"]}';
+        : '{"title": "Mock title", "summary": "Mock summary", "tags": ["flutter", "state-management"], "area": "general"}';
       await route.fulfill({
         status: 200,
         contentType: 'application/json',
@@ -94,13 +114,18 @@ test('searches by tags', async ({ page }) => {
   await expect(page.locator(byLabel('Flutter state management')).first()).toBeVisible();
 });
 
-test('configures Ollama provider and searches by text', async ({ page }) => {
-  test.skip(!HAS_LLM, 'Set OLLAMA_BASE_URL to run LLM-backed tests');
+test('configures LLM provider and searches by text', async ({ page }) => {
+  test.skip(!HAS_LLM, 'Set LLM_PROVIDER + LLM_API_KEY or OLLAMA_BASE_URL to run LLM-backed tests');
 
   await page.getByRole('tab', { name: 'Settings' }).click();
-  await page.getByRole('checkbox', { name: 'Ollama' }).click();
-  await fillField(page, 'Base URL (optional)', OLLAMA_BASE_URL);
-  await fillField(page, 'Model', OLLAMA_MODEL);
+  await page.getByRole('checkbox', { name: PROVIDER_LABEL[LLM_PROVIDER] }).click();
+  if (LLM_API_KEY) {
+    await fillField(page, /API key|token/i, LLM_API_KEY);
+  }
+  if (LLM_BASE_URL_VALUE) {
+    await fillField(page, 'Base URL (optional)', LLM_BASE_URL_VALUE);
+  }
+  await fillField(page, 'Model', LLM_MODEL_VALUE);
   await page.getByRole('button', { name: 'Save settings' }).click();
 
   await expect(page.getByText(/LLM ready\s*yes/)).toBeVisible();
@@ -132,12 +157,17 @@ test('builds graph', async ({ page }) => {
 });
 
 test('uploads and analyzes an image', async ({ page }) => {
-  test.skip(!HAS_LLM, 'Set OLLAMA_BASE_URL to run LLM-backed image tests');
+  test.skip(!HAS_LLM, 'Set LLM_PROVIDER + LLM_API_KEY or OLLAMA_BASE_URL to run LLM-backed image tests');
 
   await page.getByRole('tab', { name: 'Settings' }).click();
-  await page.getByRole('checkbox', { name: 'Ollama' }).click();
-  await fillField(page, 'Base URL (optional)', OLLAMA_BASE_URL);
-  await fillField(page, 'Model', OLLAMA_MODEL);
+  await page.getByRole('checkbox', { name: PROVIDER_LABEL[LLM_PROVIDER] }).click();
+  if (LLM_API_KEY) {
+    await fillField(page, /API key|token/i, LLM_API_KEY);
+  }
+  if (LLM_BASE_URL_VALUE) {
+    await fillField(page, 'Base URL (optional)', LLM_BASE_URL_VALUE);
+  }
+  await fillField(page, 'Model', LLM_MODEL_VALUE);
   await page.getByRole('button', { name: 'Save settings' }).click();
   await expect(page.getByText(/LLM ready\s*yes/)).toBeVisible();
 

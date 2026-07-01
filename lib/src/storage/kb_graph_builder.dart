@@ -246,6 +246,12 @@ class KBGraphBuilder {
         )
         .toList();
 
+    // Mermaid node ids must not clash with keywords such as `graph`.
+    String mermaidId(String id) {
+      final safe = id.replaceAll(RegExp(r'[^a-zA-Z0-9_]'), '_');
+      return 'n_${safe}_id';
+    }
+
     final buffer = StringBuffer()
       ..writeln('---')
       ..writeln('id: graph')
@@ -277,10 +283,12 @@ class KBGraphBuilder {
       final node = nodes[id];
       if (node == null) continue;
       final label = node.title.replaceAll('"', '\\"');
-      buffer.writeln('    ${node.id}["$label"];');
+      buffer.writeln('    ${mermaidId(node.id)}["$label"];');
     }
     for (final e in mermaidEdges) {
-      buffer.writeln('    ${e.source} -->|${e.type}| ${e.target};');
+      buffer.writeln(
+        '    ${mermaidId(e.source)} -->|${e.type}| ${mermaidId(e.target)};',
+      );
     }
     buffer
       ..writeln('```')

@@ -3,6 +3,7 @@ import 'package:flutter_agent_memory/flutter_agent_memory_web.dart';
 
 import 'image_analysis_service.dart';
 import 'provider_service.dart';
+import 'raw_text_processor_service.dart';
 import 'settings_service.dart';
 
 /// Holds the active memory store, search engine, and graph builder.
@@ -18,6 +19,7 @@ class KbService extends ChangeNotifier {
   late KBSearchEngine engine;
   late KBGraphBuilder graphBuilder;
   late ImageAnalysisService imageAnalysis;
+  late RawTextProcessorService rawTextProcessor;
 
   KbStorage get storage => _storage;
 
@@ -40,6 +42,7 @@ class KbService extends ChangeNotifier {
     engine = KBSearchEngine(_storage, provider: provider);
     graphBuilder = KBGraphBuilder(_storage);
     imageAnalysis = ImageAnalysisService(provider);
+    rawTextProcessor = RawTextProcessorService(provider);
   }
 
   Future<void> updateSettings({

@@ -120,8 +120,8 @@ void main() {
 
     final content = File('${tmpDir.path}/GRAPH.md').readAsStringSync();
     // The concept-level note should be included in the mermaid diagram.
-    expect(content, contains('n_0002["Note: n_0002"]'));
+    expect(content, contains('n_n_0002_id["Note: n_0002"]'));
     // The raw note is below the threshold and should be omitted.
-    expect(content, isNot(contains('n_0001')));
+    expect(content, isNot(contains('n_n_0001_id')));
   });
 }

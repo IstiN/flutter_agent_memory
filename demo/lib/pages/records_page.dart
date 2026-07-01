@@ -354,6 +354,7 @@ class AddRecordDialog extends StatefulWidget {
 class _AddRecordDialogState extends State<AddRecordDialog> {
   String _type = 'question';
   final _textController = TextEditingController();
+  final _rawTextController = TextEditingController();
   final _areaController = TextEditingController(text: 'general');
   final _tagsController = TextEditingController();
   final _linkController = TextEditingController();
@@ -401,12 +402,29 @@ class _AddRecordDialogState extends State<AddRecordDialog> {
                 ButtonSegment(value: 'answer', label: Text('Answer')),
                 ButtonSegment(value: 'note', label: Text('Note')),
                 ButtonSegment(value: 'image', label: Text('Image')),
+                ButtonSegment(value: 'raw', label: Text('Raw text')),
               ],
               selected: {_type},
               onSelectionChanged: (s) => setState(() => _type = s.first),
             ),
             const SizedBox(height: 16),
-            if (_type == 'image') ...[
+            if (_type == 'raw') ...[
+              TextField(
+                controller: _rawTextController,
+                style: const TextStyle(color: AppColors.text),
+                decoration: const InputDecoration(
+                  labelText: 'Paste raw text here',
+                  hintText: 'Any text dump; LLM will extract title, summary and tags.',
+                ),
+                maxLines: 8,
+              ),
+              const SizedBox(height: 12),
+              if (!widget.kbService.rawTextProcessor.available)
+                const Text(
+                  'Configure an LLM provider in Settings to auto-process raw text.',
+                  style: TextStyle(color: AppColors.warning),
+                ),
+            ] else if (_type == 'image') ...[
               if (_imageDataUrl == null)
                 OutlinedButton.icon(
                   onPressed: _pickImage,
@@ -599,6 +617,41 @@ class _AddRecordDialogState extends State<AddRecordDialog> {
             text: '$text\n\n![image]($dataUrl)',
             area: area.isEmpty ? 'images' : area,
             tags: allTags,
+            memoryType: 'observation',
+            level: MemoryLevel.raw,
+          );
+        } catch (e) {
+          setState(() {
+            _analyzing = false;
+            _imageError = e.toString();
+          });
+          return;
+        }
+        setState(() => _analyzing = false);
+      case 'raw':
+        final raw = _rawTextController.text.trim();
+        if (raw.isEmpty) return;
+        setState(() => _analyzing = true);
+        try {
+          String noteText;
+          List<String> noteTags;
+          String noteArea;
+          if (widget.kbService.rawTextProcessor.available) {
+            final result = await widget.kbService.rawTextProcessor.process(raw);
+            final title = result['title'] as String;
+            final summary = result['summary'] as String;
+            noteTags = (result['tags'] as List).map((e) => e.toString()).toList();
+            noteArea = (result['area'] as String).isEmpty ? area : result['area'] as String;
+            noteText = title.isEmpty ? summary : '$title\n\n$summary';
+          } else {
+            noteText = raw;
+            noteTags = tags;
+            noteArea = area;
+          }
+          await store.addNote(
+            text: noteText,
+            area: noteArea,
+            tags: noteTags,
             memoryType: 'observation',
             level: MemoryLevel.raw,
           );

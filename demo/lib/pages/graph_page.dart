@@ -225,20 +225,29 @@ class _DiagramView extends StatefulWidget {
 }
 
 class _DiagramViewState extends State<_DiagramView> {
-  late final String _viewType;
-
   @override
   void initState() {
     super.initState();
-    _viewType = 'mermaid_${widget.diagram.hashCode}_${DateTime.now().microsecond}';
-    MermaidRenderer.render(widget.diagram, _viewType);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      renderMermaidDiagram(widget.diagram);
+    });
+  }
+
+  @override
+  void didUpdateWidget(covariant _DiagramView oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.diagram != widget.diagram) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        renderMermaidDiagram(widget.diagram);
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Container(
       color: AppColors.background,
-      child: HtmlElementView(viewType: _viewType),
+      child: const HtmlElementView(viewType: 'mermaid-diagram'),
     );
   }
 }

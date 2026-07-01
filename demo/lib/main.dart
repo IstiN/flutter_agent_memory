@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/semantics.dart';
 
@@ -10,9 +11,11 @@ import 'pages/records_page.dart';
 import 'pages/search_page.dart';
 import 'pages/settings_page.dart';
 import 'theme/app_theme.dart';
+import 'widgets/mermaid_renderer.dart' show registerMermaidPlatformView;
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  if (kIsWeb) registerMermaidPlatformView();
   initializePromptAssetLoader();
   final settings = await SettingsService.load();
   final providerService = ProviderService(settings);

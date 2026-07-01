@@ -1,5 +1,3 @@
-void platformRender(String diagram, String viewType) {
-  throw UnsupportedError(
-    'Mermaid rendering is only supported on the web.',
-  );
-}
+/// No-op stub for non-web targets.
+void registerMermaidPlatformView() {}
+void renderMermaidDiagram(String diagram) {}
