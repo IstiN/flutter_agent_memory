@@ -125,6 +125,14 @@ class _SettingsPageState extends State<SettingsPage> {
                     helperText: 'e.g. gpt-4o-mini, llama3, mistral',
                   ),
                 ),
+                const SizedBox(height: 10),
+                _ModelPresets(
+                  type: _type,
+                  onSelected: (model, baseUrl) {
+                    _modelController.text = model;
+                    _baseUrlController.text = baseUrl;
+                  },
+                ),
               ],
             ),
           ),
@@ -268,6 +276,89 @@ class _SettingsPageState extends State<SettingsPage> {
     await widget.kbService.clearAll();
     await _loadRecordCount();
     setState(() => _message = 'Knowledge base reset.');
+  }
+}
+
+class _ModelPresets extends StatelessWidget {
+  final ProviderType type;
+  final void Function(String model, String baseUrl) onSelected;
+
+  const _ModelPresets({required this.type, required this.onSelected});
+
+  static const _presets = [
+    (
+      provider: 'openrouter',
+      label: 'Gemini 3.1 Flash Lite',
+      model: 'google/gemini-3.1-flash-lite-preview',
+      baseUrl: '',
+    ),
+    (
+      provider: 'openrouter',
+      label: 'Gemma 4 31B',
+      model: 'google/gemma-4-31b-it',
+      baseUrl: '',
+    ),
+    (
+      provider: 'openrouter',
+      label: 'Qwen 3.6 Flash',
+      model: 'qwen/qwen3.6-flash',
+      baseUrl: '',
+    ),
+    (
+      provider: 'openrouter',
+      label: 'Qwen 3 VL 8B',
+      model: 'qwen/qwen3-vl-8b-instruct',
+      baseUrl: '',
+    ),
+    (
+      provider: 'openrouter',
+      label: 'Qwen 3.5 Flash',
+      model: 'qwen/qwen3.5-flash-02-23',
+      baseUrl: '',
+    ),
+    (
+      provider: 'openai',
+      label: 'GPT-4o mini',
+      model: 'gpt-4o-mini',
+      baseUrl: '',
+    ),
+    (
+      provider: 'openai',
+      label: 'GPT-4o',
+      model: 'gpt-4o',
+      baseUrl: '',
+    ),
+    (
+      provider: 'ollama',
+      label: 'llama3',
+      model: 'llama3',
+      baseUrl: 'http://localhost:11434/v1/chat/completions',
+    ),
+    (
+      provider: 'ollama',
+      label: 'llava',
+      model: 'llava',
+      baseUrl: 'http://localhost:11434/v1/chat/completions',
+    ),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    final items = _presets.where((p) => p.provider == type.settingsValue).toList();
+    if (items.isEmpty) return const SizedBox.shrink();
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: items.map((p) {
+        return ActionChip(
+          label: Text(p.label),
+          onPressed: () => onSelected(p.model, p.baseUrl),
+          backgroundColor: AppColors.surfaceLow,
+          side: const BorderSide(color: AppColors.border),
+          labelStyle: const TextStyle(color: AppColors.textMuted, fontSize: 12),
+        );
+      }).toList(),
+    );
   }
 }
 
