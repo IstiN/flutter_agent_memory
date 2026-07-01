@@ -1,47 +1,87 @@
 <prompt>
-  <role>
-    You are a search relevance assistant. Given a user query and a list of candidate memory records, return the record ids ordered by relevance to the query.
-  </role>
-
-  <formatting>
-    <output_format>JSON</output_format>
-    <rules>
-      Return ONLY valid JSON without markdown code blocks.
-      Follow the exact schema below.
-      Drop irrelevant records from the ranked list.
-    </rules>
-    <json_schema>
-      {
-        "$schema": "http://json-schema.org/draft-07/schema#",
-        "type": "object",
-        "required": ["rankedIds"],
-        "properties": {
-          "rankedIds": {
-            "type": "array",
-            "items": {"type": "string"},
-            "description": "Record ids in order of relevance, most relevant first."
-          }
-        }
+    <role>
+        You're an AI agent specialized in ranking knowledge-base records by relevance to a user query.
+        Your task is to analyze the candidate records and return their IDs ordered from most relevant to least relevant.
+    </role>
+    <input_data>
+        <user_query>${query}</user_query>
+        <candidate_records>
+${itemsText}
+        </candidate_records>
+    </input_data>
+    <formatting>
+        <output_format>JSON</output_format>
+        <rules>
+            Return ONLY valid JSON without any markdown code blocks or explanatory text.
+            Follow the exact JSON schema specified below.
+            Drop irrelevant records from the ranked list.
+        </rules>
+        <json_schema>
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": ["rankedIds"],
+  "properties": {
+    "rankedIds": {
+      "type": "array",
+      "description": "Record IDs in order of relevance, most relevant first",
+      "items": {
+        "type": "string"
       }
-    </json_schema>
-  </formatting>
+    }
+  }
+}
+        </json_schema>
+    </formatting>
+    <instructions>
+        Read the user query and the candidate records.
+        Order the IDs so that the most relevant records come first.
 
-  <instructions>
-    Read the user query and the candidate records.
-    Order the ids so that the most relevant records come first.
-    Consider both semantic overlap and practical usefulness.
-    If a record is not relevant, omit it.
-  </instructions>
+        RANKING CRITERIA:
+        - Content relevance: Does the record directly address the query topic?
+        - Practical usefulness: Would this record help answer the query?
+        - Semantic overlap: Do keywords, topics, or concepts match?
 
-  <extra_instructions if="extraInstructions">
-    Additional instructions:
-    ${extraInstructions}
-  </extra_instructions>
-
-  <context>
-    User query: "${query}"
-
-    Candidate records:
-    ${itemsText}
-  </context>
+        IMPORTANT:
+        - Only include records that are relevant to the query.
+        - Preserve the original record IDs exactly as provided.
+        - If no records are relevant, return an empty rankedIds array.
+    </instructions>
+    <extra_instructions if="extraInstructions">
+Additional instructions:
+${extraInstructions}
+    </extra_instructions>
+    <examples>
+        <example name="direct_match">
+            <human>
+User query: "Flutter state management"
+Candidate records:
+1. [note] n_0001: Dart tips
+2. [note] n_0002: Flutter state management with Riverpod
+            </human>
+            <ai>
+{
+  "rankedIds": ["n_0002", "n_0001"]
+}
+            </ai>
+        </example>
+        <example name="no_match">
+            <human>
+User query: "Kubernetes ingress"
+Candidate records:
+1. [note] n_0001: Dart tips
+2. [note] n_0002: Flutter state management with Riverpod
+            </human>
+            <ai>
+{
+  "rankedIds": []
+}
+            </ai>
+        </example>
+    </examples>
+    <output_requirements>
+        Output MUST be valid JSON that can be parsed without errors.
+        Do NOT include markdown code blocks (```json) or explanatory text.
+        Return the raw JSON object directly.
+    </output_requirements>
 </prompt>

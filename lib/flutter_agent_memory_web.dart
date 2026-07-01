@@ -6,8 +6,12 @@
 library flutter_agent_memory_web;
 
 // Agents (prompt loader is host-configurable, so it is web-safe).
-export 'src/agents/kb_tag_generator_agent.dart';
+export 'src/agents/kb_analysis_agent.dart';
+export 'src/agents/kb_aggregation_agent.dart';
+export 'src/agents/kb_consolidation_agent.dart';
+export 'src/agents/kb_qa_mapping_agent.dart';
 export 'src/agents/kb_reranker_agent.dart';
+export 'src/agents/kb_tag_generator_agent.dart';
 export 'src/agents/prompts/prompt_loader.dart';
 
 // LLM.

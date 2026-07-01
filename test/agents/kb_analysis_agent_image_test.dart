@@ -36,8 +36,8 @@ void main() {
     );
 
     expect(provider.capturedMessages, isNotNull);
-    expect(provider.capturedMessages!.length, 2); // system + user
-    final userMessage = provider.capturedMessages!.last;
+    expect(provider.capturedMessages!.length, 1); // single user message with prompt and images
+    final userMessage = provider.capturedMessages!.single;
     expect(userMessage.images, hasLength(1));
   });
 }

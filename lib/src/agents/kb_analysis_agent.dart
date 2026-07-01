@@ -28,12 +28,9 @@ class KBAnalysisAgent {
       extraInstructions,
       hasImages: images != null && images.isNotEmpty,
     );
-    final response = images != null && images.isNotEmpty
-        ? await _provider.chatMessages([
-            LlmMessage(role: 'system', content: _systemPrompt(context)),
-            LlmMessage(role: 'user', content: prompt, images: images),
-          ])
-        : await _provider.chat(prompt);
+    final response = await _provider.chatMessages([
+      LlmMessage(role: 'user', content: prompt, images: images),
+    ]);
     final jsonText = extractJsonFromMarkdown(response);
     final json = jsonDecode(jsonText) as Map<String, dynamic>;
     return AnalysisResult.fromJson(json);
@@ -67,12 +64,4 @@ class KBAnalysisAgent {
     });
   }
 
-  String _systemPrompt(KBContext context) {
-    return '''
-You are a knowledge-base extraction assistant.
-Return only valid JSON matching the requested schema.
-Be concise but complete.
-'''
-        .trim();
-  }
 }

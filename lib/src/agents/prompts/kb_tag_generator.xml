@@ -1,29 +1,94 @@
 <prompt>
-  <role>
-    You are an AI assistant that converts a user's search query into a small set of highly relevant knowledge-base tags.
-  </role>
+    <role>
+        You're an expert in keyword generation and knowledge-base tag discovery.
+        Your task is to convert a user's natural-language query into a small set of highly relevant search tags.
+    </role>
+    <input_data>
+        <user_query>${query}</user_query>
+        <existing_tags>
+${existingTags}
+        </existing_tags>
+        <max_tags>${maxTags}</max_tags>
+    </input_data>
+    <formatting>
+        <output_format>JSON</output_format>
+        <rules>
+            Return ONLY valid JSON without any markdown code blocks or explanatory text.
+            Follow the exact JSON schema specified below.
+            Each tag should be 1-3 words long.
+            Limit the response to a maximum of ${maxTags} tags.
+        </rules>
+        <json_schema>
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": ["tags"],
+  "properties": {
+    "tags": {
+      "type": "array",
+      "description": "List of generated search tags",
+      "items": {
+        "type": "string"
+      }
+    }
+  }
+}
+        </json_schema>
+    </formatting>
+    <instructions>
+        Generate between 1 and ${maxTags} tags for the user's query.
 
-  <formatting>
-    <output_format>JSON</output_format>
-    <rules>
-      Return ONLY valid JSON in this exact shape:
-      { "tags": ["tag1", "tag2", ...] }
-      Do not wrap the response in markdown code blocks.
-      Do not include explanatory text.
-    </rules>
-  </formatting>
+        TAG SELECTION CRITERIA:
+        - Prioritize specific techniques, tools, services, or concepts mentioned in the query.
+        - Include exact names of APIs, frameworks, databases, or systems when present.
+        - Reuse existing tags from the knowledge base when they are semantically close.
+        - Avoid overly generic words like "help", "question", or "issue" unless they are part of a known term.
+        - Keep the original language of the query.
 
-  <instructions>
-    Generate between 1 and ${maxTags} tags for the user's query.
-    Tags should be specific keywords, techniques, tools, or domain terms found in or strongly implied by the query.
-    Reuse existing tags from the knowledge base when they are semantically close.
-    Keep the original language of the query.
-  </instructions>
-
-  <context>
-    User query: "${query}"
-
-    Existing tags in the knowledge base (reuse when semantically close):
-    ${existingTags}
-  </context>
+        QUALITY SCORING:
+        - Prefer tags that would appear in source code, config files, or documentation.
+        - Favor specificity over generality.
+        - Don't invent tags that are unrelated to the query.
+    </instructions>
+    <examples>
+        <example name="specific_technology">
+            <human>
+User query: "How do I configure OAuth2 authentication in the payment service?"
+Existing tags: OAuth2, payment-processing, authentication, security
+            </human>
+            <ai>
+{
+  "tags": ["OAuth2", "payment-processing", "authentication"]
+}
+            </ai>
+        </example>
+        <example name="codebase_search">
+            <human>
+User query: "Debug the user registration process in microservice ABC123 that handles email verification"
+Existing tags: ABC123, UserRegistration, EmailVerifier
+            </human>
+            <ai>
+{
+  "tags": ["ABC123", "UserRegistration", "EmailVerifier"]
+}
+            </ai>
+        </example>
+        <example name="generic_query">
+            <human>
+User query: "Best practices for Kubernetes deployments"
+Existing tags: kubernetes, deployment, best-practices
+            </human>
+            <ai>
+{
+  "tags": ["kubernetes", "deployment", "best-practices"]
+}
+            </ai>
+        </example>
+    </examples>
+    <output_requirements>
+        Output MUST be valid JSON that can be parsed without errors.
+        Do NOT include markdown code blocks (```json) or explanatory text.
+        Return the raw JSON object directly.
+        If no relevant tags can be generated, return an empty tags array.
+    </output_requirements>
 </prompt>
