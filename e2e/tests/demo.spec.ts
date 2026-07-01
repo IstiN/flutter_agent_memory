@@ -157,8 +157,6 @@ test('builds graph', async ({ page }) => {
 });
 
 test('decomposes raw text into questions, answers and notes', async ({ page }) => {
-  test.skip(!USE_MOCK_LLM, 'Deterministic only when LLM responses are mocked');
-
   await page.getByRole('button', { name: 'Add first record' }).click();
   await page.getByRole('button', { name: 'Raw text' }).click();
   await fillField(
@@ -168,11 +166,16 @@ test('decomposes raw text into questions, answers and notes', async ({ page }) =
   );
   await page.getByRole('button', { name: 'Add' }).click();
 
-  // The dialog closes and the decomposed records appear.
-  await expect(page.getByRole('button', { name: 'Add record' })).toBeVisible({ timeout: 60000 });
-  await expect(page.locator(byLabel('How do I manage state in Flutter?')).first()).toBeVisible();
-  await expect(page.locator(byLabel('Use a state management solution like Riverpod or Bloc.')).first()).toBeVisible();
-  await expect(page.locator(byLabel('State management is important for scalable Flutter apps.')).first()).toBeVisible();
+  // The dialog closes and at least one decomposed record appears.
+  await expect(page.getByRole('button', { name: 'Add record' })).toBeVisible({ timeout: 120000 });
+  await expect(page.locator(byLabel('Empty state')).first()).not.toBeVisible();
+
+  if (USE_MOCK_LLM) {
+    // With deterministic mocks we can assert exact decomposed entities.
+    await expect(page.locator(byLabel('How do I manage state in Flutter?')).first()).toBeVisible();
+    await expect(page.locator(byLabel('Use a state management solution like Riverpod or Bloc.')).first()).toBeVisible();
+    await expect(page.locator(byLabel('State management is important for scalable Flutter apps.')).first()).toBeVisible();
+  }
 });
 
 test('uploads and analyzes an image', async ({ page }) => {
