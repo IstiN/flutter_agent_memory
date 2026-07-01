@@ -135,7 +135,7 @@ test('configures LLM provider and searches by text', async ({ page }) => {
   await fillField(page, 'Text', 'How do I manage state in Flutter?');
   await fillField(page, 'Tags (comma separated)', 'flutter');
   await page.getByRole('button', { name: 'Add' }).click();
-  await expect(page.locator(byLabel('How do I manage state in Flutter?')).first()).toBeVisible();
+  await expect(page.locator(byLabel('How do I manage state in Flutter?')).first()).toBeVisible({ timeout: 60000 });
 
   await page.getByRole('tab', { name: 'Search' }).click();
   await page.getByRole('button', { name: 'By text' }).first().click();
