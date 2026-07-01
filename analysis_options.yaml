@@ -1,0 +1,6 @@
+analyzer:
+  exclude:
+    - demo/**
+    - build/**
+    - .dart_tool/**
+    - test_output/**

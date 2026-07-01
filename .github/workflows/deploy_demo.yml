@@ -36,6 +36,10 @@ jobs:
         working-directory: demo
         run: flutter pub get
 
+      - name: Analyze demo
+        working-directory: demo
+        run: flutter analyze --no-pub
+
       - name: Build Flutter demo
         working-directory: demo
         run: |
