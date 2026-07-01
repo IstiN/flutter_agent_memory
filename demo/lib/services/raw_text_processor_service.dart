@@ -1,12 +1,14 @@
 import 'package:flutter_agent_memory/flutter_agent_memory_web.dart';
 
+import 'vtt_utils.dart';
+
 /// Decomposes a raw text dump into structured knowledge-base entries.
 ///
 /// Reuses the package's [KBAnalysisAgent] so the demo and core library share
 /// the same DMTools-derived prompt.
 ///
-/// Long inputs (e.g. meeting transcripts) are automatically chunked so they
-/// fit into models with modest context windows.
+/// Long inputs are automatically chunked so they fit into models with modest
+/// context windows, matching the DMTools [ChunkPreparation] behavior.
 class RawTextProcessorService {
   final LlmProvider? provider;
 
@@ -14,13 +16,12 @@ class RawTextProcessorService {
 
   bool get available => provider != null;
 
-  /// Approximate character budget per chunk. A single Latin/English character
-  /// is roughly 1/4 of a token, so 80k chars is ~20k tokens. This leaves room
-  /// for the DMTools system prompt and the model's completion budget in a
-  /// typical 32k-context model.
-  static const int _maxChunkChars = 80000;
+  /// Default token limit per chunk, aligned with DMTools'
+  /// `DEFAULT_PROMPT_CHUNK_TOKEN_LIMIT` (50000 tokens).
+  /// Using ~4 characters per token as a rough approximation.
+  static const int _maxChunkChars = 200000;
 
-  /// If the input exceeds this length we normalize and chunk it.
+  /// If the normalized input exceeds this length we split it into chunks.
   static const int _chunkingThreshold = _maxChunkChars;
 
   Future<Map<String, dynamic>> process(String rawText) async {
@@ -83,45 +84,19 @@ class RawTextProcessorService {
     };
   }
 
-  /// Removes common transcript/markup noise (WEBVTT cues, timestamps,
-  /// speaker tags) and collapses whitespace.
+  /// Normalizes line endings and transforms VTT transcripts, matching
+  /// DMTools' [KBFileReader] and [VTTUtils] behavior.
   static String _normalize(String text) {
     var normalized = text
         .replaceAll('\r\n', '\n')
-        .replaceAll('\r', '\n');
+        .replaceAll('\r', '\n')
+        .replaceAll('\u0085', '\n');
 
-    final isVtt = normalized.contains('WEBVTT') ||
-        normalized.contains('-->') ||
-        normalized.contains('<v ');
-
-    if (isVtt) {
-      final buffer = StringBuffer();
-      for (final line in normalized.split('\n')) {
-        final trimmed = line.trim();
-        if (trimmed.isEmpty) continue;
-        if (trimmed == 'WEBVTT') continue;
-        // Skip cue identifiers like "ec1f.../123-0".
-        if (RegExp(r'^[\w\-]+/[\w\-]+$').hasMatch(trimmed)) continue;
-        // Skip timestamp lines like "00:00:11.265 --> 00:00:16.404".
-        if (RegExp(r'^\d{2}:\d{2}:\d{2}\.\d+\s*-->').hasMatch(trimmed)) {
-          continue;
-        }
-        // Convert "<v Name>text</v>" to "Name: text".
-        final speakerMatch = RegExp(r'^<v\s+([^>]+)>(.+?)</v>\s*$').firstMatch(trimmed);
-        if (speakerMatch != null) {
-          final speaker = speakerMatch.group(1)!.trim();
-          final content = speakerMatch.group(2)!.trim();
-          buffer.writeln('$speaker: $content');
-          continue;
-        }
-        buffer.writeln(trimmed);
-      }
-      normalized = buffer.toString();
+    if (VttUtils.isVttFormat(normalized)) {
+      normalized = VttUtils.transformVtt(normalized, date: DateTime.now());
     }
 
-    return normalized
-        .replaceAll(RegExp(r'\n{3,}'), '\n\n')
-        .trim();
+    return normalized;
   }
 
   /// Splits [text] into chunks that do not exceed [maxChunkSize] characters,
@@ -141,7 +116,7 @@ class RawTextProcessorService {
     for (final paragraph in paragraphs) {
       if (paragraph.length > maxChunkSize) {
         flush();
-        chunks.addAll(_chunkByLines(paragraph, maxChunkSize));
+        chunks.addAll(_chunkByBreaks(paragraph, maxChunkSize));
         continue;
       }
       if (buffer.length + paragraph.length + 2 > maxChunkSize) {
@@ -154,8 +129,9 @@ class RawTextProcessorService {
     return chunks.where((c) => c.isNotEmpty).toList();
   }
 
-  static List<String> _chunkByLines(String paragraph, int maxChunkSize) {
-    final lines = paragraph.split('\n');
+  /// Splits a large paragraph at natural boundaries: commas/brackets,
+  /// then newlines, then spaces.
+  static List<String> _chunkByBreaks(String text, int maxChunkSize) {
     final chunks = <String>[];
     final buffer = StringBuffer();
 
@@ -166,42 +142,28 @@ class RawTextProcessorService {
       }
     }
 
-    for (final line in lines) {
-      if (line.length > maxChunkSize) {
-        flush();
-        chunks.addAll(_chunkByWords(line, maxChunkSize));
-        continue;
+    var lastEnd = 0;
+    while (lastEnd < text.length) {
+      final remaining = text.substring(lastEnd);
+      // Take up to maxChunkSize, then look back for a good break point.
+      var take = remaining.length.clamp(0, maxChunkSize);
+      if (take < remaining.length) {
+        var bestBreak = take;
+        // Look back up to 500 chars for a comma/bracket/newline/space.
+        for (var i = take; i > take - 500 && i > 0; i--) {
+          final ch = remaining[i - 1];
+          if (ch == ',' || ch == '}' || ch == ']' || ch == '\n' || ch == ' ') {
+            bestBreak = i;
+            if (ch == ',' || ch == '}' || ch == ']' || ch == '\n') break;
+          }
+        }
+        take = bestBreak;
       }
-      if (buffer.length + line.length + 1 > maxChunkSize) {
-        flush();
-      }
-      if (buffer.isNotEmpty) buffer.writeln();
-      buffer.write(line);
-    }
-    flush();
-    return chunks.where((c) => c.isNotEmpty).toList();
-  }
-
-  static List<String> _chunkByWords(String line, int maxChunkSize) {
-    final words = line.split(' ');
-    final chunks = <String>[];
-    final buffer = StringBuffer();
-
-    void flush() {
-      if (buffer.isNotEmpty) {
-        chunks.add(buffer.toString().trim());
-        buffer.clear();
-      }
+      buffer.write(remaining.substring(0, take));
+      lastEnd += take;
+      flush();
     }
 
-    for (final word in words) {
-      if (buffer.length + word.length + 1 > maxChunkSize) {
-        flush();
-      }
-      if (buffer.isNotEmpty) buffer.write(' ');
-      buffer.write(word);
-    }
-    flush();
     return chunks.where((c) => c.isNotEmpty).toList();
   }
 

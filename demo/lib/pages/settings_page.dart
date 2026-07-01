@@ -288,8 +288,32 @@ class _ModelPresets extends StatelessWidget {
   static const _presets = [
     (
       provider: 'openrouter',
-      label: 'Gemini 3.1 Flash Lite',
+      label: 'Gemini 2.5 Flash Lite (1M ctx)',
+      model: 'google/gemini-2.5-flash-lite',
+      baseUrl: '',
+    ),
+    (
+      provider: 'openrouter',
+      label: 'Gemini 3.1 Flash Lite (1M ctx)',
       model: 'google/gemini-3.1-flash-lite-preview',
+      baseUrl: '',
+    ),
+    (
+      provider: 'openrouter',
+      label: 'Gemini 3.5 Flash (1M ctx)',
+      model: 'google/gemini-3.5-flash',
+      baseUrl: '',
+    ),
+    (
+      provider: 'openrouter',
+      label: 'Claude Sonnet 5 (1M ctx)',
+      model: 'anthropic/claude-sonnet-5',
+      baseUrl: '',
+    ),
+    (
+      provider: 'openrouter',
+      label: 'Claude 3 Haiku (200k ctx)',
+      model: 'anthropic/claude-3-haiku',
       baseUrl: '',
     ),
     (
