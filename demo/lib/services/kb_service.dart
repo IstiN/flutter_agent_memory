@@ -42,7 +42,7 @@ class KbService extends ChangeNotifier {
     engine = KBSearchEngine(_storage, provider: provider);
     graphBuilder = KBGraphBuilder(_storage);
     imageAnalysis = ImageAnalysisService(provider);
-    rawTextProcessor = RawTextProcessorService(provider);
+    rawTextProcessor = RawTextProcessorService(providerService);
   }
 
   Future<void> updateSettings({

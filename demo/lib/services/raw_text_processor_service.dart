@@ -1,5 +1,9 @@
+import 'dart:math' show max;
+
 import 'package:flutter_agent_memory/flutter_agent_memory_web.dart';
 
+import 'openrouter_model_service.dart';
+import 'provider_service.dart';
 import 'vtt_utils.dart';
 
 /// Decomposes a raw text dump into structured knowledge-base entries.
@@ -7,34 +11,39 @@ import 'vtt_utils.dart';
 /// Reuses the package's [KBAnalysisAgent] so the demo and core library share
 /// the same DMTools-derived prompt.
 ///
-/// Long inputs are automatically chunked so they fit into models with modest
-/// context windows, matching the DMTools [ChunkPreparation] behavior.
+/// Long inputs are automatically chunked. For OpenRouter models the chunk size
+/// and output token limit are resolved dynamically from the model's published
+/// metadata (`context_length` and `max_completion_tokens`). For other providers
+/// a conservative DMTools-aligned default of 50k input tokens is used.
 class RawTextProcessorService {
-  final LlmProvider? provider;
+  final ProviderService _providerService;
 
-  const RawTextProcessorService(this.provider);
+  RawTextProcessorService(this._providerService);
 
-  bool get available => provider != null;
+  bool get available => _providerService.provider != null;
 
-  /// Default token limit per chunk, aligned with DMTools'
-  /// `DEFAULT_PROMPT_CHUNK_TOKEN_LIMIT` (50000 tokens).
-  /// Using ~4 characters per token as a rough approximation.
-  static const int _maxChunkChars = 200000;
+  /// Fallback chunk size aligned with DMTools' default chunk token limit.
+  static const int _defaultInputChunkTokens = 50000;
 
-  /// If the normalized input exceeds this length we split it into chunks.
-  static const int _chunkingThreshold = _maxChunkChars;
+  /// Reserve tokens for the system prompt, instructions, and output overhead.
+  static const int _systemOverheadTokens = 1024;
+
+  /// Approximate characters per token for Latin/Cyrillic text.
+  static const int _charsPerToken = 4;
 
   Future<Map<String, dynamic>> process(String rawText) async {
-    final p = provider;
-    if (p == null) {
+    if (!available) {
       throw StateError('LLM provider is not configured');
     }
 
     final normalized = _normalize(rawText);
-    final agent = KBAnalysisAgent(p);
+    final limits = await _resolveLimits();
+
+    final agent = KBAnalysisAgent(limits.provider);
+    final maxChunkChars = limits.inputChunkTokens * _charsPerToken;
 
     final results = <AnalysisResult>[];
-    if (normalized.length <= _chunkingThreshold) {
+    if (normalized.length <= maxChunkChars) {
       final result = await agent.analyze(
         normalized,
         KBContext(),
@@ -42,7 +51,7 @@ class RawTextProcessorService {
       );
       results.add(result);
     } else {
-      final chunks = _chunkText(normalized, _maxChunkChars);
+      final chunks = _chunkText(normalized, maxChunkChars);
       for (var i = 0; i < chunks.length; i++) {
         final result = await agent.analyze(
           chunks[i],
@@ -82,6 +91,48 @@ class RawTextProcessorService {
       'answers': merged.answers.map((a) => a.toJson()).toList(),
       'notes': merged.notes.map((n) => n.toJson()).toList(),
     };
+  }
+
+  /// Resolves the output token limit and input chunk size for the current
+  /// provider/model combination.
+  ///
+  /// For OpenRouter the limits are fetched from `/api/v1/models` so the demo
+  /// automatically uses the largest possible output and the largest safe input
+  /// chunk (roughly half of the remaining context after reserving output).
+  Future<_Limits> _resolveLimits() async {
+    final baseConfig = _providerService.baseConfig;
+    var outputTokens = baseConfig.maxTokens;
+    var inputChunkTokens = _defaultInputChunkTokens;
+
+    if (baseConfig.providerName == 'openrouter') {
+      final info = await OpenRouterModelService.fetchModelInfo(baseConfig.model);
+      if (info != null && info.contextLength > 0) {
+        outputTokens = info.maxCompletionTokens > 0
+            ? info.maxCompletionTokens
+            : baseConfig.maxTokens;
+        // Leave roughly half of the post-output context for input so we stay
+        // well below the model's total context window even with system prompts.
+        inputChunkTokens = max(
+          1000,
+          (info.contextLength - outputTokens - _systemOverheadTokens) ~/ 2,
+        );
+      }
+    }
+
+    final config = LlmConfig(
+      providerName: baseConfig.providerName,
+      apiKey: baseConfig.apiKey,
+      baseUrl: baseConfig.baseUrl,
+      model: baseConfig.model,
+      maxTokens: outputTokens,
+      temperature: baseConfig.temperature,
+      maxTokensParamName: baseConfig.maxTokensParamName,
+    );
+
+    return _Limits(
+      provider: ProviderFactory.create(config),
+      inputChunkTokens: inputChunkTokens,
+    );
   }
 
   /// Normalizes line endings and transforms VTT transcripts, matching
@@ -182,4 +233,11 @@ class RawTextProcessorService {
       notes: notes,
     );
   }
+}
+
+class _Limits {
+  final LlmProvider provider;
+  final int inputChunkTokens;
+
+  _Limits({required this.provider, required this.inputChunkTokens});
 }

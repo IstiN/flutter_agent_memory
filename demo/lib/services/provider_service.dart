@@ -30,18 +30,23 @@ class ProviderService {
 
   ProviderService(this.settings);
 
+  /// The LLM configuration derived from persisted settings and environment
+  /// variables (e.g. `OPENROUTER_MAX_TOKENS`).
+  LlmConfig get baseConfig {
+    return LlmConfig.fromEnvironment(
+      provider: settings.provider,
+      apiKey: settings.apiKey,
+      baseUrl: settings.baseUrl,
+      model: settings.model,
+    );
+  }
+
   LlmProvider? get provider {
     if (settings.provider == 'none') return null;
     final needsKey = settings.provider != 'ollama';
     if (settings.model.isEmpty) return null;
     if (needsKey && settings.apiKey.isEmpty) return null;
-    final config = LlmConfig(
-      providerName: settings.provider,
-      apiKey: settings.apiKey,
-      baseUrl: settings.baseUrl,
-      model: settings.model,
-    );
-    return ProviderFactory.create(config);
+    return ProviderFactory.create(baseConfig);
   }
 
   String? get corsWarning {
