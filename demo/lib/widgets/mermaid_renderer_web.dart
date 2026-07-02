@@ -14,7 +14,8 @@ void registerMermaidPlatformView() {
         ..id = 'mermaid-host'
         ..style.width = '100%'
         ..style.height = '100%'
-        ..style.backgroundColor = '#0B0E14';
+        ..style.backgroundColor = '#0B0E14'
+        ..style.overflow = 'hidden';
 
       final stub = html.ScriptElement()
         ..text = '''
@@ -28,27 +29,103 @@ window.renderMermaid = function() {
       final script = html.ScriptElement()
         ..type = 'module'
         ..text = '''
-window.renderMermaid = (diagram, elementId) => {
-  if (!window.__mermaid_loaded__) {
-    window.__mermaid_queue__.push([diagram, elementId]);
-    return;
+(function() {
+  let scale = 1;
+  let tx = 0;
+  let ty = 0;
+  let dragging = false;
+  let lastX = 0;
+  let lastY = 0;
+
+  function applyTransform(svg) {
+    svg.style.transform = 'translate(' + tx + 'px, ' + ty + 'px) scale(' + scale + ')';
   }
-  const element = document.getElementById(elementId);
-  if (!element) return;
-  element.innerHTML = '';
-  mermaid.render('mermaid-svg-' + Date.now(), diagram)
-    .then(({ svg }) => {
-      element.innerHTML = svg;
-      const svgEl = element.querySelector('svg');
-      if (svgEl) {
-        svgEl.style.maxWidth = '100%';
-        svgEl.style.height = '100%';
-      }
-    })
-    .catch(err => {
-      element.innerHTML = '<pre style="color:#EF4444; padding:16px;">' + err.toString() + '</pre>';
+
+  function resetTransform(svg) {
+    scale = 1;
+    tx = 0;
+    ty = 0;
+    applyTransform(svg);
+  }
+
+  function setupZoomPan(svg) {
+    svg.style.cursor = 'grab';
+    svg.style.transformOrigin = '0 0';
+    applyTransform(svg);
+
+    svg.addEventListener('wheel', function(e) {
+      e.preventDefault();
+      const rect = svg.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      const delta = e.deltaY > 0 ? 0.9 : 1.1;
+      const newScale = Math.min(Math.max(scale * delta, 0.2), 5);
+      const ratio = newScale / scale;
+      tx = x - (x - tx) * ratio;
+      ty = y - (y - ty) * ratio;
+      scale = newScale;
+      applyTransform(svg);
+    }, { passive: false });
+
+    svg.addEventListener('pointerdown', function(e) {
+      dragging = true;
+      lastX = e.clientX;
+      lastY = e.clientY;
+      svg.style.cursor = 'grabbing';
+      svg.setPointerCapture(e.pointerId);
     });
-};
+
+    svg.addEventListener('pointermove', function(e) {
+      if (!dragging) return;
+      const dx = e.clientX - lastX;
+      const dy = e.clientY - lastY;
+      lastX = e.clientX;
+      lastY = e.clientY;
+      tx += dx;
+      ty += dy;
+      applyTransform(svg);
+    });
+
+    svg.addEventListener('pointerup', function(e) {
+      dragging = false;
+      svg.style.cursor = 'grab';
+      svg.releasePointerCapture(e.pointerId);
+    });
+
+    svg.addEventListener('pointerleave', function() {
+      dragging = false;
+      svg.style.cursor = 'grab';
+    });
+
+    svg.addEventListener('dblclick', function() {
+      resetTransform(svg);
+    });
+  }
+
+  window.renderMermaid = (diagram, elementId) => {
+    if (!window.__mermaid_loaded__) {
+      window.__mermaid_queue__.push([diagram, elementId]);
+      return;
+    }
+    const element = document.getElementById(elementId);
+    if (!element) return;
+    element.innerHTML = '';
+    mermaid.render('mermaid-svg-' + Date.now(), diagram)
+      .then(({ svg }) => {
+        element.innerHTML = svg;
+        const svgEl = element.querySelector('svg');
+        if (svgEl) {
+          svgEl.style.width = '100%';
+          svgEl.style.height = '100%';
+          svgEl.style.display = 'block';
+          setupZoomPan(svgEl);
+        }
+      })
+      .catch(err => {
+        element.innerHTML = '<pre style="color:#EF4444; padding:16px;">' + err.toString() + '</pre>';
+      });
+  };
+})();
 import('https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs')
   .then(module => {
     const mermaid = module.default || module;

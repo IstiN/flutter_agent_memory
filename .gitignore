@@ -13,6 +13,9 @@
 # Test artifacts
 test_output/
 
+# Local GitHub Pages build output
+_site/
+
 
 
 # Flutter repo-specific

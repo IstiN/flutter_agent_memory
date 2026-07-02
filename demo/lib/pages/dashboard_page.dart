@@ -4,9 +4,13 @@ import 'package:flutter_agent_memory/flutter_agent_memory_web.dart';
 import '../services/kb_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/mermaid_renderer.dart';
+import 'add_record_dialog.dart';
+import 'people_page.dart';
+import 'record_detail_dialog.dart';
 import 'records_page.dart';
 import 'search_page.dart';
 import 'settings_page.dart';
+import 'tags_page.dart';
 
 /// Desktop-style dashboard with a left sidebar, top search bar, and a
 /// two-pane Records + Graph body by default. Sidebar items switch to
@@ -164,8 +168,8 @@ class _DashboardPageState extends State<DashboardPage> {
     return switch (index) {
       0 => SearchPage(kbService: widget.kbService),
       2 => RecordsPage(kbService: widget.kbService),
-      3 => _EntityListPage(kbService: widget.kbService, type: 'tag'),
-      4 => _EntityListPage(kbService: widget.kbService, type: 'person'),
+      3 => TagsPage(kbService: widget.kbService),
+      4 => PeoplePage(kbService: widget.kbService),
       5 => SettingsPage(kbService: widget.kbService),
       _ => _buildDashboardBody(),
     };
@@ -184,7 +188,7 @@ class _NavItem {
   });
 }
 
-class _Sidebar extends StatefulWidget {
+class _Sidebar extends StatelessWidget {
   final int selectedIndex;
   final ValueChanged<int> onDestinationSelected;
   final VoidCallback? onGenerateSamples;
@@ -197,24 +201,11 @@ class _Sidebar extends StatefulWidget {
     required this.storage,
   });
 
-  @override
-  State<_Sidebar> createState() => _SidebarState();
-}
-
-class _SidebarState extends State<_Sidebar> {
-  int _count = 0;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadCount();
-  }
-
-  Future<void> _loadCount() async {
-    final q = await widget.storage.listEntityIds('question');
-    final a = await widget.storage.listEntityIds('answer');
-    final n = await widget.storage.listEntityIds('note');
-    if (mounted) setState(() => _count = q.length + a.length + n.length);
+  Future<int> _count() async {
+    final q = await storage.listEntityIds('question');
+    final a = await storage.listEntityIds('answer');
+    final n = await storage.listEntityIds('note');
+    return q.length + a.length + n.length;
   }
 
   @override
@@ -265,23 +256,23 @@ class _SidebarState extends State<_Sidebar> {
               itemCount: items.length,
               itemBuilder: (context, index) {
                 final item = items[index];
-                final selected = widget.selectedIndex == index;
+                final selected = selectedIndex == index;
                 return _SidebarTile(
                   icon: selected ? item.selectedIcon : item.icon,
                   label: item.label,
                   selected: selected,
-                  onTap: () => widget.onDestinationSelected(index),
+                  onTap: () => onDestinationSelected(index),
                 );
               },
             ),
           ),
-          if (widget.onGenerateSamples != null)
+          if (onGenerateSamples != null)
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
               child: SizedBox(
                 width: double.infinity,
                 child: TextButton.icon(
-                  onPressed: widget.onGenerateSamples,
+                  onPressed: onGenerateSamples,
                   icon: const Icon(Icons.auto_fix_high, size: 16),
                   label: const Text('Generate sample data'),
                   style: TextButton.styleFrom(
@@ -314,13 +305,19 @@ class _SidebarState extends State<_Sidebar> {
                   ),
                 ),
                 const Spacer(),
-                Text(
-                  '$_count records',
-                  style: const TextStyle(
-                    color: AppColors.textMuted,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                  ),
+                FutureBuilder<int>(
+                  future: _count(),
+                  builder: (context, snapshot) {
+                    final count = snapshot.data ?? 0;
+                    return Text(
+                      '$count records',
+                      style: const TextStyle(
+                        color: AppColors.textMuted,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    );
+                  },
                 ),
               ],
             ),
@@ -544,7 +541,7 @@ class _RecordsPanelState extends State<_RecordsPanel> {
             itemCount: records.length,
             itemBuilder: (context, index) {
               final r = records[index];
-              return _RecordRow(record: r);
+              return _RecordRow(record: r, kbService: widget.kbService);
             },
           );
         },
@@ -555,8 +552,9 @@ class _RecordsPanelState extends State<_RecordsPanel> {
 
 class _RecordRow extends StatelessWidget {
   final MemoryRecord record;
+  final KbService kbService;
 
-  const _RecordRow({required this.record});
+  const _RecordRow({required this.record, required this.kbService});
 
   static const _monthNames = [
     'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
@@ -601,16 +599,18 @@ class _RecordRow extends StatelessWidget {
         })
         .toList();
 
-    return Container(
-      margin: const EdgeInsets.symmetric(vertical: 6),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.border.withValues(alpha: 0.5)),
-      ),
-      child: Row(
-        children: [
+    return GestureDetector(
+      onTap: () => RecordDetailDialog.show(context, kbService, record.id),
+      child: Container(
+        margin: const EdgeInsets.symmetric(vertical: 6),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: AppColors.border.withValues(alpha: 0.5)),
+        ),
+        child: Row(
+          children: [
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -659,7 +659,7 @@ class _RecordRow extends StatelessWidget {
           ),
         ],
       ),
-    );
+    ),);
   }
 
   DateTime _parseDate(String raw) {
@@ -970,23 +970,4 @@ class _MEdge {
   });
 }
 
-class _EntityListPage extends StatelessWidget {
-  final KbService kbService;
-  final String type;
 
-  const _EntityListPage({required this.kbService, required this.type});
-
-  @override
-  Widget build(BuildContext context) {
-    final label = type == 'tag' ? 'Tags' : 'People';
-    return Container(
-      color: AppColors.background,
-      padding: const EdgeInsets.all(24),
-      alignment: Alignment.topLeft,
-      child: Text(
-        '$label view — coming soon',
-        style: const TextStyle(color: AppColors.textMuted, fontSize: 16),
-      ),
-    );
-  }
-}
