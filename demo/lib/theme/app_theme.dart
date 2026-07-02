@@ -11,6 +11,8 @@ abstract class AppColors {
   static const secondary = Color(0xFF06B6D4);
   static const secondaryGlow = Color(0xFF67E8F9);
   static const accent = Color(0xFFF472B6);
+  static const teal = Color(0xFF14B8A6);
+  static const blue = Color(0xFF6366F1);
   static const text = Color(0xFFF8FAFC);
   static const textMuted = Color(0xFF94A3B8);
   static const success = Color(0xFF22C55E);
