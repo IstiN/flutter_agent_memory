@@ -731,8 +731,8 @@ class _GraphPanelState extends State<_GraphPanel> {
   }
 
   /// Re-styles the generated Mermaid graph to look more like the reference
-  /// force-directed graph: circular nodes, colored by semantic role, fewer
-  /// metadata/tag nodes, and direct edges between records that share tags.
+  /// force-directed graph: circular nodes, colored by semantic role, with
+  /// explicit tag nodes linking related records.
   String _prettifyMermaid(String src) {
     final nodeRe = RegExp(
       r'^(\s*)(n_[A-Za-z0-9_]+_id)\["([^"]*)"\];',
@@ -754,7 +754,7 @@ class _GraphPanelState extends State<_GraphPanel> {
         nodes[id] = _MNode(
           id: id,
           label: label,
-          className: _classForNode(label),
+          className: _classForNode(id, label),
         );
         continue;
       }
@@ -770,39 +770,25 @@ class _GraphPanelState extends State<_GraphPanel> {
       }
     }
 
-    bool isMetadata(String id) {
-      return RegExp(r'^n_(tag|topic|area)_.*_id$').hasMatch(id);
-    }
-
-    // Cluster records around shared metadata nodes.
-    final metadataGroups = <String, List<String>>{};
-    for (final e in edges) {
-      if (isMetadata(e.target) && !isMetadata(e.source)) {
-        metadataGroups.putIfAbsent(e.target, () => []).add(e.source);
-      }
-    }
-    final extraEdges = <_MEdge>[];
-    for (final group in metadataGroups.values) {
-      group.sort();
-      for (var i = 0; i < group.length; i++) {
-        for (var j = i + 1; j < group.length; j++) {
-          extraEdges.add(_MEdge(source: group[i], target: group[j], type: 'related'));
-        }
-      }
-    }
+    bool isTag(String id) => RegExp(r'^n_tag_.*_id$').hasMatch(id);
+    bool isTopicOrArea(String id) => RegExp(r'^n_(topic|area)_.*_id$').hasMatch(id);
+    bool isAgent(String id) => nodes[id]?.label.toLowerCase().trim() == 'agent';
 
     final keptNodes = nodes.values
-        .where((n) => !isMetadata(n.id) && n.label.toLowerCase().trim() != 'agent')
+        .where((n) =>
+            !isTopicOrArea(n.id) &&
+            !isAgent(n.id) &&
+            (isTag(n.id) || n.className != 'tagNode'))
         .toList();
     final keptEdges = edges
         .where((e) =>
-            !isMetadata(e.source) &&
-            !isMetadata(e.target) &&
+            !isTopicOrArea(e.source) &&
+            !isTopicOrArea(e.target) &&
+            !isAgent(e.source) &&
+            !isAgent(e.target) &&
             e.type != 'authored_by' &&
-            nodes[e.source]?.label.toLowerCase().trim() != 'agent' &&
-            nodes[e.target]?.label.toLowerCase().trim() != 'agent')
-        .toList()
-      ..addAll(extraEdges.where((e) => e.type != 'authored_by'));
+            (isTag(e.source) || isTag(e.target) || e.type != 'tagged'))
+        .toList();
 
     final buffer = StringBuffer()
       ..writeln('flowchart TD')
@@ -826,7 +812,10 @@ class _GraphPanelState extends State<_GraphPanel> {
     return buffer.toString();
   }
 
-  String _classForNode(String label) {
+  String _classForNode(String id, String label) {
+    if (RegExp(r'^n_tag_.*_id$').hasMatch(id)) {
+      return 'tagNode';
+    }
     final lower = label.toLowerCase().trim();
     if (lower.contains('?')) {
       return 'question';
