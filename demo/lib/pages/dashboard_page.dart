@@ -25,6 +25,7 @@ class _DashboardPageState extends State<DashboardPage> {
   int _selectedIndex = 1; // Graph selected by default to match reference.
   String _query = '';
   int _recordsTab = 0; // 0 = Records, 1 = Graph
+  int _graphVersion = 0;
 
   static const _destinations = [
     _NavItem(icon: Icons.search_outlined, selectedIcon: Icons.search, label: 'Search'),
@@ -41,6 +42,46 @@ class _DashboardPageState extends State<DashboardPage> {
       builder: (context) => AddRecordDialog(kbService: widget.kbService),
     );
     if (added == true && mounted) setState(() {});
+  }
+
+  Future<void> _generateSamples() async {
+    // Add in reverse display order so the newest record appears at the top
+    // of the list after generation.
+    final samples = [
+      _Sample(type: 'note', text: 'meeting.vtt', tags: ['source', 'transcript']),
+      _Sample(type: 'note', text: 'Scalability & maintainability', tags: ['architecture']),
+      _Sample(type: 'note', text: 'Performance considerations', tags: ['performance', 'flutter']),
+      _Sample(type: 'answer', text: 'We decided on Riverpod', tags: ['decision', 'architecture']),
+      _Sample(type: 'question', text: 'Why Riverpod over Provider?', tags: ['flutter', 'state-management', 'decision']),
+    ];
+
+    for (final s in samples) {
+      switch (s.type) {
+        case 'question':
+          await widget.kbService.store.addQuestion(text: s.text, tags: s.tags);
+        case 'answer':
+          await widget.kbService.store.addAnswer(text: s.text, tags: s.tags);
+        case 'note':
+        default:
+          await widget.kbService.store.addNote(text: s.text, tags: s.tags);
+      }
+      // Stagger timestamps so the list order stays predictable.
+      await Future.delayed(const Duration(milliseconds: 50));
+    }
+
+    await widget.kbService.graphBuilder.build(maxMermaidNodes: 80);
+
+    if (!mounted) return;
+    setState(() {
+      _graphVersion++;
+      _recordsTab = 0;
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Sample records generated'),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
   }
 
   @override
@@ -63,6 +104,7 @@ class _DashboardPageState extends State<DashboardPage> {
           _Sidebar(
             selectedIndex: _selectedIndex,
             onDestinationSelected: (i) => setState(() => _selectedIndex = i),
+            onGenerateSamples: _generateSamples,
             storage: widget.kbService.storage,
           ),
           Expanded(
@@ -98,14 +140,20 @@ class _DashboardPageState extends State<DashboardPage> {
                               kbService: widget.kbService,
                               query: _query,
                             )
-                          : _GraphPanel(kbService: widget.kbService),
+                          : _GraphPanel(
+                              key: ValueKey(_graphVersion),
+                              kbService: widget.kbService,
+                            ),
                     ),
                   ],
                 ),
               ),
               Expanded(
                 flex: 45,
-                child: _GraphPanel(kbService: widget.kbService),
+                child: _GraphPanel(
+                  key: ValueKey('right-$_graphVersion'),
+                  kbService: widget.kbService,
+                ),
               ),
             ],
           ),
@@ -141,11 +189,13 @@ class _NavItem {
 class _Sidebar extends StatefulWidget {
   final int selectedIndex;
   final ValueChanged<int> onDestinationSelected;
+  final VoidCallback? onGenerateSamples;
   final KbStorage storage;
 
   const _Sidebar({
     required this.selectedIndex,
     required this.onDestinationSelected,
+    this.onGenerateSamples,
     required this.storage,
   });
 
@@ -227,6 +277,31 @@ class _SidebarState extends State<_Sidebar> {
               },
             ),
           ),
+          if (widget.onGenerateSamples != null)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+              child: SizedBox(
+                width: double.infinity,
+                child: TextButton.icon(
+                  onPressed: widget.onGenerateSamples,
+                  icon: const Icon(Icons.auto_fix_high, size: 16),
+                  label: const Text('Generate sample data'),
+                  style: TextButton.styleFrom(
+                    foregroundColor: AppColors.textMuted,
+                    backgroundColor: AppColors.surfaceHigh.withValues(alpha: 0.5),
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      side: BorderSide(color: AppColors.border.withValues(alpha: 0.5)),
+                    ),
+                    textStyle: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ),
+            ),
           Padding(
             padding: const EdgeInsets.all(20),
             child: Row(
@@ -602,7 +677,7 @@ class _RecordRow extends StatelessWidget {
 class _GraphPanel extends StatefulWidget {
   final KbService kbService;
 
-  const _GraphPanel({required this.kbService});
+  const _GraphPanel({super.key, required this.kbService});
 
   @override
   State<_GraphPanel> createState() => _GraphPanelState();
@@ -865,6 +940,18 @@ class _DiagramViewState extends State<_DiagramView> {
       child: const HtmlElementView(viewType: 'mermaid-diagram'),
     );
   }
+}
+
+class _Sample {
+  final String type;
+  final String text;
+  final List<String> tags;
+
+  const _Sample({
+    required this.type,
+    required this.text,
+    required this.tags,
+  });
 }
 
 class _MNode {
