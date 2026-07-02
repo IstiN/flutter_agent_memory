@@ -124,7 +124,9 @@ void main() {
         expect(graph, contains('[[${stateNote.id}]]'));
         expect(graph, contains('### answers'));
         expect(graph, contains('### related_to'));
-        expect(graph, contains('### links_to'));
+        // The wiki-link duplicates the explicit related_to relation, so it is
+        // folded into the typed edge and no generic links_to section remains.
+        expect(graph, isNot(contains('### links_to')));
         // Concept-level notes are included in the Mermaid diagram.
         final sanitizedNoteId =
             'n_${stateNote.id.replaceAll(RegExp(r'[^a-zA-Z0-9_]'), '_')}_id';

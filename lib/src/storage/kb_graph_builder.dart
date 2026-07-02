@@ -60,6 +60,7 @@ class KBGraphBuilder {
             level: level,
             memoryType: fm.getString('memoryType'),
             tags: fm.getStringList('tags'),
+            topics: fm.getStringList('topics'),
             content: content,
             fm: fm,
           );
@@ -89,6 +90,7 @@ class KBGraphBuilder {
             level: MemoryLevel.concept,
             memoryType: fm.getString('memoryType'),
             tags: fm.getStringList('tags'),
+            topics: fm.getStringList('topics'),
             content: content,
             fm: fm,
           );
@@ -101,23 +103,54 @@ class KBGraphBuilder {
     await scanFiles('topics', 'topic');
     await scanFiles('skills', 'skill');
 
-    // Synthetic nodes for MEMORY.md and GRAPH.md themselves.
-    for (final name in ['MEMORY', 'GRAPH']) {
-      final id = name.toLowerCase();
-      nodes[id] = _GraphNode(
-        id: id,
-        type: 'index',
-        title: name,
-        path: '$id.md',
-        area: '',
-        level: MemoryLevel.concept,
-        tags: const [],
-        content: '',
-        fm: Frontmatter(),
-      );
+    // Add shared tag/topic/area/author nodes so the graph looks like
+    // Obsidian: pages cluster around common tags and people. Areas, tags and
+    // topics share the same namespace so that, for example, area "infrastructure"
+    // and tag "infrastructure" become one node.
+    final entityNodes = nodes.values
+        .where((n) => const {'question', 'answer', 'note'}.contains(n.type))
+        .toList();
+    for (final node in entityNodes) {
+      if (node.area.isNotEmpty) {
+        _ensureTagNode(nodes, 'tag_${slugify(node.area)}', node.area, 'tag');
+      }
+      for (final tag in node.tags) {
+        if (tag.startsWith('#')) continue;
+        _ensureTagNode(nodes, 'tag_${slugify(tag)}', tag, 'tag');
+      }
+      for (final topic in node.topics) {
+        if (topic.isEmpty) continue;
+        _ensureTagNode(nodes, 'tag_${slugify(topic)}', topic, 'tag');
+      }
+      if (node.fm.getString('author')?.isNotEmpty == true) {
+        final author = node.fm.getString('author')!;
+        final authorId = _personId(author);
+        _ensureTagNode(nodes, authorId, author, 'person');
+      }
     }
 
     return nodes;
+  }
+
+  void _ensureTagNode(
+    Map<String, _GraphNode> nodes,
+    String id,
+    String title,
+    String type,
+  ) {
+    if (nodes.containsKey(id)) return;
+    nodes[id] = _GraphNode(
+      id: id,
+      type: type,
+      title: title,
+      path: type,
+      area: '',
+      level: MemoryLevel.concept,
+      tags: const [],
+      topics: const [],
+      content: '',
+      fm: Frontmatter(),
+    );
   }
 
   List<_GraphEdge> _collectEdges(Map<String, _GraphNode> nodes) {
@@ -175,12 +208,27 @@ class KBGraphBuilder {
         );
       }
 
-      // Authorship.
-      final author = node.fm.getString('author');
-      if (author != null && author.isNotEmpty) {
-        final authorId = _personId(author);
-        if (nodes.containsKey(authorId))
-          addEdge(node.id, authorId, 'authored_by');
+      // Tag/topic/area/author edges — make the graph Obsidian-like by
+      // clustering records around shared metadata nodes.
+      if (const {'question', 'answer', 'note'}.contains(node.type)) {
+        if (node.area.isNotEmpty) {
+          addEdge(node.id, 'tag_${slugify(node.area)}', 'area');
+        }
+        for (final tag in node.tags) {
+          if (tag.startsWith('#')) continue;
+          addEdge(node.id, 'tag_${slugify(tag)}', 'tagged');
+        }
+        for (final topic in node.topics) {
+          if (topic.isEmpty) continue;
+          addEdge(node.id, 'tag_${slugify(topic)}', 'topic');
+        }
+        final author = node.fm.getString('author');
+        if (author != null && author.isNotEmpty) {
+          final authorId = _personId(author);
+          if (nodes.containsKey(authorId)) {
+            addEdge(node.id, authorId, 'authored_by');
+          }
+        }
       }
     }
 
@@ -240,13 +288,17 @@ class KBGraphBuilder {
     final edgeList = edges.toList();
 
     // For the Mermaid diagram, show everything when the graph is small.
-    // Otherwise prefer higher-level nodes plus their immediate neighbors.
+    // Otherwise prefer higher-level entity nodes plus their immediate metadata
+    // neighbors, so the diagram stays focused on records rather than tags.
     final Set<String> mermaidIds;
     if (nodeList.length <= maxMermaidNodes) {
       mermaidIds = nodes.keys.toSet();
     } else {
+      final entityTypes = const {'question', 'answer', 'note'};
       final priority = nodeList
-          .where((n) => n.level >= MemoryLevel.concept)
+          .where(
+            (n) => entityTypes.contains(n.type) && n.level >= MemoryLevel.concept,
+          )
           .map((n) => n.id)
           .toSet();
       final seed = priority.take(maxMermaidNodes ~/ 2).toList();
@@ -341,6 +393,7 @@ class _GraphNode {
   final int level;
   final String? memoryType;
   final List<String> tags;
+  final List<String> topics;
   final String content;
   final Frontmatter fm;
 
@@ -353,6 +406,7 @@ class _GraphNode {
     required this.level,
     this.memoryType,
     required this.tags,
+    required this.topics,
     required this.content,
     required this.fm,
   });
