@@ -3,7 +3,9 @@ import 'package:flutter_markdown/flutter_markdown.dart';
 
 import '../services/kb_service.dart';
 import '../theme/app_theme.dart';
-import '../widgets/mermaid_renderer.dart';
+import '../utils/mermaid_prettifier.dart';
+import '../widgets/mermaid_diagram_view.dart';
+import 'record_detail_dialog.dart';
 
 class GraphPage extends StatefulWidget {
   final KbService kbService;
@@ -34,7 +36,8 @@ class _GraphPageState extends State<GraphPage> {
       final stats = _extractStats(md);
       setState(() {
         _markdown = md;
-        _mermaid = _extractMermaid(md);
+        final raw = _extractMermaid(md);
+        _mermaid = raw == null ? null : prettifyMermaid(raw);
         _nodeCount = stats.$1;
         _edgeCount = stats.$2;
         _error = null;
@@ -139,7 +142,14 @@ class _GraphPageState extends State<GraphPage> {
                           style: TextStyle(color: AppColors.textMuted),
                         ),
                       )
-                    : _DiagramView(diagram: _mermaid!),
+                    : MermaidDiagramView(
+                        diagram: _mermaid!,
+                        onNodeTap: (mermaidId) {
+                          final recordId = recordIdFromMermaidNode(mermaidId);
+                          if (recordId == null) return;
+                          RecordDetailDialog.show(context, widget.kbService, recordId);
+                        },
+                      ),
               ],
             ),
           ),
@@ -211,43 +221,6 @@ class _StatCard extends StatelessWidget {
         ],
         ),
       ),
-    );
-  }
-}
-
-class _DiagramView extends StatefulWidget {
-  final String diagram;
-
-  const _DiagramView({required this.diagram});
-
-  @override
-  State<_DiagramView> createState() => _DiagramViewState();
-}
-
-class _DiagramViewState extends State<_DiagramView> {
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      renderMermaidDiagram(widget.diagram);
-    });
-  }
-
-  @override
-  void didUpdateWidget(covariant _DiagramView oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (oldWidget.diagram != widget.diagram) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        renderMermaidDiagram(widget.diagram);
-      });
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      color: AppColors.background,
-      child: const HtmlElementView(viewType: 'mermaid-diagram'),
     );
   }
 }

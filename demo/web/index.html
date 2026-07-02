@@ -41,6 +41,12 @@
     For more details:
     * https://docs.flutter.dev/platform-integration/web/initialization
   -->
+  <script type="module">
+    import { FilesetResolver, LlmInference }
+      from 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-genai@0.10.27';
+    window.FilesetResolver = FilesetResolver;
+    window.LlmInference = LlmInference;
+  </script>
   <script src="flutter_bootstrap.js" async></script>
 </body>
 </html>

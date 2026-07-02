@@ -24,6 +24,9 @@ window.__mermaid_loaded__ = false;
 window.renderMermaid = function() {
   window.__mermaid_queue__.push(Array.from(arguments));
 };
+window.famNodeClick = function(id) {
+  window.parent.postMessage({source: 'flutter_agent_memory', type: 'mermaid-node-click', id: id}, '*');
+};
 ''';
 
       final script = html.ScriptElement()
@@ -34,11 +37,17 @@ window.renderMermaid = function() {
   let tx = 0;
   let ty = 0;
   let dragging = false;
+  let dragStarted = false;
+  let startX = 0;
+  let startY = 0;
   let lastX = 0;
   let lastY = 0;
+  const DRAG_THRESHOLD = 5;
+  const MIN_SCALE = 0.15;
+  const MAX_SCALE = 6;
 
   function applyTransform(svg) {
-    svg.style.transform = 'translate(' + tx + 'px, ' + ty + 'px) scale(' + scale + ')';
+    svg.style.transform = 'translate(' + tx.toFixed(2) + 'px, ' + ty.toFixed(2) + 'px) scale(' + scale.toFixed(4) + ')';
   }
 
   function resetTransform(svg) {
@@ -48,56 +57,87 @@ window.renderMermaid = function() {
     applyTransform(svg);
   }
 
+  function setupNodeClicks(svg) {
+    svg.querySelectorAll('.node[data-id]').forEach(function(node) {
+      node.style.cursor = 'pointer';
+      node.addEventListener('click', function(e) {
+        e.stopPropagation();
+        const id = node.getAttribute('data-id');
+        if (id && window.famNodeClick) window.famNodeClick(id);
+      });
+    });
+  }
+
   function setupZoomPan(svg) {
     svg.style.cursor = 'grab';
     svg.style.transformOrigin = '0 0';
+    svg.style.pointerEvents = 'all';
     applyTransform(svg);
 
     svg.addEventListener('wheel', function(e) {
       e.preventDefault();
-      const rect = svg.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
-      const delta = e.deltaY > 0 ? 0.9 : 1.1;
-      const newScale = Math.min(Math.max(scale * delta, 0.2), 5);
+      e.stopPropagation();
+      const hostRect = svg.parentElement.getBoundingClientRect();
+      const x = e.clientX - hostRect.left;
+      const y = e.clientY - hostRect.top;
+      const delta = e.deltaY || e.detail || 0;
+      const zoomFactor = Math.exp(-delta * 0.002);
+      const newScale = Math.min(Math.max(scale * zoomFactor, MIN_SCALE), MAX_SCALE);
       const ratio = newScale / scale;
       tx = x - (x - tx) * ratio;
       ty = y - (y - ty) * ratio;
       scale = newScale;
       applyTransform(svg);
-    }, { passive: false });
+    }, { passive: false, capture: true });
 
     svg.addEventListener('pointerdown', function(e) {
+      if (e.button !== 0) return;
+      // Let real clicks on nodes open record details; don't start a pan on a node.
+      if (e.target.closest('.node')) return;
       dragging = true;
+      dragStarted = false;
+      startX = e.clientX;
+      startY = e.clientY;
       lastX = e.clientX;
       lastY = e.clientY;
       svg.style.cursor = 'grabbing';
-      svg.setPointerCapture(e.pointerId);
+      try { svg.setPointerCapture(e.pointerId); } catch (_) {}
     });
 
     svg.addEventListener('pointermove', function(e) {
       if (!dragging) return;
-      const dx = e.clientX - lastX;
-      const dy = e.clientY - lastY;
+      const dx = e.clientX - startX;
+      const dy = e.clientY - startY;
+      if (!dragStarted && Math.sqrt(dx * dx + dy * dy) < DRAG_THRESHOLD) {
+        return;
+      }
+      if (!dragStarted) {
+        dragStarted = true;
+      }
+      const moveX = e.clientX - lastX;
+      const moveY = e.clientY - lastY;
       lastX = e.clientX;
       lastY = e.clientY;
-      tx += dx;
-      ty += dy;
+      tx += moveX / scale;
+      ty += moveY / scale;
       applyTransform(svg);
     });
 
-    svg.addEventListener('pointerup', function(e) {
+    function endDrag(e) {
       dragging = false;
+      dragStarted = false;
       svg.style.cursor = 'grab';
-      svg.releasePointerCapture(e.pointerId);
-    });
+      if (e && e.pointerId != null) {
+        try { svg.releasePointerCapture(e.pointerId); } catch (_) {}
+      }
+    }
 
-    svg.addEventListener('pointerleave', function() {
-      dragging = false;
-      svg.style.cursor = 'grab';
-    });
+    svg.addEventListener('pointerup', function(e) { endDrag(e); });
+    svg.addEventListener('pointercancel', function(e) { endDrag(e); });
+    svg.addEventListener('pointerleave', function(e) { if (dragging) endDrag(e); });
 
-    svg.addEventListener('dblclick', function() {
+    svg.addEventListener('dblclick', function(e) {
+      e.stopPropagation();
       resetTransform(svg);
     });
   }
@@ -109,6 +149,7 @@ window.renderMermaid = function() {
     }
     const element = document.getElementById(elementId);
     if (!element) return;
+    element.setAttribute('data-diagram', diagram);
     element.innerHTML = '';
     mermaid.render('mermaid-svg-' + Date.now(), diagram)
       .then(({ svg }) => {
@@ -118,6 +159,7 @@ window.renderMermaid = function() {
           svgEl.style.width = '100%';
           svgEl.style.height = '100%';
           svgEl.style.display = 'block';
+          setupNodeClicks(svgEl);
           setupZoomPan(svgEl);
         }
       })
@@ -140,7 +182,8 @@ import('https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs')
         lineColor: '#A78BFA',
         secondaryColor: '#111827',
         tertiaryColor: '#0F172A',
-        fontFamily: 'ui-sans-serif, system-ui, sans-serif'
+        fontFamily: 'ui-sans-serif, system-ui, sans-serif',
+        fontSize: '14px'
       }
     });
     window.__mermaid_loaded__ = true;

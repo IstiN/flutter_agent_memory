@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/semantics.dart';
 
+import 'services/gemma_service.dart';
 import 'services/kb_service.dart';
 import 'services/prompt_asset_loader.dart';
 import 'services/provider_service.dart';
@@ -15,7 +16,8 @@ Future<void> main() async {
   if (kIsWeb) registerMermaidPlatformView();
   initializePromptAssetLoader();
   final settings = await SettingsService.load();
-  final providerService = ProviderService(settings);
+  final gemmaService = FlutterGemmaService();
+  final providerService = ProviderService(settings, gemmaService: gemmaService);
   final kbService = KbService(settings, providerService);
 
   runApp(DemoApp(kbService: kbService));

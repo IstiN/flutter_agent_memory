@@ -3,7 +3,8 @@ import 'package:flutter_agent_memory/flutter_agent_memory_web.dart';
 
 import '../services/kb_service.dart';
 import '../theme/app_theme.dart';
-import '../widgets/mermaid_renderer.dart';
+import '../utils/mermaid_prettifier.dart';
+import '../widgets/mermaid_diagram_view.dart';
 import 'add_record_dialog.dart';
 import 'people_page.dart';
 import 'record_detail_dialog.dart';
@@ -52,28 +53,31 @@ class _DashboardPageState extends State<DashboardPage> {
     // Add in reverse display order so the newest record appears at the top
     // of the list after generation.
     final samples = [
-      _Sample(type: 'note', text: 'meeting.vtt', tags: ['source', 'transcript']),
-      _Sample(type: 'note', text: 'Scalability & maintainability', tags: ['architecture']),
-      _Sample(type: 'note', text: 'Performance considerations', tags: ['performance', 'flutter']),
-      _Sample(type: 'answer', text: 'We decided on Riverpod', tags: ['decision', 'architecture']),
-      _Sample(type: 'question', text: 'Why Riverpod over Provider?', tags: ['flutter', 'state-management', 'decision']),
+      _Sample(type: 'note', text: 'meeting.vtt', tags: ['source', 'transcript'], author: 'Alice', area: 'development'),
+      _Sample(type: 'note', text: 'Scalability & maintainability', tags: ['architecture', 'backend'], author: 'Bob', area: 'development'),
+      _Sample(type: 'answer', text: 'We decided on Riverpod', tags: ['decision', 'architecture', 'state-management'], author: 'Alice', area: 'development'),
+      _Sample(type: 'question', text: 'Why Riverpod over Provider?', tags: ['flutter', 'state-management', 'decision'], author: 'Bob', area: 'development'),
+      _Sample(type: 'question', text: 'How do we handle offline sync?', tags: ['flutter', 'backend', 'architecture'], author: 'Charlie', area: 'development'),
+      _Sample(type: 'answer', text: 'Use a local SQLite cache with sync queue', tags: ['decision', 'backend', 'flutter'], author: 'Diana', area: 'development'),
+      _Sample(type: 'question', text: 'What is our AI integration strategy?', tags: ['ai', 'roadmap'], author: 'Diana', area: 'research'),
+      _Sample(type: 'note', text: 'User interview findings', tags: ['ux', 'design', 'research'], author: 'Charlie', area: 'design'),
     ];
 
     for (final s in samples) {
       switch (s.type) {
         case 'question':
-          await widget.kbService.store.addQuestion(text: s.text, tags: s.tags);
+          await widget.kbService.store.addQuestion(text: s.text, tags: s.tags, author: s.author, area: s.area);
         case 'answer':
-          await widget.kbService.store.addAnswer(text: s.text, tags: s.tags);
+          await widget.kbService.store.addAnswer(text: s.text, tags: s.tags, author: s.author, area: s.area);
         case 'note':
         default:
-          await widget.kbService.store.addNote(text: s.text, tags: s.tags);
+          await widget.kbService.store.addNote(text: s.text, tags: s.tags, author: s.author, area: s.area);
       }
       // Stagger timestamps so the list order stays predictable.
       await Future.delayed(const Duration(milliseconds: 50));
     }
 
-    await widget.kbService.graphBuilder.build(maxMermaidNodes: 80);
+    await widget.kbService.graphBuilder.build(maxMermaidNodes: 40);
 
     if (!mounted) return;
     setState(() => _graphVersion++);
@@ -530,9 +534,12 @@ class _RecordsPanelState extends State<_RecordsPanel> {
           final records = snapshot.data ?? [];
           if (records.isEmpty) {
             return Center(
-              child: Text(
-                widget.query.isEmpty ? 'No records yet' : 'No matches',
-                style: const TextStyle(color: AppColors.textMuted),
+              child: Semantics(
+                label: 'Empty state',
+                child: Text(
+                  widget.query.isEmpty ? 'No records yet' : 'No matches',
+                  style: const TextStyle(color: AppColors.textMuted),
+                ),
               ),
             );
           }
@@ -699,7 +706,7 @@ class _GraphPanelState extends State<_GraphPanel> {
 
   Future<void> _buildGraph() async {
     try {
-      await widget.kbService.graphBuilder.build(maxMermaidNodes: 80);
+      await widget.kbService.graphBuilder.build(maxMermaidNodes: 40);
       final md = await widget.kbService.storage.readFile('GRAPH.md');
       if (md == null) {
         setState(() {
@@ -710,7 +717,7 @@ class _GraphPanelState extends State<_GraphPanel> {
       }
       final raw = _extractMermaid(md);
       setState(() {
-        _mermaid = raw == null ? null : _prettifyMermaid(raw);
+        _mermaid = raw == null ? null : prettifyMermaid(raw);
         _error = null;
         _loading = false;
       });
@@ -728,125 +735,6 @@ class _GraphPanelState extends State<_GraphPanel> {
       multiLine: true,
     ).firstMatch(markdown);
     return match?.group(1);
-  }
-
-  /// Re-styles the generated Mermaid graph to look more like the reference
-  /// force-directed graph: circular nodes, colored by semantic role, with
-  /// explicit tag nodes linking related records.
-  String _prettifyMermaid(String src) {
-    final nodeRe = RegExp(
-      r'^(\s*)(n_[A-Za-z0-9_]+_id)\["([^"]*)"\];',
-      multiLine: false,
-    );
-    final edgeRe = RegExp(
-      r'^(\s*)(n_[A-Za-z0-9_]+_id)\s*--?>\|([^|]*)\|\s*(n_[A-Za-z0-9_]+_id);',
-      multiLine: false,
-    );
-
-    final nodes = <String, _MNode>{};
-    final edges = <_MEdge>[];
-
-    for (final line in src.split('\n')) {
-      final nodeMatch = nodeRe.firstMatch(line);
-      if (nodeMatch != null) {
-        final id = nodeMatch.group(2)!;
-        final label = nodeMatch.group(3)!;
-        nodes[id] = _MNode(
-          id: id,
-          label: label,
-          className: _classForNode(id, label),
-        );
-        continue;
-      }
-      final edgeMatch = edgeRe.firstMatch(line);
-      if (edgeMatch != null) {
-        edges.add(
-          _MEdge(
-            source: edgeMatch.group(2)!,
-            target: edgeMatch.group(4)!,
-            type: edgeMatch.group(3)!.trim(),
-          ),
-        );
-      }
-    }
-
-    bool isTag(String id) => RegExp(r'^n_tag_.*_id$').hasMatch(id);
-    bool isTopicOrArea(String id) => RegExp(r'^n_(topic|area)_.*_id$').hasMatch(id);
-    bool isAgent(String id) => nodes[id]?.label.toLowerCase().trim() == 'agent';
-
-    final keptNodes = nodes.values
-        .where((n) =>
-            !isTopicOrArea(n.id) &&
-            !isAgent(n.id) &&
-            (isTag(n.id) || n.className != 'tagNode'))
-        .toList();
-    final keptEdges = edges
-        .where((e) =>
-            !isTopicOrArea(e.source) &&
-            !isTopicOrArea(e.target) &&
-            !isAgent(e.source) &&
-            !isAgent(e.target) &&
-            e.type != 'authored_by' &&
-            (isTag(e.source) || isTag(e.target) || e.type != 'tagged'))
-        .toList();
-
-    final buffer = StringBuffer()
-      ..writeln('flowchart TD')
-      ..writeln(
-        "    %%{init: {'flowchart': {'curve': 'basis', 'nodeSpacing': 50, 'rankSpacing': 60, 'useMaxWidth': true}}}%%",
-      )
-      ..writeln('    classDef question fill:#7C3AED,stroke:#A78BFA,stroke-width:2px,color:#fff,font-size:10px')
-      ..writeln('    classDef answer fill:#0891B2,stroke:#67E8F9,stroke-width:2px,color:#fff,font-size:10px')
-      ..writeln('    classDef note fill:#DB2777,stroke:#F472B6,stroke-width:2px,color:#fff,font-size:10px')
-      ..writeln('    classDef tagNode fill:#14B8A6,stroke:#5EEAD4,stroke-width:2px,color:#fff,font-size:10px')
-      ..writeln('    classDef person fill:#4F46E5,stroke:#818CF8,stroke-width:2px,color:#fff,font-size:10px')
-      ..writeln('    classDef fileNode fill:#475569,stroke:#94A3B8,stroke-width:2px,color:#fff,font-size:10px');
-
-    for (final n in keptNodes) {
-      final safeLabel = n.label.replaceAll('"', '\\"');
-      buffer.writeln('    ${n.id}(("$safeLabel")):::${n.className};');
-    }
-    for (final e in keptEdges) {
-      buffer.writeln('    ${e.source} --> ${e.target};');
-    }
-    return buffer.toString();
-  }
-
-  String _classForNode(String id, String label) {
-    if (RegExp(r'^n_tag_.*_id$').hasMatch(id)) {
-      return 'tagNode';
-    }
-    final lower = label.toLowerCase().trim();
-    if (lower.contains('?')) {
-      return 'question';
-    }
-    if (lower.contains('we decided') ||
-        lower.contains('answer') ||
-        lower.contains('conclusion')) {
-      return 'answer';
-    }
-    if (lower.contains('meeting.vtt') ||
-        lower.contains('.vtt') ||
-        lower.contains('.md') ||
-        lower.contains('.txt')) {
-      return 'fileNode';
-    }
-    if (label.trim().startsWith('#')) {
-      return 'tagNode';
-    }
-    if (lower.contains('alice') ||
-        lower.contains('bob') ||
-        lower.contains('john') ||
-        lower.contains('sarah')) {
-      return 'person';
-    }
-    if (lower.contains('performance') ||
-        lower.contains('scalability') ||
-        lower.contains('considerations') ||
-        lower.contains('maintainability')) {
-      return 'note';
-    }
-    return 'default';
   }
 
   @override
@@ -893,43 +781,13 @@ class _GraphPanelState extends State<_GraphPanel> {
         ),
       );
     }
-    return _DiagramView(diagram: _mermaid!);
-  }
-}
-
-class _DiagramView extends StatefulWidget {
-  final String diagram;
-
-  const _DiagramView({required this.diagram});
-
-  @override
-  State<_DiagramView> createState() => _DiagramViewState();
-}
-
-class _DiagramViewState extends State<_DiagramView> {
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      renderMermaidDiagram(widget.diagram);
-    });
-  }
-
-  @override
-  void didUpdateWidget(covariant _DiagramView oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (oldWidget.diagram != widget.diagram) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        renderMermaidDiagram(widget.diagram);
-      });
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      color: AppColors.background,
-      child: const HtmlElementView(viewType: 'mermaid-diagram'),
+    return MermaidDiagramView(
+      diagram: _mermaid!,
+      onNodeTap: (mermaidId) {
+        final recordId = recordIdFromMermaidNode(mermaidId);
+        if (recordId == null) return;
+        RecordDetailDialog.show(context, widget.kbService, recordId);
+      },
     );
   }
 }
@@ -938,36 +796,15 @@ class _Sample {
   final String type;
   final String text;
   final List<String> tags;
+  final String author;
+  final String area;
 
   const _Sample({
     required this.type,
     required this.text,
     required this.tags,
+    this.author = 'agent',
+    this.area = 'general',
   });
 }
-
-class _MNode {
-  final String id;
-  final String label;
-  final String className;
-
-  const _MNode({
-    required this.id,
-    required this.label,
-    required this.className,
-  });
-}
-
-class _MEdge {
-  final String source;
-  final String target;
-  final String type;
-
-  const _MEdge({
-    required this.source,
-    required this.target,
-    required this.type,
-  });
-}
-
 

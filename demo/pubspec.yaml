@@ -5,6 +5,7 @@ version: 1.0.0+1
 
 environment:
   sdk: '>=3.12.0 <4.0.0'
+  flutter: '>=3.44.0'
 
 dependencies:
   flutter:
@@ -14,6 +15,9 @@ dependencies:
   file_picker: ^8.0.0+1
   flutter_agent_memory:
     path: ..
+  flutter_gemma: ^1.2.0
+  flutter_gemma_litertlm: ^1.0.2
+  flutter_gemma_mediapipe: ^1.0.3
   flutter_markdown: ^0.7.4
   http: ^1.6.0
   shared_preferences: ^2.2.3

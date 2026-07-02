@@ -5,6 +5,8 @@ import 'package:demo/services/kb_service.dart';
 import 'package:demo/services/provider_service.dart';
 import 'package:demo/services/settings_service.dart';
 
+import 'services/fake_gemma_service.dart';
+
 Future<SettingsService> createTestSettings([
   Map<String, Object>? values,
 ]) async {
@@ -17,5 +19,9 @@ Future<KbService> createTestKbService({
   KbStorage? storage,
 }) async {
   final s = settings ?? await createTestSettings();
-  return KbService(s, ProviderService(s), storage: storage ?? InMemoryKbStorage());
+  return KbService(
+    s,
+    ProviderService(s, gemmaService: FakeGemmaService()),
+    storage: storage ?? InMemoryKbStorage(),
+  );
 }

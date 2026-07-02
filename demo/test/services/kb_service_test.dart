@@ -5,13 +5,18 @@ import 'package:demo/services/provider_service.dart';
 import 'package:demo/services/kb_service.dart';
 
 import '../test_helpers.dart';
+import 'fake_gemma_service.dart';
 
 void main() {
   group('KbService', () {
     test('uses injected in-memory storage', () async {
       final storage = InMemoryKbStorage();
       final settings = await createTestSettings();
-      final service = KbService(settings, ProviderService(settings), storage: storage);
+      final service = KbService(
+        settings,
+        ProviderService(settings, gemmaService: FakeGemmaService()),
+        storage: storage,
+      );
 
       expect(service.storage, same(storage));
       await service.store.addQuestion(text: 'What is Dart?', area: 'dev', tags: ['dart']);

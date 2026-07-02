@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:url_launcher/link.dart';
 
+import '../services/gemma_model_presets.dart';
+import '../services/gemma_service.dart';
 import '../services/kb_service.dart';
 import '../services/provider_service.dart';
 import '../theme/app_theme.dart';
@@ -108,21 +110,25 @@ class _SettingsPageState extends State<SettingsPage> {
                   obscureText: true,
                 ),
                 const SizedBox(height: 12),
-                TextField(
-                  controller: _baseUrlController,
-                  style: const TextStyle(color: AppColors.text),
-                  decoration: const InputDecoration(
-                    labelText: 'Base URL (optional)',
-                    helperText: 'For Ollama e.g. http://localhost:11434',
+                if (_type != ProviderType.gemma) ...[
+                  TextField(
+                    controller: _baseUrlController,
+                    style: const TextStyle(color: AppColors.text),
+                    decoration: const InputDecoration(
+                      labelText: 'Base URL (optional)',
+                      helperText: 'For Ollama e.g. http://localhost:11434',
+                    ),
                   ),
-                ),
-                const SizedBox(height: 12),
+                  const SizedBox(height: 12),
+                ],
                 TextField(
                   controller: _modelController,
                   style: const TextStyle(color: AppColors.text),
-                  decoration: const InputDecoration(
+                  decoration: InputDecoration(
                     labelText: 'Model',
-                    helperText: 'e.g. gpt-4o-mini, llama3, mistral',
+                    helperText: _type == ProviderType.gemma
+                        ? 'Selected Gemma preset id'
+                        : 'e.g. gpt-4o-mini, llama3, mistral',
                   ),
                 ),
                 const SizedBox(height: 10),
@@ -133,6 +139,17 @@ class _SettingsPageState extends State<SettingsPage> {
                     _baseUrlController.text = baseUrl;
                   },
                 ),
+                if (_type == ProviderType.gemma) ...[
+                  const SizedBox(height: 12),
+                  _GemmaModelPresets(
+                    service: widget.kbService.providerService.gemmaService,
+                    selectedId: _modelController.text,
+                    hfToken: _tokenController.text.trim(),
+                    onSelected: (preset) {
+                      setState(() => _modelController.text = preset.id);
+                    },
+                  ),
+                ],
               ],
             ),
           ),
@@ -225,6 +242,7 @@ class _SettingsPageState extends State<SettingsPage> {
       ProviderType.ollama => 'Ollama token (optional)',
       ProviderType.openRouter => 'OpenRouter API key',
       ProviderType.openAi => 'OpenAI API key',
+      ProviderType.gemma => 'HuggingFace token (optional)',
       ProviderType.none => 'Token (unused)',
     };
   }
@@ -386,6 +404,132 @@ class _ModelPresets extends StatelessWidget {
   }
 }
 
+class _GemmaModelPresets extends StatefulWidget {
+  final GemmaService service;
+  final String selectedId;
+  final String hfToken;
+  final ValueChanged<GemmaModelPreset> onSelected;
+
+  const _GemmaModelPresets({
+    required this.service,
+    required this.selectedId,
+    required this.hfToken,
+    required this.onSelected,
+  });
+
+  @override
+  State<_GemmaModelPresets> createState() => _GemmaModelPresetsState();
+}
+
+class _GemmaModelPresetsState extends State<_GemmaModelPresets> {
+  final Map<String, bool> _installed = {};
+  final Map<String, double> _progress = {};
+  String? _installingId;
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _refreshInstalledStatus();
+  }
+
+  Future<void> _refreshInstalledStatus() async {
+    for (final preset in gemmaModelPresets) {
+      final installed = await widget.service.isModelInstalled(preset);
+      if (mounted) {
+        setState(() => _installed[preset.id] = installed);
+      }
+    }
+  }
+
+  Future<void> _install(GemmaModelPreset preset) async {
+    setState(() {
+      _installingId = preset.id;
+      _progress[preset.id] = 0;
+      _error = null;
+    });
+    try {
+      await for (final value in widget.service.installModel(preset, hfToken: widget.hfToken)) {
+        if (mounted) {
+          setState(() => _progress[preset.id] = value);
+        }
+      }
+      if (mounted) {
+        setState(() => _installed[preset.id] = true);
+        widget.onSelected(preset);
+      }
+    } catch (e) {
+      if (mounted) setState(() => _error = 'Install failed: $e');
+    } finally {
+      if (mounted) setState(() => _installingId = null);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const Text(
+          'On-device models',
+          style: TextStyle(color: AppColors.textMuted, fontSize: 12),
+        ),
+        const SizedBox(height: 8),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: gemmaModelPresets.map((preset) {
+            final isSelected = widget.selectedId == preset.id;
+            final installed = _installed[preset.id] == true;
+            final installing = _installingId == preset.id;
+            final progress = _progress[preset.id] ?? 0;
+            return ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 220),
+              child: InputChip(
+                label: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(preset.displayName),
+                    Text(
+                      preset.size,
+                      style: const TextStyle(fontSize: 10, color: AppColors.textMuted),
+                    ),
+                    if (installing)
+                      LinearProgressIndicator(
+                        value: progress > 0 ? progress / 100 : null,
+                        backgroundColor: AppColors.surfaceLow,
+                        color: AppColors.primary,
+                      ),
+                  ],
+                ),
+                selected: isSelected,
+                onSelected: (_) => widget.onSelected(preset),
+                deleteIcon: installing
+                    ? const SizedBox.shrink()
+                    : installed
+                        ? const Icon(Icons.check, size: 16)
+                        : const Icon(Icons.download, size: 16),
+                onDeleted: installing
+                    ? null
+                    : () => _install(preset),
+              ),
+            );
+          }).toList(),
+        ),
+        if (_error != null)
+          Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: Text(
+              _error!,
+              style: const TextStyle(color: AppColors.error, fontSize: 12),
+            ),
+          ),
+      ],
+    );
+  }
+}
+
 class _ProviderGrid extends StatelessWidget {
   final ProviderType selected;
   final ValueChanged<ProviderType> onSelected;
@@ -398,6 +542,7 @@ class _ProviderGrid extends StatelessWidget {
       (ProviderType.ollama, 'Ollama', Icons.computer),
       (ProviderType.openRouter, 'OpenRouter', Icons.router),
       (ProviderType.openAi, 'OpenAI', Icons.bolt),
+      (ProviderType.gemma, 'Gemma', Icons.memory),
       (ProviderType.none, 'None', Icons.block),
     ];
     return Wrap(
@@ -457,6 +602,13 @@ class _ProviderHint extends StatelessWidget {
         icon: Icons.open_in_new,
         text: 'Get OpenAI key',
         url: 'https://platform.openai.com/api-keys',
+      );
+    }
+    if (type == ProviderType.gemma) {
+      return _HintCard(
+        icon: Icons.open_in_new,
+        text: 'Flutter Gemma models',
+        url: 'https://fluttergemma.dev',
       );
     }
     return const SizedBox.shrink();
