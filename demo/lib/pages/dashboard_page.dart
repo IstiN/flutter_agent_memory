@@ -72,10 +72,7 @@ class _DashboardPageState extends State<DashboardPage> {
     await widget.kbService.graphBuilder.build(maxMermaidNodes: 80);
 
     if (!mounted) return;
-    setState(() {
-      _graphVersion++;
-      _recordsTab = 0;
-    });
+    setState(() => _graphVersion++);
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Text('Sample records generated'),
@@ -141,20 +138,21 @@ class _DashboardPageState extends State<DashboardPage> {
                               query: _query,
                             )
                           : _GraphPanel(
-                              key: ValueKey(_graphVersion),
+                              key: ValueKey('left-$_graphVersion'),
                               kbService: widget.kbService,
                             ),
                     ),
                   ],
                 ),
               ),
-              Expanded(
-                flex: 45,
-                child: _GraphPanel(
-                  key: ValueKey('right-$_graphVersion'),
-                  kbService: widget.kbService,
+              if (_recordsTab == 0)
+                Expanded(
+                  flex: 45,
+                  child: _GraphPanel(
+                    key: ValueKey('right-$_graphVersion'),
+                    kbService: widget.kbService,
+                  ),
                 ),
-              ),
             ],
           ),
         ),
@@ -470,24 +468,29 @@ class _Tab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
-        decoration: BoxDecoration(
-          border: Border(
-            bottom: BorderSide(
-              color: selected ? AppColors.secondaryGlow : Colors.transparent,
-              width: 2,
+    return Semantics(
+      selected: selected,
+      button: true,
+      label: '$label tab',
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+          decoration: BoxDecoration(
+            border: Border(
+              bottom: BorderSide(
+                color: selected ? AppColors.secondaryGlow : Colors.transparent,
+                width: 2,
+              ),
             ),
           ),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            color: selected ? AppColors.text : AppColors.textMuted,
-            fontSize: 14,
-            fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
+          child: Text(
+            label,
+            style: TextStyle(
+              color: selected ? AppColors.text : AppColors.textMuted,
+              fontSize: 14,
+              fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
+            ),
           ),
         ),
       ),
