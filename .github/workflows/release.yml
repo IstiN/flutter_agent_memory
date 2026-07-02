@@ -44,7 +44,8 @@ jobs:
         run: |
           dart pub get
           dart analyze
-          dart test
+          # Integration tests hit real/external LLM endpoints and are excluded from release gates.
+          dart test --exclude-tags integration
 
       - name: Read current version
         id: current_version

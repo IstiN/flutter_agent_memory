@@ -30,7 +30,8 @@ jobs:
         run: dart analyze
 
       - name: Run tests
-        run: dart test
+        # Integration tests hit real/external LLM endpoints and are too slow/non-deterministic for CI gates.
+        run: dart test --exclude-tags integration
 
   test-installer:
     name: Test installer script
