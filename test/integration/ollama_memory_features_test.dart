@@ -1,4 +1,5 @@
 @TestOn('vm')
+@Tags(['integration'])
 import 'dart:io';
 
 import 'package:flutter_agent_memory/src/agents/kb_secret_redaction_agent.dart';

@@ -19,9 +19,11 @@ dart analyze
 # ═══════════════════════════════════════════════════════════════════════════
 # 2. TESTS WITH COVERAGE
 # ═══════════════════════════════════════════════════════════════════════════
-echo "[pre-commit] Running dart test --coverage..."
+# Integration tests call external LLM endpoints and are too slow/non-deterministic
+# for a pre-commit gate; they run in CI instead.
+echo "[pre-commit] Running dart test --coverage (excluding integration tests)..."
 rm -rf coverage
-dart test --coverage=coverage
+dart test --coverage=coverage --exclude-tags integration
 
 echo "[pre-commit] Formatting coverage to lcov..."
 dart run coverage:format_coverage --lcov -i coverage -o coverage/lcov.info
