@@ -4,6 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Flutter Agent Memory — Agent memory that thinks</title>
+  <link rel="icon" type="image/png" href="favicon.png">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
   <link rel="stylesheet" href="style.css">
   <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
 </head>
@@ -78,18 +80,15 @@
         <div class="central-cube">
           <div class="cube-glow"></div>
           <div class="cube-face front">
-            <svg viewBox="0 0 64 64" fill="none" stroke="url(#brainGrad)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-              <defs>
-                <linearGradient id="brainGrad" x1="0" y1="0" x2="64" y2="64">
-                  <stop offset="0%" stop-color="#A78BFA"/>
-                  <stop offset="100%" stop-color="#67E8F9"/>
-                </linearGradient>
-              </defs>
-              <path d="M20 42c-4-4-6-10-4-16s8-10 14-10 12 4 14 10-1 12-4 16"/>
-              <path d="M24 46c2 2 6 4 10 4s8-2 10-4"/>
-              <path d="M28 26c-2 4-2 10 0 14"/>
-              <path d="M36 26c2 4 2 10 0 14"/>
-              <path d="M22 36h20"/>
+            <svg viewBox="0 0 40 40" width="120" height="120" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="12" cy="12" r="5" fill="rgba(255,255,255,0.95)"/>
+              <circle cx="32" cy="10" r="4" fill="rgba(255,255,255,0.95)"/>
+              <circle cx="28" cy="32" r="4" fill="rgba(255,255,255,0.95)"/>
+              <circle cx="8" cy="30" r="3" fill="rgba(255,255,255,0.95)"/>
+              <line x1="17" y1="13" x2="28" y2="11" stroke="rgba(255,255,255,0.7)" stroke-width="2"/>
+              <line x1="31" y1="14" x2="29" y2="28" stroke="rgba(255,255,255,0.7)" stroke-width="2"/>
+              <line x1="11" y1="27" x2="24" y2="31" stroke="rgba(255,255,255,0.7)" stroke-width="2"/>
+              <line x1="13" y1="16" x2="10" y2="27" stroke="rgba(255,255,255,0.7)" stroke-width="2"/>
             </svg>
           </div>
         </div>
@@ -323,15 +322,17 @@ flowchart LR
           <div class="window-title">agent_memory</div>
         </div>
         <div class="terminal-body">
-          <div class="line"><span class="prompt">$</span> <span class="cmd">agent_memory</span> <span class="arg">ingest</span> <span class="path">./meeting.vtt</span></div>
+          <div class="line"><span class="prompt">$</span> <span class="cmd">agent_memory</span> <span class="arg">process</span> <span class="path">-i ./meeting.vtt -o kb</span></div>
           <div class="line"><span class="success">✓</span> Ingested <span class="hl">1</span> file</div>
-          <div class="line"><span class="success">✓</span> Extracted <span class="hl">42</span> records (Q: 12, A: 18, Notes: 12)</div>
-          <div class="line"><span class="prompt">$</span> <span class="cmd">agent_memory</span> <span class="arg">ask</span> <span class="str">"What did we decide about state_management?"</span></div>
-          <div class="line output">❯ We decided to use Riverpod for state management due to its testability, scalability, and developer experience. See: notes/2024-03-12-riverpod.md</div>
-          <div class="line"><span class="prompt">$</span> <span class="cmd">agent_memory</span> <span class="arg">search</span> <span class="path">tag:#architecture</span></div>
-          <div class="line">Found <span class="hl">28</span> results</div>
-          <div class="line"><span class="prompt">$</span> <span class="cmd">agent_memory</span> <span class="arg">serve</span></div>
-          <div class="line"><span class="rocket">🚀</span> Web demo available at <span class="url">http://localhost:8080</span></div>
+          <div class="line"><span class="success">✓</span> Extracted <span class="hl">12</span> records (Q: 4, A: 5, Notes: 3)</div>
+          <div class="line"><span class="prompt">$</span> <span class="cmd">agent_memory</span> <span class="arg">memory ask</span> <span class="str">-q "What did we decide about state management?"</span></div>
+          <div class="line output">❯ We decided to use Riverpod for state management due to its testability, scalability, and developer experience.</div>
+          <div class="line"><span class="prompt">$</span> <span class="cmd">agent_memory</span> <span class="arg">search-tags</span> <span class="path">-o kb -t architecture</span></div>
+          <div class="line">Found <span class="hl">8</span> results — q_0001, a_0002, n_0004, n_0007…</div>
+          <div class="line"><span class="prompt">$</span> <span class="cmd">agent_memory</span> <span class="arg">memory list</span> <span class="path">-o kb --type question --limit 3</span></div>
+          <div class="line output">q_0001 State management strategies?</div>
+          <div class="line output">q_0002 How do we handle offline sync?</div>
+          <div class="line output">q_0003 Performance optimisation goals?</div>
           <div class="line"><span class="cursor"></span></div>
         </div>
       </div>
