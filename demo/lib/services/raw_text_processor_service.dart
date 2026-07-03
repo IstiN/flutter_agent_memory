@@ -100,14 +100,17 @@ class RawTextProcessorService {
   /// automatically uses the largest possible output and the largest safe input
   /// chunk (roughly half of the remaining context after reserving output).
   Future<_Limits> _resolveLimits() async {
-    final baseConfig = _providerService.baseConfig;
-    var outputTokens = baseConfig.maxTokens;
+    // Use the provider already built by [ProviderService] — this preserves
+    // the Gemma on-device provider instead of routing it through the generic
+    // [ProviderFactory] which only knows openai/openrouter/ollama.
+    final provider = _providerService.provider!;
     var inputChunkTokens = _defaultInputChunkTokens;
 
+    final baseConfig = _providerService.baseConfig;
     if (baseConfig.providerName == 'openrouter') {
       final info = await OpenRouterModelService.fetchModelInfo(baseConfig.model);
       if (info != null && info.contextLength > 0) {
-        outputTokens = info.maxCompletionTokens > 0
+        final outputTokens = info.maxCompletionTokens > 0
             ? info.maxCompletionTokens
             : baseConfig.maxTokens;
         // Leave roughly half of the post-output context for input so we stay
@@ -119,18 +122,8 @@ class RawTextProcessorService {
       }
     }
 
-    final config = LlmConfig(
-      providerName: baseConfig.providerName,
-      apiKey: baseConfig.apiKey,
-      baseUrl: baseConfig.baseUrl,
-      model: baseConfig.model,
-      maxTokens: outputTokens,
-      temperature: baseConfig.temperature,
-      maxTokensParamName: baseConfig.maxTokensParamName,
-    );
-
     return _Limits(
-      provider: ProviderFactory.create(config),
+      provider: provider,
       inputChunkTokens: inputChunkTokens,
     );
   }
