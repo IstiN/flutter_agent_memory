@@ -29,6 +29,7 @@ class _AddRecordDialogState extends State<AddRecordDialog> {
   String? _imageDataUrl;
   bool _analyzing = false;
   String? _errorMessage;
+  String? _statusMessage;
 
   Future<void> _pickImage() async {
     final result = await FilePicker.platform.pickFiles(
@@ -204,6 +205,13 @@ class _AddRecordDialogState extends State<AddRecordDialog> {
                 style: const TextStyle(color: AppColors.text),
               ),
             ],
+            if (_statusMessage != null) ...[
+              const SizedBox(height: 12),
+              Text(
+                _statusMessage!,
+                style: const TextStyle(color: AppColors.textMuted, fontSize: 12),
+              ),
+            ],
           ],
         ),
       ),
@@ -255,17 +263,36 @@ class _AddRecordDialogState extends State<AddRecordDialog> {
       case 'note':
         final text = _textController.text.trim();
         if (text.isEmpty) return;
-        await store.addNote(
-          text: text,
-          area: area,
-          tags: tags,
-          memoryType: _memoryType,
-          level: _level,
-        );
+        setState(() {
+          _analyzing = true;
+          _errorMessage = null;
+        });
+        try {
+          await store.addNote(
+            text: text,
+            area: area,
+            tags: tags,
+            memoryType: _memoryType,
+            level: _level,
+          );
+        } catch (e) {
+          setState(() {
+            _analyzing = false;
+            _errorMessage = 'Error saving note: $e';
+          });
+          return;
+        }
+        setState(() => _analyzing = false);
       case 'image':
         final dataUrl = _imageDataUrl;
         if (dataUrl == null) return;
-        setState(() => _analyzing = true);
+        setState(() {
+          _analyzing = true;
+          _errorMessage = null;
+          _statusMessage = widget.kbService.providerService.isGemma
+              ? 'On-device vision model is analyzing image...'
+              : 'LLM is analyzing image...';
+        });
         try {
           String text;
           List<String> imageTags;
@@ -296,7 +323,13 @@ class _AddRecordDialogState extends State<AddRecordDialog> {
       case 'raw':
         final raw = _rawTextController.text.trim();
         if (raw.isEmpty) return;
-        setState(() => _analyzing = true);
+        setState(() {
+          _analyzing = true;
+          _errorMessage = null;
+          _statusMessage = widget.kbService.providerService.isGemma
+              ? 'On-device model is thinking. First run may take 1–2 minutes...'
+              : 'LLM is analyzing raw text...';
+        });
         try {
           if (widget.kbService.rawTextProcessor.available) {
             final result = await widget.kbService.rawTextProcessor.process(raw);

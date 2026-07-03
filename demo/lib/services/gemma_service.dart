@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:developer' as dev;
 
 import 'package:flutter_gemma/flutter_gemma.dart';
 import 'package:flutter_gemma_litertlm/flutter_gemma_litertlm.dart';
@@ -30,9 +31,12 @@ class FlutterGemmaService implements GemmaService {
 
   Future<void> _ensureInitialized() async {
     if (_initFuture != null) return _initFuture!;
+    dev.log('[GemmaService] initializing FlutterGemma...');
     _initFuture = FlutterGemma.initialize(
       inferenceEngines: const [LiteRtLmEngine(), MediaPipeEngine()],
     );
+    await _initFuture!;
+    dev.log('[GemmaService] FlutterGemma initialized');
     return _initFuture!;
   }
 
@@ -42,7 +46,9 @@ class FlutterGemmaService implements GemmaService {
   @override
   Future<bool> isModelInstalled(GemmaModelPreset preset) async {
     await _ensureInitialized();
-    return FlutterGemma.isModelInstalled(preset.filename);
+    final installed = await FlutterGemma.isModelInstalled(preset.filename);
+    dev.log('[GemmaService] isModelInstalled(${preset.id}) = $installed');
+    return installed;
   }
 
   @override
@@ -81,6 +87,7 @@ class FlutterGemmaService implements GemmaService {
 
   @override
   Future<InferenceModel> loadModel(GemmaModelPreset preset) async {
+    dev.log('[GemmaService] loadModel(${preset.id}) start');
     final installed = await isModelInstalled(preset);
     if (!installed) {
       throw StateError(
@@ -89,13 +96,18 @@ class FlutterGemmaService implements GemmaService {
     }
     if (_loadedPreset?.id == preset.id) {
       final cached = FlutterGemmaPlugin.instance.initializedModel;
-      if (cached != null) return cached;
+      if (cached != null) {
+        dev.log('[GemmaService] loadModel(${preset.id}) using cached model');
+        return cached;
+      }
     }
+    dev.log('[GemmaService] loadModel(${preset.id}) calling getActiveModel...');
     final model = await FlutterGemma.getActiveModel(
       maxTokens: preset.maxTokens,
       preferredBackend: preset.preferredBackend,
     );
     _loadedPreset = preset;
+    dev.log('[GemmaService] loadModel(${preset.id}) done');
     return model;
   }
 }

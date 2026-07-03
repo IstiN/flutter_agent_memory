@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:developer' as dev;
 import 'dart:typed_data';
 
 import 'package:flutter_agent_memory/flutter_agent_memory_web.dart';
@@ -27,20 +28,34 @@ class GemmaLlmProvider implements LlmProvider {
       _run(messages);
 
   Future<String> _run(List<LlmMessage> messages) async {
+    dev.log('[GemmaLlmProvider] _run start: ${messages.length} message(s), '
+        'preset=${_preset.id}, maxTokens=${_preset.maxTokens}');
     final model = await _service.loadModel(_preset);
+    dev.log('[GemmaLlmProvider] model loaded, creating session...');
     final session = await model.createSession(
       temperature: _preset.temperature,
       topK: _preset.topK,
       topP: _preset.topP,
       maxOutputTokens: _preset.maxTokens,
     );
+    dev.log('[GemmaLlmProvider] session created');
     try {
       for (final msg in messages) {
         final gemmaMsg = _toGemmaMessage(msg);
+        dev.log('[GemmaLlmProvider] addQueryChunk: role=${msg.role}, '
+            'textLength=${msg.content.length}');
         await session.addQueryChunk(gemmaMsg);
       }
-      return await session.getResponse();
+      dev.log('[GemmaLlmProvider] waiting for response...');
+      final response = await session.getResponse();
+      dev.log('[GemmaLlmProvider] response received, length=${response.length}, '
+          'preview=${response.length > 200 ? response.substring(0, 200) : response}');
+      return response;
+    } catch (e, s) {
+      dev.log('[GemmaLlmProvider] inference error: $e', stackTrace: s);
+      rethrow;
     } finally {
+      dev.log('[GemmaLlmProvider] closing session');
       await session.close();
     }
   }

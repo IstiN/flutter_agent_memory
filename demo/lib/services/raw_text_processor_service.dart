@@ -1,3 +1,4 @@
+import 'dart:developer' as dev;
 import 'dart:math' show max;
 
 import 'package:flutter_agent_memory/flutter_agent_memory_web.dart';
@@ -36,33 +37,45 @@ class RawTextProcessorService {
       throw StateError('LLM provider is not configured');
     }
 
+    dev.log('[RawTextProcessor] process start, inputLength=${rawText.length}');
     final normalized = _normalize(rawText);
     final limits = await _resolveLimits();
+    dev.log('[RawTextProcessor] limits: inputChunkTokens=${limits.inputChunkTokens}, '
+        'maxTokens=${_providerService.baseConfig.maxTokens}');
 
     final agent = KBAnalysisAgent(limits.provider);
     final maxChunkChars = limits.inputChunkTokens * _charsPerToken;
 
     final results = <AnalysisResult>[];
     if (normalized.length <= maxChunkChars) {
+      dev.log('[RawTextProcessor] analyzing single chunk, chars=$normalized.length');
       final result = await agent.analyze(
         normalized,
         KBContext(),
         sourceName: 'raw-text',
       );
+      dev.log('[RawTextProcessor] analysis done: questions=${result.questions.length}, '
+          'answers=${result.answers.length}, notes=${result.notes.length}');
       results.add(result);
     } else {
       final chunks = _chunkText(normalized, maxChunkChars);
+      dev.log('[RawTextProcessor] analyzing ${chunks.length} chunks');
       for (var i = 0; i < chunks.length; i++) {
+        dev.log('[RawTextProcessor] chunk ${i + 1}/${chunks.length}, chars=${chunks[i].length}');
         final result = await agent.analyze(
           chunks[i],
           KBContext(),
           sourceName: 'raw-text-part-${i + 1}',
         );
+        dev.log('[RawTextProcessor] chunk ${i + 1} done: questions=${result.questions.length}, '
+            'answers=${result.answers.length}, notes=${result.notes.length}');
         results.add(result);
       }
     }
 
     final merged = _mergeResults(results);
+    dev.log('[RawTextProcessor] merged: questions=${merged.questions.length}, '
+        'answers=${merged.answers.length}, notes=${merged.notes.length}');
 
     final allTopics = <String>{
       ...merged.questions.expand((q) => q.topics),
@@ -83,7 +96,7 @@ class RawTextProcessorService {
       return 'general';
     }
 
-    return {
+    final result = {
       'area': firstArea(),
       'topics': allTopics,
       'tags': allTags,
@@ -91,6 +104,8 @@ class RawTextProcessorService {
       'answers': merged.answers.map((a) => a.toJson()).toList(),
       'notes': merged.notes.map((n) => n.toJson()).toList(),
     };
+    dev.log('[RawTextProcessor] process done, resultKeys=${result.keys.toList()}');
+    return result;
   }
 
   /// Resolves the output token limit and input chunk size for the current
@@ -107,6 +122,8 @@ class RawTextProcessorService {
     var inputChunkTokens = _defaultInputChunkTokens;
 
     final baseConfig = _providerService.baseConfig;
+    dev.log('[RawTextProcessor] _resolveLimits: provider=${baseConfig.providerName}, '
+        'model=${baseConfig.model}, maxTokens=${baseConfig.maxTokens}');
     if (baseConfig.providerName == 'openrouter') {
       final info = await OpenRouterModelService.fetchModelInfo(baseConfig.model);
       if (info != null && info.contextLength > 0) {
