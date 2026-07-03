@@ -28,12 +28,20 @@ class KBTagGeneratorAgent {
       'existingTags': existing,
       'maxTags': maxTags.toString(),
     });
+    _log('generateTags prompt:\n$prompt');
     final response = await _provider.chat(prompt);
+    _log('generateTags raw response:\n$response');
     final jsonText = extractJsonFromMarkdown(response);
     final json = jsonDecode(jsonText) as Map<String, dynamic>;
     final tags = (json['tags'] as List? ?? [])
         .map((e) => e.toString())
         .toList();
+    _log('generateTags parsed tags: $tags');
     return tags.where((t) => t.isNotEmpty).toList();
+  }
+
+  void _log(String message) {
+    // ignore: avoid_print
+    print('[KBTagGeneratorAgent] $message');
   }
 }

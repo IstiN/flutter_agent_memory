@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:developer' as dev;
 import 'dart:typed_data';
 
 import 'package:flutter_agent_memory/flutter_agent_memory_web.dart';
@@ -27,35 +26,53 @@ class GemmaLlmProvider implements LlmProvider {
   Future<String> chatMessages(List<LlmMessage> messages, {String? model}) =>
       _run(messages);
 
+  void _log(String message) {
+    // ignore: avoid_print
+    print('[GemmaLlmProvider] $message');
+  }
+
   Future<String> _run(List<LlmMessage> messages) async {
-    dev.log('[GemmaLlmProvider] _run start: ${messages.length} message(s), '
+    _log('_run start: ${messages.length} message(s), '
         'preset=${_preset.id}, maxTokens=${_preset.maxTokens}');
+    for (var i = 0; i < messages.length; i++) {
+      final msg = messages[i];
+      _log('message $i: role=${msg.role}, textLength=${msg.content.length}, '
+          'text=${msg.content.length > 500 ? '${msg.content.substring(0, 500)}...' : msg.content}');
+    }
+
     final model = await _service.loadModel(_preset);
-    dev.log('[GemmaLlmProvider] model loaded, creating session...');
+    _log('model loaded, creating session...');
     final session = await model.createSession(
       temperature: _preset.temperature,
       topK: _preset.topK,
       topP: _preset.topP,
       maxOutputTokens: _preset.maxTokens,
     );
-    dev.log('[GemmaLlmProvider] session created');
+    _log('session created');
     try {
       for (final msg in messages) {
         final gemmaMsg = _toGemmaMessage(msg);
-        dev.log('[GemmaLlmProvider] addQueryChunk: role=${msg.role}, '
-            'textLength=${msg.content.length}');
+        _log('addQueryChunk: role=${msg.role}, textLength=${msg.content.length}');
         await session.addQueryChunk(gemmaMsg);
       }
-      dev.log('[GemmaLlmProvider] waiting for response...');
-      final response = await session.getResponse();
-      dev.log('[GemmaLlmProvider] response received, length=${response.length}, '
-          'preview=${response.length > 200 ? response.substring(0, 200) : response}');
+      _log('waiting for response (streaming)...');
+
+      // Prefill/decode models (Gemma 4, FunctionGemma litertlm) do not support
+      // the synchronous getResponse() path and return an empty/cancelled result.
+      // Collect the async token stream instead.
+      final buffer = StringBuffer();
+      await for (final token in session.getResponseAsync()) {
+        buffer.write(token);
+      }
+      final response = buffer.toString();
+      _log('response received, length=${response.length}, '
+          'preview=${response.length > 500 ? '${response.substring(0, 500)}...' : response}');
       return response;
     } catch (e, s) {
-      dev.log('[GemmaLlmProvider] inference error: $e', stackTrace: s);
+      _log('inference error: $e\n$s');
       rethrow;
     } finally {
-      dev.log('[GemmaLlmProvider] closing session');
+      _log('closing session');
       await session.close();
     }
   }

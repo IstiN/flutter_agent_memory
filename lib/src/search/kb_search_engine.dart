@@ -127,6 +127,8 @@ class KBSearchEngine {
       existingTags: existingTags,
       maxTags: maxGeneratedTags,
     );
+    // ignore: avoid_print
+    print('[KBSearchEngine] searchByText "$query" generated tags: $generatedTags');
 
     final tagResults = generatedTags.isEmpty
         ? <KBSearchResult>[]

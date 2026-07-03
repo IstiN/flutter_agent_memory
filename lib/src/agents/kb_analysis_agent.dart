@@ -28,12 +28,21 @@ class KBAnalysisAgent {
       extraInstructions,
       hasImages: images != null && images.isNotEmpty,
     );
+    _log('analyze prompt length=${prompt.length}');
+    _log('analyze prompt:\n$prompt');
     final response = await _provider.chatMessages([
       LlmMessage(role: 'user', content: prompt, images: images),
     ]);
+    _log('analyze raw response length=${response.length}');
+    _log('analyze raw response:\n$response');
     final jsonText = extractJsonFromMarkdown(response);
     final json = jsonDecode(jsonText) as Map<String, dynamic>;
     return AnalysisResult.fromJson(json);
+  }
+
+  void _log(String message) {
+    // ignore: avoid_print
+    print('[KBAnalysisAgent] $message');
   }
 
   Future<String> _buildPrompt(

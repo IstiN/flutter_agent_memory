@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:developer' as dev;
 
 import 'package:flutter_gemma/core/registry/inference_engine_provider.dart';
 import 'package:flutter_gemma/flutter_gemma.dart';
@@ -45,14 +44,19 @@ class FlutterGemmaService implements GemmaService {
     ],
   });
 
+  void _log(String message) {
+    // ignore: avoid_print
+    print('[GemmaService] $message');
+  }
+
   Future<void> _ensureInitialized() async {
     if (_initFuture != null) return _initFuture!;
-    dev.log('[GemmaService] initializing FlutterGemma...');
+    _log('initializing FlutterGemma...');
     _initFuture = FlutterGemma.initialize(
       inferenceEngines: _inferenceEngines,
     );
     await _initFuture!;
-    dev.log('[GemmaService] FlutterGemma initialized');
+    _log('FlutterGemma initialized');
     return _initFuture!;
   }
 
@@ -63,7 +67,7 @@ class FlutterGemmaService implements GemmaService {
   Future<bool> isModelInstalled(GemmaModelPreset preset) async {
     await _ensureInitialized();
     final installed = await FlutterGemma.isModelInstalled(preset.filename);
-    dev.log('[GemmaService] isModelInstalled(${preset.id}) = $installed');
+    _log('isModelInstalled(${preset.id}) = $installed');
     return installed;
   }
 
@@ -106,7 +110,7 @@ class FlutterGemmaService implements GemmaService {
     GemmaModelPreset preset, {
     PreferredBackend? backend,
   }) async {
-    dev.log('[GemmaService] loadModel(${preset.id}) start');
+    _log('loadModel(${preset.id}) start');
     final installed = await isModelInstalled(preset);
     if (!installed) {
       throw StateError(
@@ -116,19 +120,19 @@ class FlutterGemmaService implements GemmaService {
     if (_loadedPreset?.id == preset.id && backend == null) {
       final cached = FlutterGemmaPlugin.instance.initializedModel;
       if (cached != null) {
-        dev.log('[GemmaService] loadModel(${preset.id}) using cached model');
+        _log('loadModel(${preset.id}) using cached model');
         return cached;
       }
     }
     final preferredBackend = backend ?? preset.preferredBackend;
-    dev.log('[GemmaService] loadModel(${preset.id}) calling getActiveModel '
+    _log('loadModel(${preset.id}) calling getActiveModel '
         'with backend=$preferredBackend...');
     final model = await FlutterGemma.getActiveModel(
       maxTokens: preset.maxTokens,
       preferredBackend: preferredBackend,
     );
     _loadedPreset = preset;
-    dev.log('[GemmaService] loadModel(${preset.id}) done');
+    _log('loadModel(${preset.id}) done');
     return model;
   }
 }

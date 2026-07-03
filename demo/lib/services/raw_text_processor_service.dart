@@ -1,4 +1,3 @@
-import 'dart:developer' as dev;
 import 'dart:math' show max;
 
 import 'package:flutter_agent_memory/flutter_agent_memory_web.dart';
@@ -32,15 +31,20 @@ class RawTextProcessorService {
   /// Approximate characters per token for Latin/Cyrillic text.
   static const int _charsPerToken = 4;
 
+  void _log(String message) {
+    // ignore: avoid_print
+    print('[RawTextProcessor] $message');
+  }
+
   Future<Map<String, dynamic>> process(String rawText) async {
     if (!available) {
       throw StateError('LLM provider is not configured');
     }
 
-    dev.log('[RawTextProcessor] process start, inputLength=${rawText.length}');
+    _log('process start, inputLength=${rawText.length}');
     final normalized = _normalize(rawText);
     final limits = await _resolveLimits();
-    dev.log('[RawTextProcessor] limits: inputChunkTokens=${limits.inputChunkTokens}, '
+    _log('limits: inputChunkTokens=${limits.inputChunkTokens}, '
         'maxTokens=${_providerService.baseConfig.maxTokens}');
 
     final agent = KBAnalysisAgent(limits.provider);
@@ -48,33 +52,33 @@ class RawTextProcessorService {
 
     final results = <AnalysisResult>[];
     if (normalized.length <= maxChunkChars) {
-      dev.log('[RawTextProcessor] analyzing single chunk, chars=$normalized.length');
+      _log('analyzing single chunk, chars=${normalized.length}');
       final result = await agent.analyze(
         normalized,
         KBContext(),
         sourceName: 'raw-text',
       );
-      dev.log('[RawTextProcessor] analysis done: questions=${result.questions.length}, '
+      _log('analysis done: questions=${result.questions.length}, '
           'answers=${result.answers.length}, notes=${result.notes.length}');
       results.add(result);
     } else {
       final chunks = _chunkText(normalized, maxChunkChars);
-      dev.log('[RawTextProcessor] analyzing ${chunks.length} chunks');
+      _log('analyzing ${chunks.length} chunks');
       for (var i = 0; i < chunks.length; i++) {
-        dev.log('[RawTextProcessor] chunk ${i + 1}/${chunks.length}, chars=${chunks[i].length}');
+        _log('chunk ${i + 1}/${chunks.length}, chars=${chunks[i].length}');
         final result = await agent.analyze(
           chunks[i],
           KBContext(),
           sourceName: 'raw-text-part-${i + 1}',
         );
-        dev.log('[RawTextProcessor] chunk ${i + 1} done: questions=${result.questions.length}, '
+        _log('chunk ${i + 1} done: questions=${result.questions.length}, '
             'answers=${result.answers.length}, notes=${result.notes.length}');
         results.add(result);
       }
     }
 
     final merged = _mergeResults(results);
-    dev.log('[RawTextProcessor] merged: questions=${merged.questions.length}, '
+    _log('merged: questions=${merged.questions.length}, '
         'answers=${merged.answers.length}, notes=${merged.notes.length}');
 
     final allTopics = <String>{
@@ -104,7 +108,7 @@ class RawTextProcessorService {
       'answers': merged.answers.map((a) => a.toJson()).toList(),
       'notes': merged.notes.map((n) => n.toJson()).toList(),
     };
-    dev.log('[RawTextProcessor] process done, resultKeys=${result.keys.toList()}');
+    _log('process done, resultKeys=${result.keys.toList()}');
     return result;
   }
 
@@ -122,7 +126,7 @@ class RawTextProcessorService {
     var inputChunkTokens = _defaultInputChunkTokens;
 
     final baseConfig = _providerService.baseConfig;
-    dev.log('[RawTextProcessor] _resolveLimits: provider=${baseConfig.providerName}, '
+    _log('_resolveLimits: provider=${baseConfig.providerName}, '
         'model=${baseConfig.model}, maxTokens=${baseConfig.maxTokens}');
     if (baseConfig.providerName == 'openrouter') {
       final info = await OpenRouterModelService.fetchModelInfo(baseConfig.model);
