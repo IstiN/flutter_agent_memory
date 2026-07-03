@@ -39,11 +39,11 @@ class FlutterGemmaService implements GemmaService {
   Future<void>? _initFuture;
 
   FlutterGemmaService({
-    List<InferenceEngineProvider> inferenceEngines = const [
+    this._inferenceEngines = const [
       LiteRtLmEngine(),
       MediaPipeEngine(),
     ],
-  }) : _inferenceEngines = inferenceEngines;
+  });
 
   Future<void> _ensureInitialized() async {
     if (_initFuture != null) return _initFuture!;
