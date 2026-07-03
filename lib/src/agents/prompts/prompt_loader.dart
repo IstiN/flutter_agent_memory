@@ -100,20 +100,10 @@ class PromptLoader {
     }
   }
 
+  /// Serializes the XML tree back to text, preserving tags so the model
+  /// receives the structured markup instead of a flat text extraction.
   static String _innerText(XmlNode node) {
-    final buffer = StringBuffer();
-    for (final child in node.children) {
-      if (child is XmlText) {
-        buffer.write(child.value);
-      } else if (child is XmlElement) {
-        final inner = _innerText(child);
-        if (inner.trim().isNotEmpty) {
-          buffer.write(inner);
-          buffer.write('\n');
-        }
-      }
-    }
-    return buffer.toString();
+    return node.toXmlString(pretty: true);
   }
 
   static String _replacePlaceholders(
