@@ -49,7 +49,8 @@ class RawTextProcessorService {
 
     // On-device Gemma models compiled for web have a small fixed context
     // window (commonly 4096 tokens). Use the compact analysis prompt so the
-    // system prompt itself does not exceed the budget.
+    // system prompt itself does not exceed the budget. This also keeps the
+    // per-chunk math realistic when maxTokens is capped to the runtime limit.
     final analysisTemplate = _providerService.isGemma
         ? 'kb_analysis_compact.xml'
         : 'kb_analysis.xml';
