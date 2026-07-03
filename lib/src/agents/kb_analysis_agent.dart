@@ -20,12 +20,14 @@ class KBAnalysisAgent {
     String sourceName = 'unknown',
     String extraInstructions = '',
     List<String>? images,
+    String template = 'kb_analysis.xml',
   }) async {
     final prompt = await _buildPrompt(
       inputText,
       context,
       sourceName,
       extraInstructions,
+      template: template,
       hasImages: images != null && images.isNotEmpty,
     );
     _log('analyze prompt length=${prompt.length}');
@@ -51,6 +53,7 @@ class KBAnalysisAgent {
     String sourceName,
     String extraInstructions, {
     bool hasImages = false,
+    required String template,
   }) async {
     final existingPeople = context.existingPeople.isEmpty
         ? '(No existing people yet)'
@@ -63,7 +66,7 @@ class KBAnalysisAgent {
         ? 'One or more images are attached. Analyze the text and images together. Extract any questions, answers, or notes visible in the images as well.'
         : '';
 
-    return PromptLoader.load('kb_analysis.xml', {
+    return PromptLoader.load(template, {
       'inputText': inputText,
       'sourceName': sourceName,
       'existingPeople': existingPeople,

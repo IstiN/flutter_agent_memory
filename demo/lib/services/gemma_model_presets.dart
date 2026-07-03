@@ -110,7 +110,11 @@ const List<GemmaModelPreset> gemmaModelPresets = [
     modelType: ModelType.gemma4,
     fileType: ModelFileType.litertlm,
     preferredBackend: PreferredBackend.gpu,
-    maxTokens: 131072,
+    // LiteRT-LM web builds currently ignore the Dart maxTokens parameter and
+    // use the context window baked into the compiled model file. For the
+    // gemma-4 litertlm artifacts that window is 4096 tokens, so we reflect it
+    // here so the demo's chunking math stays realistic.
+    maxTokens: 4096,
     maxOutputTokens: 8192,
     supportImage: true,
     supportAudio: true,
@@ -133,7 +137,7 @@ const List<GemmaModelPreset> gemmaModelPresets = [
     modelType: ModelType.gemma4,
     fileType: ModelFileType.litertlm,
     preferredBackend: PreferredBackend.gpu,
-    maxTokens: 131072,
+    maxTokens: 4096,
     maxOutputTokens: 8192,
     supportImage: true,
     supportAudio: true,
@@ -154,7 +158,7 @@ const List<GemmaModelPreset> gemmaModelPresets = [
     modelType: ModelType.gemma4,
     fileType: ModelFileType.litertlm,
     preferredBackend: PreferredBackend.npu,
-    maxTokens: 131072,
+    maxTokens: 4096,
     maxOutputTokens: 8192,
     supportsFunctionCalls: true,
     isThinking: true,
@@ -171,7 +175,7 @@ const List<GemmaModelPreset> gemmaModelPresets = [
     modelType: ModelType.gemma4,
     fileType: ModelFileType.litertlm,
     preferredBackend: PreferredBackend.npu,
-    maxTokens: 131072,
+    maxTokens: 4096,
     maxOutputTokens: 8192,
     supportsFunctionCalls: true,
     isThinking: true,
@@ -264,7 +268,8 @@ const List<GemmaModelPreset> gemmaModelPresets = [
     modelType: ModelType.gemmaIt,
     fileType: ModelFileType.litertlm,
     needsAuth: true,
-    maxTokens: 32768,
+    // Conservative context for LiteRT-LM builds without an explicit ekv suffix.
+    maxTokens: 4096,
     maxOutputTokens: 4096,
     supportsFunctionCalls: false,
   ),
@@ -282,7 +287,7 @@ const List<GemmaModelPreset> gemmaModelPresets = [
     modelType: ModelType.gemmaIt,
     fileType: ModelFileType.litertlm,
     needsAuth: true,
-    maxTokens: 32768,
+    maxTokens: 4096,
     maxOutputTokens: 4096,
     supportImage: true,
     supportAudio: true,

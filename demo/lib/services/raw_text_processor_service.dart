@@ -47,6 +47,12 @@ class RawTextProcessorService {
     _log('limits: inputChunkTokens=${limits.inputChunkTokens}, '
         'maxTokens=${_providerService.baseConfig.maxTokens}');
 
+    // On-device Gemma models compiled for web have a small fixed context
+    // window (commonly 4096 tokens). Use the compact analysis prompt so the
+    // system prompt itself does not exceed the budget.
+    final analysisTemplate = _providerService.isGemma
+        ? 'kb_analysis_compact.xml'
+        : 'kb_analysis.xml';
     final agent = KBAnalysisAgent(limits.provider);
     final maxChunkChars = limits.inputChunkTokens * _charsPerToken;
 
@@ -57,6 +63,7 @@ class RawTextProcessorService {
         normalized,
         KBContext(),
         sourceName: 'raw-text',
+        template: analysisTemplate,
       );
       _log('analysis done: questions=${result.questions.length}, '
           'answers=${result.answers.length}, notes=${result.notes.length}');
@@ -70,6 +77,7 @@ class RawTextProcessorService {
           chunks[i],
           KBContext(),
           sourceName: 'raw-text-part-${i + 1}',
+          template: analysisTemplate,
         );
         _log('chunk ${i + 1} done: questions=${result.questions.length}, '
             'answers=${result.answers.length}, notes=${result.notes.length}');
@@ -170,7 +178,10 @@ class RawTextProcessorService {
   /// analysis call.
   Future<int> _estimateAnalysisPromptTokens() async {
     try {
-      final emptyPrompt = await PromptLoader.load('kb_analysis.xml', {
+      final template = _providerService.isGemma
+          ? 'kb_analysis_compact.xml'
+          : 'kb_analysis.xml';
+      final emptyPrompt = await PromptLoader.load(template, {
         'inputText': '',
         'sourceName': 'raw-text',
         'existingPeople': '(No existing people yet)',

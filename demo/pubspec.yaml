@@ -33,6 +33,7 @@ flutter:
 
   assets:
     - packages/flutter_agent_memory/src/agents/prompts/kb_analysis.xml
+    - packages/flutter_agent_memory/src/agents/prompts/kb_analysis_compact.xml
     - packages/flutter_agent_memory/src/agents/prompts/kb_aggregation.xml
     - packages/flutter_agent_memory/src/agents/prompts/kb_consolidation.xml
     - packages/flutter_agent_memory/src/agents/prompts/kb_qa_mapping.xml
