@@ -49,6 +49,16 @@
   </script>
   <!-- flutter_gemma web cache helpers (window.cacheHas/cachePut/cacheGet/etc.) -->
   <script src="cache_api.js"></script>
+  <!-- flutter_gemma OPFS helper for large model streaming (>2GB) -->
+  <script src="opfs_helper.js"></script>
+  <!-- LiteRT-LM Web Inference for .litertlm models via WebGPU/WASM -->
+  <script type="module">
+    window.litertLmReady = (async () => {
+      const m = await import('https://cdn.jsdelivr.net/npm/@litert-lm/core@0.12.1/+esm');
+      window.Engine = m.Engine;
+      return m.Engine;
+    })();
+  </script>
   <script src="flutter_bootstrap.js" async></script>
 </body>
 </html>
