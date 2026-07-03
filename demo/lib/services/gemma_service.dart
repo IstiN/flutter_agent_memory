@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:developer' as dev;
 
+import 'package:flutter_gemma/core/registry/inference_engine_provider.dart';
 import 'package:flutter_gemma/flutter_gemma.dart';
 import 'package:flutter_gemma_litertlm/flutter_gemma_litertlm.dart';
 import 'package:flutter_gemma_mediapipe/flutter_gemma_mediapipe.dart';
@@ -21,19 +22,34 @@ abstract class GemmaService {
   /// Loads the currently-active inference model.
   ///
   /// Throws if the model is not installed.
-  Future<InferenceModel> loadModel(GemmaModelPreset preset);
+  ///
+  /// [backend] overrides the preset's preferred backend, e.g. for CPU smoke
+  /// tests in headless environments.
+  Future<InferenceModel> loadModel(
+    GemmaModelPreset preset, {
+    PreferredBackend? backend,
+  });
 }
 
 /// Concrete Flutter Gemma service backed by the plugin.
 class FlutterGemmaService implements GemmaService {
+  final List<InferenceEngineProvider> _inferenceEngines;
+
   GemmaModelPreset? _loadedPreset;
   Future<void>? _initFuture;
+
+  FlutterGemmaService({
+    List<InferenceEngineProvider> inferenceEngines = const [
+      LiteRtLmEngine(),
+      MediaPipeEngine(),
+    ],
+  }) : _inferenceEngines = inferenceEngines;
 
   Future<void> _ensureInitialized() async {
     if (_initFuture != null) return _initFuture!;
     dev.log('[GemmaService] initializing FlutterGemma...');
     _initFuture = FlutterGemma.initialize(
-      inferenceEngines: const [LiteRtLmEngine(), MediaPipeEngine()],
+      inferenceEngines: _inferenceEngines,
     );
     await _initFuture!;
     dev.log('[GemmaService] FlutterGemma initialized');
@@ -86,7 +102,10 @@ class FlutterGemmaService implements GemmaService {
   }
 
   @override
-  Future<InferenceModel> loadModel(GemmaModelPreset preset) async {
+  Future<InferenceModel> loadModel(
+    GemmaModelPreset preset, {
+    PreferredBackend? backend,
+  }) async {
     dev.log('[GemmaService] loadModel(${preset.id}) start');
     final installed = await isModelInstalled(preset);
     if (!installed) {
@@ -94,17 +113,19 @@ class FlutterGemmaService implements GemmaService {
         'Model "${preset.displayName}" is not installed. Install it first.',
       );
     }
-    if (_loadedPreset?.id == preset.id) {
+    if (_loadedPreset?.id == preset.id && backend == null) {
       final cached = FlutterGemmaPlugin.instance.initializedModel;
       if (cached != null) {
         dev.log('[GemmaService] loadModel(${preset.id}) using cached model');
         return cached;
       }
     }
-    dev.log('[GemmaService] loadModel(${preset.id}) calling getActiveModel...');
+    final preferredBackend = backend ?? preset.preferredBackend;
+    dev.log('[GemmaService] loadModel(${preset.id}) calling getActiveModel '
+        'with backend=$preferredBackend...');
     final model = await FlutterGemma.getActiveModel(
       maxTokens: preset.maxTokens,
-      preferredBackend: preset.preferredBackend,
+      preferredBackend: preferredBackend,
     );
     _loadedPreset = preset;
     dev.log('[GemmaService] loadModel(${preset.id}) done');

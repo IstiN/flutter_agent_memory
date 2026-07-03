@@ -13,17 +13,14 @@ import 'package:demo/services/gemma_model_presets.dart';
 /// Run with:
 ///   HUGGINGFACE_TOKEN=hf_xxx flutter test demo/test/integration/huggingface_presets_test.dart
 void main() {
+  final token = Platform.environment['HUGGINGFACE_TOKEN'];
+  final tokenMissing = token == null || token.isEmpty;
+
   group('HuggingFace preset URLs', () {
-    final token = Platform.environment['HUGGINGFACE_TOKEN'];
-
-    setUpAll(() {
-      if (token == null || token.isEmpty) {
-        markTestSkipped('HUGGINGFACE_TOKEN is not set');
-      }
-    });
-
     for (final preset in gemmaModelPresets) {
-      test('${preset.id} is reachable', () async {
+      test(
+        '${preset.id} is reachable',
+        () async {
         final client = HttpClient();
         try {
           // HEAD from HF often omits Content-Type, so we request a single byte
@@ -38,7 +35,8 @@ void main() {
 
           // Gated models that the token cannot access are reported as skipped
           // rather than failures so the suite stays useful for a normal token.
-          if (preset.needsAuth && response.statusCode == 403) {
+          if (preset.needsAuth &&
+              (response.statusCode == 401 || response.statusCode == 403)) {
             markTestSkipped(
               '${preset.id}: token cannot access gated repo ${preset.url}',
             );
@@ -61,7 +59,9 @@ void main() {
         } finally {
           client.close();
         }
-      });
+        },
+        skip: tokenMissing ? 'HUGGINGFACE_TOKEN is not set' : null,
+      );
     }
   });
 }

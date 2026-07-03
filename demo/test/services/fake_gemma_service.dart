@@ -24,7 +24,10 @@ class FakeGemmaService implements GemmaService {
   }
 
   @override
-  Future<InferenceModel> loadModel(GemmaModelPreset preset) async {
+  Future<InferenceModel> loadModel(
+    GemmaModelPreset preset, {
+    PreferredBackend? backend,
+  }) async {
     if (!installed.contains(preset.id)) {
       throw StateError('Model ${preset.id} not installed');
     }
