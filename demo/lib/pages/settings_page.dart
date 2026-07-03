@@ -148,6 +148,10 @@ class _SettingsPageState extends State<SettingsPage> {
                     onSelected: (preset) {
                       setState(() => _modelController.text = preset.id);
                     },
+                    onUse: () {
+                      setState(() => _type = ProviderType.gemma);
+                      _save();
+                    },
                   ),
                 ],
               ],
@@ -409,12 +413,14 @@ class _GemmaModelPresets extends StatefulWidget {
   final String selectedId;
   final String hfToken;
   final ValueChanged<GemmaModelPreset> onSelected;
+  final VoidCallback? onUse;
 
   const _GemmaModelPresets({
     required this.service,
     required this.selectedId,
     required this.hfToken,
     required this.onSelected,
+    this.onUse,
   });
 
   @override
@@ -457,6 +463,7 @@ class _GemmaModelPresetsState extends State<_GemmaModelPresets> {
       if (mounted) {
         setState(() => _installed[preset.id] = true);
         widget.onSelected(preset);
+        widget.onUse?.call();
       }
     } catch (e) {
       if (mounted) setState(() => _error = 'Install failed: $e');
@@ -504,7 +511,12 @@ class _GemmaModelPresetsState extends State<_GemmaModelPresets> {
                   ],
                 ),
                 selected: isSelected,
-                onSelected: (_) => widget.onSelected(preset),
+                onSelected: installed
+                    ? (_) {
+                        widget.onSelected(preset);
+                        widget.onUse?.call();
+                      }
+                    : (_) => widget.onSelected(preset),
                 deleteIcon: installing
                     ? const SizedBox.shrink()
                     : installed
