@@ -103,4 +103,24 @@ class LlmConfig {
   }
 
   bool get isConfigured => apiKey.isNotEmpty && model.isNotEmpty;
+
+  LlmConfig copyWith({
+    String? providerName,
+    String? apiKey,
+    String? baseUrl,
+    String? model,
+    int? maxTokens,
+    double? temperature,
+    String? maxTokensParamName,
+  }) {
+    return LlmConfig(
+      providerName: providerName ?? this.providerName,
+      apiKey: apiKey ?? this.apiKey,
+      baseUrl: baseUrl ?? this.baseUrl,
+      model: model ?? this.model,
+      maxTokens: maxTokens ?? this.maxTokens,
+      temperature: temperature ?? this.temperature,
+      maxTokensParamName: maxTokensParamName ?? this.maxTokensParamName,
+    );
+  }
 }

@@ -117,7 +117,9 @@ class RawTextProcessorService {
   ///
   /// For OpenRouter the limits are fetched from `/api/v1/models` so the demo
   /// automatically uses the largest possible output and the largest safe input
-  /// chunk (roughly half of the remaining context after reserving output).
+  /// chunk. For other providers (Gemma on-device, Ollama, OpenAI, etc.) the
+  /// chunk size is derived from the configured context window minus the
+  /// analysis system prompt and a generation buffer.
   Future<_Limits> _resolveLimits() async {
     // Use the provider already built by [ProviderService] — this preserves
     // the Gemma on-device provider instead of routing it through the generic
@@ -128,6 +130,7 @@ class RawTextProcessorService {
     final baseConfig = _providerService.baseConfig;
     _log('_resolveLimits: provider=${baseConfig.providerName}, '
         'model=${baseConfig.model}, maxTokens=${baseConfig.maxTokens}');
+
     if (baseConfig.providerName == 'openrouter') {
       final info = await OpenRouterModelService.fetchModelInfo(baseConfig.model);
       if (info != null && info.contextLength > 0) {
@@ -141,12 +144,45 @@ class RawTextProcessorService {
           (info.contextLength - outputTokens - _systemOverheadTokens) ~/ 2,
         );
       }
+    } else {
+      // Estimate the fixed overhead of the analysis system prompt so we never
+      // try to feed the model more input than fits in its context window.
+      final systemOverhead = await _estimateAnalysisPromptTokens();
+      // Reserve some tokens for the model's response as well.
+      const outputBuffer = 4096;
+      inputChunkTokens = max(
+        1000,
+        baseConfig.maxTokens - systemOverhead - outputBuffer,
+      );
+      _log('context-based chunk: maxTokens=${baseConfig.maxTokens}, '
+          'systemOverhead=$systemOverhead, outputBuffer=$outputBuffer, '
+          'inputChunkTokens=$inputChunkTokens');
     }
 
     return _Limits(
       provider: provider,
       inputChunkTokens: inputChunkTokens,
     );
+  }
+
+  /// Renders the analysis prompt with no user input and returns its token
+  /// count (rounded up). This is the fixed overhead we must reserve in every
+  /// analysis call.
+  Future<int> _estimateAnalysisPromptTokens() async {
+    try {
+      final emptyPrompt = await PromptLoader.load('kb_analysis.xml', {
+        'inputText': '',
+        'sourceName': 'raw-text',
+        'existingPeople': '(No existing people yet)',
+        'existingTopics': '(No existing topics yet)',
+        'imageHint': '',
+        'extraInstructions': '',
+      });
+      return (emptyPrompt.length / _charsPerToken).ceil();
+    } catch (e) {
+      _log('failed to estimate analysis prompt tokens: $e');
+      return _systemOverheadTokens;
+    }
   }
 
   /// Normalizes line endings and transforms VTT transcripts, matching

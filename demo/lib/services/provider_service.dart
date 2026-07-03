@@ -41,12 +41,22 @@ class ProviderService {
   /// The LLM configuration derived from persisted settings and environment
   /// variables (e.g. `OPENROUTER_MAX_TOKENS`).
   LlmConfig get baseConfig {
-    return LlmConfig.fromEnvironment(
+    final config = LlmConfig.fromEnvironment(
       provider: settings.provider,
       apiKey: settings.apiKey,
       baseUrl: settings.baseUrl,
       model: settings.model,
     );
+    // On-device Gemma models have their own context-window metadata; make sure
+    // the rest of the demo (chunking, limits) uses the preset value rather than
+    // the generic default.
+    if (ProviderType.fromString(settings.provider) == ProviderType.gemma) {
+      final preset = findGemmaPreset(settings.model);
+      if (preset != null) {
+        return config.copyWith(maxTokens: preset.maxTokens);
+      }
+    }
+    return config;
   }
 
   LlmProvider? get provider {

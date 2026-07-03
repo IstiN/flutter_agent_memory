@@ -33,7 +33,8 @@ class GemmaLlmProvider implements LlmProvider {
 
   Future<String> _run(List<LlmMessage> messages) async {
     _log('_run start: ${messages.length} message(s), '
-        'preset=${_preset.id}, maxTokens=${_preset.maxTokens}');
+        'preset=${_preset.id}, maxTokens=${_preset.maxTokens}, '
+        'maxOutputTokens=${_preset.maxOutputTokens}');
     for (var i = 0; i < messages.length; i++) {
       final msg = messages[i];
       _log('message $i: role=${msg.role}, textLength=${msg.content.length}, '
@@ -46,7 +47,7 @@ class GemmaLlmProvider implements LlmProvider {
       temperature: _preset.temperature,
       topK: _preset.topK,
       topP: _preset.topP,
-      maxOutputTokens: _preset.maxTokens,
+      maxOutputTokens: _preset.maxOutputTokens,
     );
     _log('session created');
     try {

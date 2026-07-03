@@ -39,9 +39,11 @@ ${existingTags}
         Generate between 1 and ${maxTags} tags for the user's query.
 
         TAG SELECTION CRITERIA:
+        - The tags MUST be directly related to the user query above.
         - Prioritize specific techniques, tools, services, or concepts mentioned in the query.
         - Include exact names of APIs, frameworks, databases, or systems when present.
-        - Reuse existing tags from the knowledge base when they are semantically close.
+        - You MAY reuse tags from the existing_tags list ONLY when they are semantically close to the query.
+        - Do NOT blindly copy tags from the existing list if they are unrelated to the query.
         - Avoid overly generic words like "help", "question", or "issue" unless they are part of a known term.
         - Keep the original language of the query.
 
@@ -50,41 +52,6 @@ ${existingTags}
         - Favor specificity over generality.
         - Don't invent tags that are unrelated to the query.
     </instructions>
-    <examples>
-        <example name="specific_technology">
-            <human>
-User query: "How do I configure OAuth2 authentication in the payment service?"
-Existing tags: OAuth2, payment-processing, authentication, security
-            </human>
-            <ai>
-{
-  "tags": ["OAuth2", "payment-processing", "authentication"]
-}
-            </ai>
-        </example>
-        <example name="codebase_search">
-            <human>
-User query: "Debug the user registration process in microservice ABC123 that handles email verification"
-Existing tags: ABC123, UserRegistration, EmailVerifier
-            </human>
-            <ai>
-{
-  "tags": ["ABC123", "UserRegistration", "EmailVerifier"]
-}
-            </ai>
-        </example>
-        <example name="generic_query">
-            <human>
-User query: "Best practices for Kubernetes deployments"
-Existing tags: kubernetes, deployment, best-practices
-            </human>
-            <ai>
-{
-  "tags": ["kubernetes", "deployment", "best-practices"]
-}
-            </ai>
-        </example>
-    </examples>
     <output_requirements>
         Output MUST be valid JSON that can be parsed without errors.
         Do NOT include markdown code blocks (```json) or explanatory text.

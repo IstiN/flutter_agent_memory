@@ -120,11 +120,12 @@ class KBSearchEngine {
       );
     }
 
-    final existingTags = await _collectExistingTags();
+    final allExistingTags = await _collectExistingTags();
+    final relevantTags = _selectRelevantTags(query, allExistingTags, max: 30);
     final generator = KBTagGeneratorAgent(provider!);
     final generatedTags = await generator.generateTags(
       query,
-      existingTags: existingTags,
+      existingTags: relevantTags,
       maxTags: maxGeneratedTags,
     );
     // ignore: avoid_print
@@ -194,6 +195,45 @@ class KBSearchEngine {
     await collect('note');
 
     return tags.map((t) => t.toLowerCase()).toSet();
+  }
+
+  /// Returns a subset of [allTags] that is likely relevant to [query].
+  ///
+  /// Uses simple substring matching over query words. If too few tags match,
+  /// falls back to the full set so the model still has candidates to reuse.
+  Set<String> _selectRelevantTags(
+    String query,
+    Set<String> allTags, {
+    int max = 30,
+  }) {
+    final words = query
+        .toLowerCase()
+        .split(RegExp(r'[^a-z0-9\u00c0-\u017e]+'))
+        .where((t) => t.length > 1)
+        .toSet();
+    if (words.isEmpty) return allTags;
+
+    final scored = allTags.map((tag) {
+      final lower = tag.toLowerCase();
+      var score = 0;
+      for (final word in words) {
+        if (lower.contains(word)) score += 2;
+        if (word.contains(lower) && lower.length > 2) score += 1;
+      }
+      return (tag, score);
+    }).toList()
+      ..sort((a, b) => b.$2.compareTo(a.$2));
+
+    final relevant = scored
+        .where((e) => e.$2 > 0)
+        .take(max)
+        .map((e) => e.$1)
+        .toSet();
+
+    // If almost nothing matches, give the model the full candidate set so it
+    // can still reuse broadly related tags.
+    if (relevant.length < 5) return allTags;
+    return relevant;
   }
 
   Future<void> _forEachEntity(
