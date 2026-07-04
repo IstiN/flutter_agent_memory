@@ -16,6 +16,9 @@ test_output/
 # Local GitHub Pages build output
 _site/
 
+# jscpd local report
+report/
+
 
 
 # Flutter repo-specific
