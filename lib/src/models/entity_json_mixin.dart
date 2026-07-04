@@ -8,6 +8,8 @@ mixin KbEntityJson {
   String get id;
   String get author;
   String get text;
+  String? get startTextRef;
+  String? get endTextRef;
   String get date;
   String get area;
   List<String> get topics;
@@ -22,6 +24,10 @@ mixin KbEntityJson {
     'id': id,
     'author': author,
     'text': text,
+    if (startTextRef != null && startTextRef!.isNotEmpty)
+      'startTextRef': startTextRef,
+    if (endTextRef != null && endTextRef!.isNotEmpty)
+      'endTextRef': endTextRef,
     'date': date,
     'area': area,
     'topics': topics,

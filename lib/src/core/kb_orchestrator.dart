@@ -61,6 +61,7 @@ class KBOrchestrator {
       sourceName: params.sourceName,
       extraInstructions: params.analysisExtraInstructions,
       images: params.inputImages.isNotEmpty ? params.inputImages : null,
+      template: params.analysisTemplate,
     );
 
     _validator.validateAndClean(analysis);

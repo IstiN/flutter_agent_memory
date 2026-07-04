@@ -1,10 +1,11 @@
-import 'dart:convert';
+import 'dart:io';
 
 import '../llm/llm_message.dart';
 import '../llm/llm_provider.dart';
 import '../models/analysis_result.dart';
 import '../models/kb_context.dart';
 import '../utils/json_utils.dart';
+import '../utils/line_analysis_parser.dart';
 import 'prompts/prompt_loader.dart';
 
 /// Extracts structured knowledge (questions, answers, notes) from raw text
@@ -37,9 +38,50 @@ class KBAnalysisAgent {
     ]);
     _log('analyze raw response length=${response.length}');
     _log('analyze raw response:\n$response');
-    final jsonText = extractJsonFromMarkdown(response);
-    final json = jsonDecode(jsonText) as Map<String, dynamic>;
-    return AnalysisResult.fromJson(json);
+    _saveRawResponse(response, sourceName);
+    final result = _decodeResponse(response, template);
+    return result;
+  }
+
+  AnalysisResult _decodeResponse(String response, String template) {
+    final lineResult = recoverPartialLineAnalysis(response);
+    final lineTotal = lineResult.questions.length +
+        lineResult.answers.length +
+        lineResult.notes.length;
+    if (lineTotal > 0) {
+      return lineResult;
+    }
+
+    // Fallback: some models or old test fixtures may still return JSON.
+    final trimmed = response.trim();
+    if (trimmed.startsWith('{')) {
+      try {
+        final json = sanitizeAndDecodeJson(response) as Map<String, dynamic>;
+        return AnalysisResult.fromJson(json);
+      } on FormatException catch (e) {
+        _log('JSON fallback decode failed: $e');
+        final recovered = recoverPartialAnalysisJson(response);
+        final total = (recovered['questions'] as List).length +
+            (recovered['answers'] as List).length +
+            (recovered['notes'] as List).length;
+        if (total == 0) rethrow;
+        _log('recovered $total items from malformed JSON response');
+        return AnalysisResult.fromJson(recovered);
+      }
+    }
+
+    throw FormatException('Unable to parse analysis response');
+  }
+
+  void _saveRawResponse(String response, String sourceName) {
+    try {
+      final dir = Directory.systemTemp.createTempSync('kb_raw_');
+      final file = File('${dir.path}/${sourceName}_raw_response.txt');
+      file.writeAsStringSync(response);
+      _log('raw response saved to ${file.path}');
+    } catch (e) {
+      _log('failed to save raw response: $e');
+    }
   }
 
   void _log(String message) {

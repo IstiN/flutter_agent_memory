@@ -1,8 +1,6 @@
-import 'dart:convert';
-
 import '../llm/llm_provider.dart';
 import '../storage/kb_memory_store.dart';
-import '../utils/json_utils.dart';
+import '../utils/line_parsers.dart';
 import 'prompts/prompt_loader.dart';
 
 /// Reranks a small set of candidate memory records for a given query using an
@@ -42,11 +40,7 @@ class KBRerankerAgent {
     });
 
     final response = await _provider.chat(prompt);
-    final jsonText = extractJsonFromMarkdown(response);
-    final json = jsonDecode(jsonText) as Map<String, dynamic>;
-    final ranked = (json['rankedIds'] as List<dynamic>? ?? [])
-        .map((e) => e.toString())
-        .toList();
+    final ranked = parseRerankerLines(response);
 
     // Preserve any candidates the model forgot, but at the bottom.
     final seen = <String>{};

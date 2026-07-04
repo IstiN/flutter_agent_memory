@@ -13,6 +13,8 @@ import 'relation.dart';
 class Note with KbEntityJson {
   final String id;
   final String text;
+  final String? startTextRef;
+  final String? endTextRef;
   final String area;
   final List<String> topics;
   final List<String> tags;
@@ -32,6 +34,8 @@ class Note with KbEntityJson {
   const Note({
     required this.id,
     required this.text,
+    this.startTextRef,
+    this.endTextRef,
     required this.area,
     required this.topics,
     required this.tags,
@@ -52,6 +56,8 @@ class Note with KbEntityJson {
   factory Note.fromJson(Map<String, dynamic> json) => Note(
     id: json['id'] as String? ?? '',
     text: json['text'] as String? ?? '',
+    startTextRef: json['startTextRef'] as String?,
+    endTextRef: json['endTextRef'] as String?,
     area: json['area'] as String? ?? '',
     topics: stringListFromJson(json['topics']),
     tags: stringListFromJson(json['tags']),
@@ -59,13 +65,13 @@ class Note with KbEntityJson {
     date: json['date'] as String? ?? '',
     answersQuestions: stringListFromJson(json['answersQuestions']),
     links: linkListFromJson(json['links']),
-    accessCount: (json['accessCount'] as num?)?.toInt() ?? 0,
+    accessCount: intFromJson(json['accessCount'], defaultValue: 0),
     lastAccessedAt: json['lastAccessedAt'] as String?,
-    importance: (json['importance'] as num?)?.toDouble() ?? 0.5,
+    importance: doubleFromJson(json['importance'], defaultValue: 0.5),
     memoryType: MemoryType.normalize(json['memoryType'] as String?),
     validFrom: json['validFrom'] as String?,
     validUntil: json['validUntil'] as String?,
-    level: (json['level'] as num?)?.toInt() ?? MemoryLevel.raw,
+    level: intFromJson(json['level'], defaultValue: MemoryLevel.raw),
     relations: _relationsFromJson(
       json['relations'] as List<dynamic>? ?? [],
       json['id'] as String? ?? '',
@@ -97,6 +103,8 @@ class Note with KbEntityJson {
   Note copyWith({
     String? id,
     String? text,
+    String? startTextRef,
+    String? endTextRef,
     String? area,
     List<String>? topics,
     List<String>? tags,
@@ -115,6 +123,8 @@ class Note with KbEntityJson {
   }) => Note(
     id: id ?? this.id,
     text: text ?? this.text,
+    startTextRef: startTextRef ?? this.startTextRef,
+    endTextRef: endTextRef ?? this.endTextRef,
     area: area ?? this.area,
     topics: topics ?? this.topics,
     tags: tags ?? this.tags,

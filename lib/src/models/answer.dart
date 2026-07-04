@@ -7,6 +7,8 @@ class Answer with KbEntityJson {
   final String id;
   final String author;
   final String text;
+  final String? startTextRef;
+  final String? endTextRef;
   final String date;
   final String area;
   final List<String> topics;
@@ -22,6 +24,8 @@ class Answer with KbEntityJson {
     required this.id,
     required this.author,
     required this.text,
+    this.startTextRef,
+    this.endTextRef,
     required this.date,
     required this.area,
     required this.topics,
@@ -38,16 +42,18 @@ class Answer with KbEntityJson {
     id: json['id'] as String? ?? '',
     author: json['author'] as String? ?? '',
     text: json['text'] as String? ?? '',
+    startTextRef: json['startTextRef'] as String?,
+    endTextRef: json['endTextRef'] as String?,
     date: json['date'] as String? ?? '',
     area: json['area'] as String? ?? '',
     topics: stringListFromJson(json['topics']),
     tags: stringListFromJson(json['tags']),
     answersQuestion: json['answersQuestion'] as String?,
-    quality: (json['quality'] as num?)?.toDouble() ?? 0.0,
+    quality: doubleFromJson(json['quality'], defaultValue: 0.0),
     links: linkListFromJson(json['links']),
-    accessCount: (json['accessCount'] as num?)?.toInt() ?? 0,
+    accessCount: intFromJson(json['accessCount'], defaultValue: 0),
     lastAccessedAt: json['lastAccessedAt'] as String?,
-    importance: (json['importance'] as num?)?.toDouble() ?? 0.5,
+    importance: doubleFromJson(json['importance'], defaultValue: 0.5),
   );
 
   Map<String, dynamic> toJson() => {
@@ -61,6 +67,8 @@ class Answer with KbEntityJson {
     String? id,
     String? author,
     String? text,
+    String? startTextRef,
+    String? endTextRef,
     String? date,
     String? area,
     List<String>? topics,
@@ -75,6 +83,8 @@ class Answer with KbEntityJson {
     id: id ?? this.id,
     author: author ?? this.author,
     text: text ?? this.text,
+    startTextRef: startTextRef ?? this.startTextRef,
+    endTextRef: endTextRef ?? this.endTextRef,
     date: date ?? this.date,
     area: area ?? this.area,
     topics: topics ?? this.topics,

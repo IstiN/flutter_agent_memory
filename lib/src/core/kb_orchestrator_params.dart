@@ -10,6 +10,12 @@ class KBOrchestratorParams {
   final String analysisExtraInstructions;
   final String aggregationExtraInstructions;
   final String qaMappingExtraInstructions;
+
+  /// Prompt template used by the analysis agent.
+  ///
+  /// Defaults to [kb_analysis.xml]. Use [kb_analysis_compact.xml] for
+  /// on-device models with small context windows.
+  final String analysisTemplate;
   final bool cleanOutput;
 
   const KBOrchestratorParams({
@@ -21,6 +27,7 @@ class KBOrchestratorParams {
     this.analysisExtraInstructions = '',
     this.aggregationExtraInstructions = '',
     this.qaMappingExtraInstructions = '',
+    this.analysisTemplate = 'kb_analysis.xml',
     this.cleanOutput = false,
   });
 }
