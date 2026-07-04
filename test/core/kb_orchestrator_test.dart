@@ -19,36 +19,8 @@ void main() {
 
   test('runs full pipeline with fake provider', () async {
     final fakeResponse = '''
-{
-  "questions": [
-    {
-      "id": "q_1",
-      "author": "Alice",
-      "text": "How do I test Dart code?",
-      "date": "2024-01-01T10:00:00Z",
-      "area": "development",
-      "topics": ["dart-testing"],
-      "tags": ["dart", "testing"],
-      "answeredBy": "",
-      "links": []
-    }
-  ],
-  "answers": [
-    {
-      "id": "a_1",
-      "author": "Bob",
-      "text": "Use the test package.",
-      "date": "2024-01-01T10:05:00Z",
-      "area": "development",
-      "topics": ["dart-testing"],
-      "tags": ["test-package"],
-      "answersQuestion": "q_1",
-      "quality": 0.9,
-      "links": []
-    }
-  ],
-  "notes": []
-}
+TYPE=Q | ID=q_1 | AUTHOR=Alice | DATE=2024-01-01T10:00:00Z | AREA=development | TOPICS=dart-testing | TAGS=dart;testing | ANSWERED_BY=a_1 | LINKS= | START=How do | END=test Dart code?
+TYPE=A | ID=a_1 | AUTHOR=Bob | DATE=2024-01-01T10:05:00Z | AREA=development | TOPICS=dart-testing | TAGS=test-package | ANSWERS_QUESTION=q_1 | QUALITY=0.9 | LINKS= | START=Use the | END=test package.
 ''';
 
     final provider = FakeLlmProvider({'Analyze': fakeResponse});

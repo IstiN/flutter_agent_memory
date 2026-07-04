@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 import 'package:flutter_agent_memory/src/llm/llm_message.dart';
 import 'package:flutter_agent_memory/src/llm/llm_provider.dart';
 
@@ -31,6 +29,6 @@ class FakeLlmProvider implements LlmProvider {
     }
     return _responses.values.isNotEmpty
         ? _responses.values.first
-        : jsonEncode({'questions': [], 'answers': [], 'notes': []});
+        : 'TYPE=Q | ID=q_1 | AUTHOR= | DATE= | AREA=general | TOPICS= | TAGS= | ANSWERED_BY= | LINKS= | START=full | END=full';
   }
 }

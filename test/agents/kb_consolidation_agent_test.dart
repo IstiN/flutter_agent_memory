@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 import 'package:flutter_agent_memory/src/agents/kb_consolidation_agent.dart';
 import 'package:flutter_agent_memory/src/llm/llm_message.dart';
 import 'package:flutter_agent_memory/src/llm/llm_provider.dart';
@@ -12,17 +10,12 @@ class _FakeProvider implements LlmProvider {
 
   @override
   Future<String> chat(String prompt, {String? model}) async {
-    return jsonEncode({
-      'summary': '# Summary\n\nTest memory summary.',
-      'skills': [
-        {
-          'id': 'sk_1',
-          'title': 'Handle async errors',
-          'instruction': 'Use try/catch or Result wrappers.',
-          'tags': ['dart', 'errors'],
-        },
-      ],
-    });
+    return '''
+SUMMARY=# Summary
+
+Test memory summary.
+SKILL | ID=sk_1 | TITLE=Handle async errors | INSTRUCTION=Use try/catch or Result wrappers. | TAGS=dart;errors
+''';
   }
 
   @override

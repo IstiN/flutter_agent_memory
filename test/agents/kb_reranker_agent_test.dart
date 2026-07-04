@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 import 'package:flutter_agent_memory/src/agents/kb_reranker_agent.dart';
 import 'package:flutter_agent_memory/src/llm/llm_message.dart';
 import 'package:flutter_agent_memory/src/llm/llm_provider.dart';
@@ -13,9 +11,10 @@ class _FakeProvider implements LlmProvider {
 
   @override
   Future<String> chat(String prompt, {String? model}) async {
-    return jsonEncode({
-      'rankedIds': ['n_0002', 'n_0001'],
-    });
+    return '''
+RANKED_ID=n_0002
+RANKED_ID=n_0001
+''';
   }
 
   @override

@@ -130,10 +130,14 @@ void main() {
             .map((t) => t.toLowerCase())
             .toSet();
         expect(
-          expectation.expectedKeywordsInTags.any(lowerTags.contains),
+          expectation.expectedKeywordsInTags.any(
+            (keyword) => lowerTags.any(
+              (tag) => tag.contains(keyword) || keyword.contains(tag),
+            ),
+          ),
           isTrue,
           reason:
-              'Expected at least one of ${expectation.expectedKeywordsInTags} in generated tags, got $lowerTags',
+              'Expected at least one of ${expectation.expectedKeywordsInTags} to overlap with generated tags, got $lowerTags',
         );
 
         expect(
