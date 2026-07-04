@@ -85,15 +85,25 @@ class GemmaLlmProvider implements LlmProvider {
       }
       _log('[timing] waiting for response (streaming) at ${sw.elapsedMilliseconds}ms...');
 
-      // Prefill/decode models (Gemma 4, FunctionGemma litertlm) do not support
-      // the synchronous getResponse() path and return an empty/cancelled result.
-      // Collect the async token stream instead.
+      // Try the synchronous getResponse() first — MediaPipe web returns the full
+      // response through the Future, while getResponseAsync() may fire an empty
+      // stream for some model/preset combinations.
+      _log('[debug] trying getResponse()...');
+      final syncResponse = await session.getResponse();
+      _log('[debug] getResponse() returned length=${syncResponse.length}, '
+          'preview="${syncResponse.length > 200 ? '${syncResponse.substring(0, 200)}...' : syncResponse}"');
+      if (syncResponse.isNotEmpty) {
+        _log('[timing] sync response received in ${sw.elapsedMilliseconds}ms');
+        return syncResponse;
+      }
+
+      _log('[debug] sync response empty, falling back to getResponseAsync()...');
       final buffer = StringBuffer();
       await for (final token in session.getResponseAsync()) {
         buffer.write(token);
       }
       final response = buffer.toString();
-      _log('[timing] response received in ${sw.elapsedMilliseconds}ms, '
+      _log('[timing] async response received in ${sw.elapsedMilliseconds}ms, '
           'length=${response.length}, '
           'preview=${response.length > 500 ? '${response.substring(0, 500)}...' : response}');
       return response;
