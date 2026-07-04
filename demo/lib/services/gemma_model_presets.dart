@@ -243,8 +243,12 @@ const List<GemmaModelPreset> gemmaModelPresets = [
     modelType: ModelType.gemma4,
     fileType: ModelFileType.task,
     preferredBackend: PreferredBackend.gpu,
-    maxTokens: 65536,
-    maxOutputTokens: 8192,
+    // MediaPipe web allocates the KV cache up to maxTokens at load time. A
+    // 65536-token context for Gemma 4 E2B can exhaust browser GPU memory and
+    // causes the first generateResponse() to hang or OOM silently. 4096 is a
+    // stable, fast-starting context for the web .task build.
+    maxTokens: 4096,
+    maxOutputTokens: 4096,
     supportImage: true,
     supportsFunctionCalls: true,
     isThinking: true,
@@ -262,8 +266,9 @@ const List<GemmaModelPreset> gemmaModelPresets = [
     modelType: ModelType.gemma4,
     fileType: ModelFileType.task,
     preferredBackend: PreferredBackend.gpu,
-    maxTokens: 65536,
-    maxOutputTokens: 8192,
+    // Same KV-cache reasoning as gemma4-e2b: keep the web .task context small.
+    maxTokens: 4096,
+    maxOutputTokens: 4096,
     supportImage: true,
     supportsFunctionCalls: true,
     isThinking: true,
