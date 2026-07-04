@@ -1,6 +1,7 @@
+// ignore_for_file: avoid_print
+
 import 'dart:io';
 
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_agent_memory/flutter_agent_memory.dart';
 import 'package:flutter_gemma/flutter_gemma.dart';

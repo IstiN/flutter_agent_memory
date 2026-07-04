@@ -1,13 +1,11 @@
+// ignore_for_file: avoid_print
+
 import 'dart:io';
 
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:flutter_agent_memory/flutter_agent_memory_web.dart';
-import 'package:flutter_gemma/flutter_gemma.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:demo/llm/gemma_llm_provider.dart';
 import 'package:demo/services/gemma_model_presets.dart';
 import 'package:demo/services/gemma_service.dart';
 import 'package:demo/services/prompt_asset_loader.dart';

@@ -1,11 +1,11 @@
+// ignore_for_file: avoid_print
+
 import 'dart:math' as math;
 
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_gemma/flutter_gemma.dart';
 import 'package:integration_test/integration_test.dart';
 
-import 'package:demo/llm/gemma_llm_provider.dart';
 import 'package:demo/services/gemma_model_presets.dart';
 import 'package:demo/services/gemma_service.dart';
 
@@ -100,7 +100,7 @@ Future<String> _probePreset({
 }) async {
   final text = _generateLongText(targetInputTokens);
   final prompt =
-      'The following text is exactly ${targetInputTokens} tokens long. '
+      'The following text is exactly $targetInputTokens tokens long. '
       'Reply with ONLY the single word that appears at the very end of it.\n\n'
       '$text\n\nEND. Now reply with the last word.';
 

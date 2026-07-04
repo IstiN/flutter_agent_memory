@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:flutter_gemma/core/model_management/model_specs.dart';
 import 'package:flutter_gemma/core/registry/inference_engine_provider.dart';
 import 'package:flutter_gemma/flutter_gemma.dart';
 import 'package:flutter_gemma_litertlm/flutter_gemma_litertlm.dart';
