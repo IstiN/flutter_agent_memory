@@ -1,96 +1,16 @@
-<prompt>
-<role>
-You are an AI assistant specialized in matching answers to questions in a knowledge base.
-Your task is to identify which new answers correspond to which existing unanswered questions.
-</role>
-<input_data>
-<new_answers>
-${answersText}
-</new_answers>
-<existing_questions>
-${questionsText}
-</existing_questions>
-</input_data>
-<formatting>
-<output_format>Plain text lines, no JSON, no markdown code blocks</output_format>
-<rules>
-- Output ONLY mapping lines. No JSON, no markdown code blocks, no explanations.
-- Each mapping is ONE line starting with MAPPING | followed by field=value pairs separated by " | ".
-- Use exactly the field names shown below: answerId, questionId, confidence.
-- Do NOT use " | " inside any value.
-- Confidence is a number between 0.0 and 1.0.
+<prompt><![CDATA[Match new answers to existing unanswered questions.
+
+Rules:
+- Output ONLY lines in the exact format MAPPING | answerId=<id> | questionId=<id> | confidence=<0.0-1.0>.
 - Only include mappings with confidence >= 0.6.
-- If no good matches exist, output nothing.
-</rules>
-</formatting>
-<instructions>
-Analyze the provided new answers and existing questions to identify which answers respond to which questions.
+- Each answer maps to AT MOST ONE question.
+- A question may have multiple answers.
+- If no good matches, output nothing.
 
-MATCHING CRITERIA:
-- Content relevance: Does the answer directly address the question's topic?
-- Contextual clues: Look for references like "for the first question", "as mentioned earlier", etc.
-- Area/topic alignment: Prefer matches within the same area and topics
-- Completeness: Does the answer provide a solution or explanation to the question?
-
-CONFIDENCE SCORING:
-- 1.0: Direct reference to the question or perfect topical match
-- 0.8-0.9: Strong topical match with relevant solution
-- 0.6-0.7: Moderate match, answer addresses similar topic
-- 0.5 or below: Weak match, only partial relevance
-- ONLY include mappings with confidence >= 0.6
-
-IMPORTANT:
-- Each answer can be mapped to AT MOST ONE question
-- Questions can have MULTIPLE answers (so it's OK to map to already answered questions)
-- Prioritize best topical match regardless of whether question is already answered
-- If an answer doesn't match any question well (confidence < 0.6), don't include it in mappings
-- If no good matches exist, output an empty response
-</instructions>
-<examples>
-<example name="direct_reference">
-<human>
 New answers:
-[n_1] by David Green: "For the first question about Dockerfile, I'd recommend using multi-stage builds." (area: docker, topics: best-practices)
+${answersText}
 
 Existing questions:
-[q_0001] by Alice Brown (UNANSWERED): "How do I create a Dockerfile for a Python application?" (area: docker)
-[q_0002] by Charlie White (UNANSWERED): "How do I configure Kubernetes ingress?" (area: kubernetes)
-</human>
-<ai>
-MAPPING | answerId=n_1 | questionId=q_0001 | confidence=1.0
-</ai>
-</example>
-<example name="topical_match">
-<human>
-New answers:
-[a_1] by Bob Smith: "Use ingress-nginx controller and create a Secret with your TLS certificate." (area: kubernetes, topics: ingress, tls)
-
-Existing questions:
-[q_0001] by Alice Brown (UNANSWERED): "How do I configure Kubernetes ingress with TLS?" (area: kubernetes)
-[q_0002] by Charlie White (UNANSWERED): "How do I deploy to Docker?" (area: docker)
-</human>
-<ai>
-MAPPING | answerId=a_1 | questionId=q_0001 | confidence=0.95
-</ai>
-</example>
-<example name="no_matches">
-<human>
-New answers:
-[a_1] by John Doe: "Use Redis for caching to improve performance." (area: database, topics: caching, performance)
-
-Existing questions:
-[q_0001] by Alice Brown (UNANSWERED): "How do I configure Docker networking?" (area: docker)
-[q_0002] by Bob Smith (UNANSWERED): "What's the best Kubernetes deployment strategy?" (area: kubernetes)
-</human>
-<ai>
-
-</ai>
-</example>
-</examples>
-<output_requirements>
-Output MUST contain only MAPPING | lines.
-Do NOT include markdown code blocks (```) or explanatory text.
-Only include mappings with confidence >= 0.6.
-If no good matches exist, output an empty response.
-</output_requirements>
-</prompt>
+${questionsText}
+${extraInstructions}
+]]></prompt>

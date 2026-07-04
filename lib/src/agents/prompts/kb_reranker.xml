@@ -1,71 +1,15 @@
-<prompt>
-<role>
-You're an AI agent specialized in ranking knowledge-base records by relevance to a user query.
-Your task is to analyze the candidate records and return their IDs ordered from most relevant to least relevant.
-</role>
-<input_data>
-<user_query>${query}</user_query>
-<candidate_records>
+<prompt><![CDATA[Rank the candidate records by relevance to the query.
+
+Rules:
+- Output ONLY lines in the exact format RANKED_ID=<record-id>.
+- Most relevant record first.
+- Drop irrelevant records.
+- Preserve original IDs exactly.
+- If nothing is relevant, output nothing.
+
+Query: "${query}"
+
+Candidate records:
 ${itemsText}
-</candidate_records>
-</input_data>
-<formatting>
-<output_format>Plain text lines, no JSON, no markdown code blocks</output_format>
-<rules>
-- Output ONLY ranked ID lines. No JSON, no markdown code blocks, no explanations.
-- Each line must start with RANKED_ID= followed by the record ID.
-- Order matters: most relevant record first, least relevant last.
-- Drop irrelevant records from the ranked list.
-- Preserve the original record IDs exactly as provided.
-- If no records are relevant, output nothing.
-</rules>
-</formatting>
-<instructions>
-Read the user query and the candidate records.
-Order the IDs so that the most relevant records come first.
-
-RANKING CRITERIA:
-- Content relevance: Does the record directly address the query topic?
-- Practical usefulness: Would this record help answer the query?
-- Semantic overlap: Do keywords, topics, or concepts match?
-
-IMPORTANT:
-- Only include records that are relevant to the query.
-- Preserve the original record IDs exactly as provided.
-- If no records are relevant, output an empty response.
-</instructions>
-<extra_instructions if="extraInstructions">
-Additional instructions:
 ${extraInstructions}
-</extra_instructions>
-<examples>
-<example name="direct_match">
-<human>
-User query: "Flutter state management"
-Candidate records:
-1. [note] n_0001: Dart tips
-2. [note] n_0002: Flutter state management with Riverpod
-</human>
-<ai>
-RANKED_ID=n_0002
-RANKED_ID=n_0001
-</ai>
-</example>
-<example name="no_match">
-<human>
-User query: "Kubernetes ingress"
-Candidate records:
-1. [note] n_0001: Dart tips
-2. [note] n_0002: Flutter state management with Riverpod
-</human>
-<ai>
-
-</ai>
-</example>
-</examples>
-<output_requirements>
-Output MUST contain only RANKED_ID= lines.
-Do NOT include markdown code blocks (```) or explanatory text.
-If no records are relevant, output an empty response.
-</output_requirements>
-</prompt>
+]]></prompt>
