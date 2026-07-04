@@ -348,8 +348,11 @@ class KBSearchEngine {
     final a = result.answer;
     final n = result.note;
     final title = q?.text ?? a?.text ?? n?.text ?? '';
+    final startRef = q?.startTextRef ?? a?.startTextRef ?? n?.startTextRef ?? '';
+    final endRef = q?.endTextRef ?? a?.endTextRef ?? n?.endTextRef ?? '';
     final tags = (q?.tags ?? a?.tags ?? n?.tags ?? []).join(' ');
-    return '$title $tags';
+    final topics = (q?.topics ?? a?.topics ?? n?.topics ?? []).join(' ');
+    return '$title $startRef $endRef $tags $topics';
   }
 
   List<String> _tokenize(String query) {

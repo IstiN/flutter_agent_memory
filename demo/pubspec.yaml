@@ -23,6 +23,10 @@ dependencies:
   shared_preferences: ^2.2.3
   url_launcher: ^6.3.0
 
+dependency_overrides:
+  flutter_gemma_litertlm:
+    path: plugins/flutter_gemma_litertlm
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
