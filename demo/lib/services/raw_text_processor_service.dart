@@ -47,13 +47,10 @@ class RawTextProcessorService {
     _log('limits: inputChunkTokens=${limits.inputChunkTokens}, '
         'maxTokens=${_providerService.baseConfig.maxTokens}');
 
-    // On-device Gemma models compiled for web have a small fixed context
-    // window (commonly 4096 tokens). Use the compact analysis prompt so the
-    // system prompt itself does not exceed the budget. This also keeps the
-    // per-chunk math realistic when maxTokens is capped to the runtime limit.
-    final analysisTemplate = _providerService.isGemma
-        ? 'kb_analysis_compact.xml'
-        : 'kb_analysis.xml';
+    // Line-oriented analysis format is more token-efficient and more robust
+    // than JSON for all providers, especially on-device models with small
+    // output budgets. It uses BEGIN Q/A/N ... END blocks and text refs.
+    final analysisTemplate = 'kb_analysis_lines.xml';
     final agent = KBAnalysisAgent(limits.provider);
     final maxChunkChars = limits.inputChunkTokens * _charsPerToken;
 
@@ -68,9 +65,11 @@ class RawTextProcessorService {
       );
       _log('analysis done: questions=${result.questions.length}, '
           'answers=${result.answers.length}, notes=${result.notes.length}');
-      results.add(result);
+      results.add(_resolveTextRefs(result, normalized));
     } else {
-      final chunks = _chunkText(normalized, maxChunkChars);
+      final chunks = _chunkText(normalized, maxChunkChars)
+          .where((c) => c.trim().length > 50)
+          .toList();
       _log('analyzing ${chunks.length} chunks');
       for (var i = 0; i < chunks.length; i++) {
         _log('chunk ${i + 1}/${chunks.length}, chars=${chunks[i].length}');
@@ -82,7 +81,7 @@ class RawTextProcessorService {
         );
         _log('chunk ${i + 1} done: questions=${result.questions.length}, '
             'answers=${result.answers.length}, notes=${result.notes.length}');
-        results.add(result);
+        results.add(_resolveTextRefs(result, chunks[i]));
       }
     }
 
@@ -158,11 +157,16 @@ class RawTextProcessorService {
       // try to feed the model more input than fits in its context window.
       final systemOverhead = await _estimateAnalysisPromptTokens();
       // Reserve some tokens for the model's response as well.
-      const outputBuffer = 4096;
+      const outputBuffer = 2048;
       inputChunkTokens = max(
         1000,
         baseConfig.maxTokens - systemOverhead - outputBuffer,
       );
+      // Gemma on-device needs small chunks and a modest output buffer to keep
+      // JSON generation stable on long transcripts.
+      if (baseConfig.providerName == 'gemma') {
+        inputChunkTokens = 512;
+      }
       _log('context-based chunk: maxTokens=${baseConfig.maxTokens}, '
           'systemOverhead=$systemOverhead, outputBuffer=$outputBuffer, '
           'inputChunkTokens=$inputChunkTokens');
@@ -179,9 +183,7 @@ class RawTextProcessorService {
   /// analysis call.
   Future<int> _estimateAnalysisPromptTokens() async {
     try {
-      final template = _providerService.isGemma
-          ? 'kb_analysis_compact.xml'
-          : 'kb_analysis.xml';
+      const template = 'kb_analysis_lines.xml';
       final emptyPrompt = await PromptLoader.load(template, {
         'inputText': '',
         'sourceName': 'raw-text',
@@ -293,6 +295,54 @@ class RawTextProcessorService {
       questions: questions,
       answers: answers,
       notes: notes,
+    );
+  }
+
+  /// Resolves startTextRef/endTextRef anchors to the actual text inside the
+  /// original chunk. If refs cannot be found, the original [text] is kept.
+  static AnalysisResult _resolveTextRefs(
+    AnalysisResult result,
+    String chunkText,
+  ) {
+    String resolve(String text, String? startRef, String? endRef) {
+      if (startRef == 'full' && endRef == 'full') {
+        return chunkText;
+      }
+      if (startRef == null ||
+          endRef == null ||
+          startRef.isEmpty ||
+          endRef.isEmpty) {
+        return text;
+      }
+      final startIdx = chunkText.indexOf(startRef);
+      if (startIdx == -1) return text;
+      final endIdx = chunkText.indexOf(endRef, startIdx + startRef.length);
+      if (endIdx == -1) return text;
+      return chunkText.substring(
+        startIdx,
+        endIdx + endRef.length,
+      );
+    }
+
+    final resolvedQuestions = result.questions.map((q) {
+      final resolvedText = resolve(q.text, q.startTextRef, q.endTextRef);
+      return q.copyWith(text: resolvedText);
+    }).toList();
+
+    final resolvedAnswers = result.answers.map((a) {
+      final resolvedText = resolve(a.text, a.startTextRef, a.endTextRef);
+      return a.copyWith(text: resolvedText);
+    }).toList();
+
+    final resolvedNotes = result.notes.map((n) {
+      final resolvedText = resolve(n.text, n.startTextRef, n.endTextRef);
+      return n.copyWith(text: resolvedText);
+    }).toList();
+
+    return AnalysisResult(
+      questions: resolvedQuestions,
+      answers: resolvedAnswers,
+      notes: resolvedNotes,
     );
   }
 }

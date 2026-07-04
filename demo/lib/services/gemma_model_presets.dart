@@ -92,6 +92,57 @@ class GemmaModelPreset {
   bool get supportsDesktop =>
       (desktopUrl != null && desktopUrl!.isNotEmpty) ||
       baseUrl.endsWith('.litertlm');
+
+  /// Returns a copy of this preset with the given fields replaced.
+  GemmaModelPreset copyWith({
+    String? id,
+    String? displayName,
+    String? bestFor,
+    String? size,
+    String? baseUrl,
+    String? webUrl,
+    String? desktopUrl,
+    ModelType? modelType,
+    ModelFileType? fileType,
+    PreferredBackend? preferredBackend,
+    bool? needsAuth,
+    int? maxTokens,
+    int? maxOutputTokens,
+    double? temperature,
+    int? topK,
+    double? topP,
+    bool? supportImage,
+    bool? supportAudio,
+    bool? supportsFunctionCalls,
+    bool? isThinking,
+    bool? agentic,
+    int? maxNumImages,
+    bool? foregroundDownload,
+  }) => GemmaModelPreset(
+    id: id ?? this.id,
+    displayName: displayName ?? this.displayName,
+    bestFor: bestFor ?? this.bestFor,
+    size: size ?? this.size,
+    baseUrl: baseUrl ?? this.baseUrl,
+    webUrl: webUrl ?? this.webUrl,
+    desktopUrl: desktopUrl ?? this.desktopUrl,
+    modelType: modelType ?? this.modelType,
+    fileType: fileType ?? this.fileType,
+    preferredBackend: preferredBackend ?? this.preferredBackend,
+    needsAuth: needsAuth ?? this.needsAuth,
+    maxTokens: maxTokens ?? this.maxTokens,
+    maxOutputTokens: maxOutputTokens ?? this.maxOutputTokens,
+    temperature: temperature ?? this.temperature,
+    topK: topK ?? this.topK,
+    topP: topP ?? this.topP,
+    supportImage: supportImage ?? this.supportImage,
+    supportAudio: supportAudio ?? this.supportAudio,
+    supportsFunctionCalls: supportsFunctionCalls ?? this.supportsFunctionCalls,
+    isThinking: isThinking ?? this.isThinking,
+    agentic: agentic ?? this.agentic,
+    maxNumImages: maxNumImages ?? this.maxNumImages,
+    foregroundDownload: foregroundDownload ?? this.foregroundDownload,
+  );
 }
 
 const List<GemmaModelPreset> gemmaModelPresets = [
@@ -110,12 +161,11 @@ const List<GemmaModelPreset> gemmaModelPresets = [
     modelType: ModelType.gemma4,
     fileType: ModelFileType.litertlm,
     preferredBackend: PreferredBackend.gpu,
-    // LiteRT-LM web builds currently ignore the Dart maxTokens parameter and
-    // use the context window baked into the compiled model file. For the
-    // gemma-4 litertlm artifacts that window is 4096 tokens, so we reflect it
-    // here so the demo's chunking math stays realistic.
-    maxTokens: 4096,
-    maxOutputTokens: 8192,
+    // macOS LiteRT-LM build reliably handles up to an 8192-token context with
+    // 2048 output tokens. Larger values cause malformed JSON / token soup on
+    // real transcripts, so we cap the preset here for stable demo usage.
+    maxTokens: 8192,
+    maxOutputTokens: 2048,
     supportImage: true,
     supportAudio: true,
     supportsFunctionCalls: true,
@@ -433,14 +483,17 @@ const List<GemmaModelPreset> gemmaModelPresets = [
     displayName: 'Phi-4 Mini Instruct',
     bestFor: 'Reasoning & instruction following',
     size: '3.9 GB',
+    // Use the LiteRT-LM build everywhere. The old .task URL is MediaPipe-only
+    // and does not work on desktop (macOS/Windows/Linux), where there is no
+    // MediaPipe engine.
     baseUrl:
-        'https://huggingface.co/litert-community/Phi-4-mini-instruct/resolve/main/Phi-4-mini-instruct_multi-prefill-seq_q8_ekv4096.task',
+        'https://huggingface.co/litert-community/Phi-4-mini-instruct/resolve/main/Phi-4-mini-instruct_multi-prefill-seq_q8_ekv4096.litertlm',
     webUrl:
         'https://huggingface.co/litert-community/Phi-4-mini-instruct/resolve/main/Phi-4-mini-instruct_multi-prefill-seq_q8_ekv4096.litertlm',
     desktopUrl:
         'https://huggingface.co/litert-community/Phi-4-mini-instruct/resolve/main/Phi-4-mini-instruct_multi-prefill-seq_q8_ekv4096.litertlm',
     modelType: ModelType.general,
-    fileType: ModelFileType.task,
+    fileType: ModelFileType.litertlm,
     maxTokens: 4096,
     maxOutputTokens: 1024,
     supportsFunctionCalls: true,

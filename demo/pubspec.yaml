@@ -26,6 +26,8 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
+  integration_test:
+    sdk: flutter
   flutter_lints: ^6.0.0
 
 flutter:
@@ -34,6 +36,9 @@ flutter:
   assets:
     - packages/flutter_agent_memory/src/agents/prompts/kb_analysis.xml
     - packages/flutter_agent_memory/src/agents/prompts/kb_analysis_compact.xml
+    - packages/flutter_agent_memory/src/agents/prompts/kb_analysis_gemma.xml
+    - packages/flutter_agent_memory/src/agents/prompts/kb_analysis_lines.xml
+    - packages/flutter_agent_memory/src/agents/prompts/kb_analysis_refs.xml
     - packages/flutter_agent_memory/src/agents/prompts/kb_aggregation.xml
     - packages/flutter_agent_memory/src/agents/prompts/kb_consolidation.xml
     - packages/flutter_agent_memory/src/agents/prompts/kb_qa_mapping.xml

@@ -1,0 +1,475 @@
+Date: 01 Oct 2025
+
+Ira Skrypnik
+00:00:21
+Hi everyone!
+
+Uladzimir Klyshevich
+00:00:22
+So I hope everyone is connected to this session now and we can start. So today we are going to talk about AI Native Future which is started several years ago and we are going to discuss what is possible now, what is will be possible soon and the talk is important to give you understanding in which world we are living now and what's happening around and what you can do and we are doing every day now. So before we start I want to really ask you to scan the code so to help the cat and if you still did not scan it so I have a story for you So my son now two years old he is watching videos uh on Youtube. so and basically I saw that he's watching a lot of different cats which are generated with Vr3 and I thought okay so guys probably will not scan the code in the session so let's try to to make some magic for them. that's why I spent a bit time work with Heygen and generated this nice video for you guys which probably I hope will help you to
+Speaker 3
+00:01:58
+scan the code and let's begin in the vast expanse of new possibilities. Building the future requires a new set of tools. The landscape of technology is changing and AI is the architect of that change. AI empowers business analysts by automating data collection, allowing them to focus on strategic, data-driven recommendations. It enables solutions architects to design smarter, self-adapting systems and predict issues before for developers. AI accelerates workflows with intelligent code completion and automated bug detection, turning concepts into reality faster than ever. Quality assurance is revolutionized with AI powered testing that enhances accuracy and predicts defects. Delivery managers can now leverage AI to forecast timelines, optimize resources and ensure project success with predictive analytics and visual designers becomes more efficient. You using AI to automate illustrations generations. These aren't just skills, they are super charged abilities. It's time to integrate AI and build your team's future.
+Speaker 3
+00:03:08
+The journey starts. Now
+
+Uladzimir Klyshevich
+00:03:11
+why the video is important? So it's just simple start and we want to show you that the tools which were used here it's available for everyone. It's almost free. So if you don't have video creator experience but you have a vision you have some scenario on your head. You can build the same with cats without cats with people. So and that allows us to to make some creativity now and this is available today. think what will be next. So if this video did not convince you so let's think what can be possible one year later. So and this is impossible because possible that we need to think what is possible because we need to think about products which we will build later. not today, but later. Uh, because that really is a power.
+
+Uladzimir Klyshevich
+00:04:08
+So now I want to show you some Next Gen and I hope that next year we will talk on the sessions not our avatars because avatars also is available. Now let's see the next video. Hello!
+
+Arkadiy Dobkin
+00:04:24
+I'm currently double booked, but this talk is too important to miss. So this isn't me. it's my avatar. Prove that the Ai Native future is already here. Scan the code to see what else it enables. today exactly.
+
+Balazs Fejes
+00:04:39
+my avatar is here while the real me is in three meetings. This is how we get things done now, ready to see how this future applies to you. Scan the Qr code.
+
+Uladzimir Klyshevich
+00:04:48
+I hope those guys convinced you a bit to scan the code. Yeah, so what is important to understand here is that the videos What you saw here those videos we got from two three prompts and with 30 dollars of price, so that means it's it's really easy to get. and uh, it allows you also to scale yourself. So for instance, if you want to build learning materials, you want to prepare presentations, you can build script, put it to Gemini to prepare some scenario, then you can put the scenario to hey Gen to Hisquel and generate the videos like this Today or yesterday. Open Ai release or two where you will not see the artifacts which you probably saw in the videos now. but it's already reality. What is with us? What we want to say is the beginning and what is about all of it. Yeah, so that Ai native Ai mindset. It's really important in if I'm as a company.
+
+Uladzimir Klyshevich
+00:05:57
+So all of us now nowadays when we are working on some specific tasks features, do development, solution, architecture, visual design, videos. We need to think what's part of work now can be delegated to Ai because that can improve you. scale up you, you can do more stuff, do more creativity, You can focus on the ideas so that means you can trust a team. you can clicking on the details, you can see details and you also can also work with other teams and later on how many tasks can we get on a day and then you can get strategy and productivity and marketing to work that way. So basically that's the the basics, what's the next step? So we're gonna focus on the development for many years and we're gonna focus on the development for the first and the second. It will be different from kind of what we're used to doing in the past, right? So let me just share one more video that I've models. we can try it, we can learn from it and that allows us to really make adoption of AI in our current teams. So let's see the next video and our end-to-end approach how we are using AI now.
+Speaker 6
+00:07:18
+Let's kick things off by creating a new ticket. Our goal is to expose the diagram's creator agent via an API. I'll write a quick story description, move the ticket to the analysis state, and assign it to our AI teammate.
+Speaker 7
+00:07:34
+Hold on. An AI teammate? You mean an AI is going to work on this ticket alongside you?
+Speaker 6
+00:07:41
+Exactly. Watch this. The AI teammate is now picking up the ticket and has already started to flesh out the description for us.
+Speaker 8
+00:07:49
+Wow. So no more writing those long, detailed descriptions from scratch? I'm already impressed.
+Speaker 6
+00:07:55
+And just like that, the AI teammate has assigned the ticket back to us. It has a few questions to clarify some points, so the ticket is temporarily blocked. But look at this. It has already prepared a beautiful, detailed description complete with a three-story point estimation, all following our project templates.
+Speaker 9
+00:08:17
+That is incredible. It understood the initial idea and came back with clarifying questions and a full project-ready description. That must save so much time.
+Speaker 6
+00:08:28
+It sure does. Now I'll just quickly answer its questions about the expected input for the API and the desired output format. Simple enough. Now that I've provided the answers, I'll move the ticket from blocked back to analysis and assign it right back to our AI teammate. And here we go again. The AI teammate has already returned the ticket to us for review with an updated description based on my answers.
+Speaker 9
+00:08:55
+That was unbelievably fast. So it's already incorporated the feedback.
+Speaker 6
+00:09:00
+It did. The description now includes the specific input and output formats we wanted. Everything looks perfect. So let's move the ticket to solution design and, you guessed it, assign it back to our AI teammate. Now for the really impressive part. The AI teammate has created a solution design subtask and has already prepared a complete solution design for our review.
+Speaker 9
+00:09:25
+It prepared the entire solution design? What does that even include?
+Speaker 6
+00:09:31
+It's incredibly thorough. It describes the currently existing functionality, the required changes, a full JSON specification, and it ensures all of our acceptance criteria from the story are covered. But on top of all that, it has even designed a sequence mermaid diagram for us. Let's take a look.
+Speaker 9
+00:09:52
+Wow. A mermaid diagram too. That's fantastic for visualizing the solution. This is some next level automation.
+Speaker 6
+00:10:00
+It really is. The solution looks solid. So let's move the solution design ticket to done. With the solution design complete, the AI has automatically created the API development story. Let's open that up. It contains all the necessary details for a developer to get started. It even specifies the classes that will be affected and what needs to be done right down to the requirement to create a graphic icon for the diagram creator job.
+Speaker 10
+00:10:29
+That's amazing. It's like having a super efficient tech lead who prepares everything perfectly for the development team. What's next?
+Speaker 6
+00:10:37
+We'll move it to the ready for development status and assign it once more to our AI teammates. And just as we'd expect, the AI teammate has moved the ticket to in progress and is now starting to develop the code.
+Speaker 8
+00:10:51
+So the AI is actually writing the code? Right now? How does that work?
+Speaker 6
+00:10:56
+Our AI platform is running Gemini CLI through a GitHub action. It has all the context from the ticket and the solution design. Gemini CLI is now preparing the code and all the prerequisites to create a branch and a pull request, all while adhering to our project's development rules. We'll give it a few minutes to work its magic. And there we have it. A pull request has been created and assigned back to us for review. You can see it was created following all of our branch naming and PR template rules. And get this, another Gemini CLI-based agent has already started to perform a code review. It has even left several comments.
+Speaker 9
+00:11:38
+Wow. An AI-powered code review. What did it find?
+Speaker 6
+00:11:42
+Let's see. This first comment is more of a stylistic suggestion, so we can ignore it for now. I'll just reply to it. The second piece of feedback, however, is very useful. It's suggesting a small optimization and has even offered to apply the fix immediately. Let's do it. Since we've pushed an update, the tests for our core and server modules will run again. While those are running, let's look at the code. We have the new JSON config, the text, and even a generated icon. This is everything we need. Great.
+Speaker 6
+00:12:14
+We can see the tests have passed now. Let's merge the pull request to the main branch. This will automatically trigger our deployment to production. While we're waiting for the pull request to be executed, let's take a look at the current version of the app. While that's deploying, let's check the current version of the app. If I try to add a new AI job configuration, you'll see that the diagram creator isn't there yet. We can see the deployment is now in progress. It's running through our automated integration tests. And if everything passes, our new feature will be available very soon.
+Speaker 9
+00:12:44
+The suspense is killing me. I can't wait to see it live.
+Speaker 6
+00:12:47
+The deployment is complete. Let's take a look at our new AI job configuration page again. I'll go to Add a New Job Configuration, and there it is, AI Diagram Generator. Woohoo! It's there. It actually worked. Let's click on it. We can see the form is laid out exactly according to our request, with all the agent parameters. We can also see our configured integrations, where we can run our new agent.
+Speaker 9
+00:13:15
+This is so cool. It went from a simple idea to a fully deployed feature, and it was almost entirely done in
+Speaker 6
+00:13:32
+just a matter of seconds. We're done. We're done. We're done. We're done. We can check our ticket.
+Speaker 11
+00:13:54
+There they are. The diagrams are attached as images. And look, in the comments, you have the diagram text so you can edit it later if you need to.
+Speaker 6
+00:14:02
+Exactly. A complete end-to-end workflow from idea to production and even used to document itself. Great work! And now, for the most satisfying click of all, moving the story to done.
+
+Uladzimir Klyshevich
+00:14:16
+I hope you enjoyed the video. Um... And... Uh... I just want to say that the scenario that was in the video was possible to make one year ago. And we have another video, which we will not show today, where it was prepared only by me without help of AI. In the case, script was prepared by Gemini and sound was created and speech was created also by Gemini. So and we did have talk in Minsk and for first video people did not applause, but for second they did. So that also kind of example how AI helped me already to prepare the presentations, the demonstrations and people like it better. So this is important to understand.
+
+Ira Skrypnik
+00:15:17
+Yeah. And please answer your questions. Please text it in the chat and I will check. We can discuss the AI-native framework together. Yeah. But what else? We are pirates and we have some fun today. Povar, let me be your picky client or an account manager and grill you with tricky questions.
+
+Uladzimir Klyshevich
+00:15:46
+Sure. All time ready for tricky questions. Let's do this.
+
+Ira Skrypnik
+00:15:51
+Yeah. Fantastic. Okay. This demo, it's cut, right? Does this really work or not?
+
+Uladzimir Klyshevich
+00:16:04
+First answer on your question. Yes, it's cut. Yeah. So if you can share my screen, I want to try to explain why it was cut. So first of all, the AI is not super fast now. People need to understand. It's probably fast when you do the charting in ChartDPT or Copilot, et cetera, because you just do discussions there. It's one request to LLM and then output, right? When we are talking about a genetic approach, what we did show in the video, it requires the time because we focused not on the speed. We focused on the quality. Because if people don't trust your AI teammate, that does not make sense.
+
+Uladzimir Klyshevich
+00:16:53
+They need to trust. They need to get the output, review, probably make small corrections and get it. Let me show you in reality how it works. So there is our Jira playground project. What I'm going to do, I'm going to create a ticket. Sorry, wrong button. I'm going to create a ticket. Let's imagine new authorization capabilities in DMTools. So I want to have new feature, like new authorization capabilities in DMTools. Currently, it supports some social authorizations, et cetera. But I want to have something new, like, for instance, just email and password authorization flow.
+
+Uladzimir Klyshevich
+00:17:45
+I want to have new feature based on the mockup with login and registration forms. Describe it for me. And here, I just prepared some mockup. I just want this. I just want to paste it to the ticket like this. And I do create it. You saw some part of it in the video. I hope it was created. Yes. This is real, yeah? So that's why I like videos, because we can cut the poses, yeah?
+
+Uladzimir Klyshevich
+00:18:26
+So we have the ticket. What we're doing next, probably you already know. So we move it to analysis. Because this state is triggering AI-teammate business analyst and assign it to AI-teammate. So what happens then? So first of all, there is configured different automations. So for different roles, for different scenarios in your SDLC project, we have different agents. So in the current case, we'll be running this AI-teammate BA, which is looking exactly to the specific status in JIRA. And at the end, it triggers two agents. So first of all, it will trigger agent which is writing story description. And second, if questions are not asked yet, it will trigger agent also to generate the questions.
+
+Uladzimir Klyshevich
+00:19:18
+It's kind of like refinement stage automatically based on the agents. If you're going to GitHub Runners, you can see that already two workflows started. It's now. It's again. It's not recording. It's happening now. I'm not sure if visible time on my machine, but it's real. So the agents are performing not super fast. So we can take a look some of this. If I'm going to this, it's running Coursor behind. So in the video, you saw Jiminy's LEI.
+
+Uladzimir Klyshevich
+00:19:49
+So but here it's Coursor behind. There is agent is taking context that where it was run and also configuration, story description. The configuration for the agent, again, is pretty simple. So when we are going to agents, we can see many agents design. For instance, story description. We can see some rules. So rules which are important for agents to perform. So there is also description template which we are using for this. To show it like it's pretty simple again. So it's kind of your definition of ready from business. And by the way, this page also was created by IT.
+
+Uladzimir Klyshevich
+00:20:32
+With my instructions. So I did not write any text here. So all of this was created by AI. Also, there is some conditions for story points, some acceptance criteria, best practices, etc. And there is many other templates for other tickets which are also important. So let's come back to our agent run. It's still working. So and the trigger for the agent. It can be different. Why does it take so long time? Because agent is not just looking to JIRA or Confluence.
+
+Uladzimir Klyshevich
+00:21:10
+It also looks into our code base to understand full context. So what is already in the code? What features are done? What scenarios are covered? Because your code is your most detailed documentation in this case. So while it's working, maybe, Ira, you have some other questions.
+
+Ira Skrypnik
+00:21:37
+Okay. And my colleagues from Atlanta, Michaila. Michaila asks you very, very interesting, very interesting question. What's your red task completion rate and error rate for the AI task in the video?
+
+Uladzimir Klyshevich
+00:22:00
+If the question is about from which round, it's that. I would say if the size. Of the story, it's kind of less than eight story points. And this is eight story points at the current moment. It can be done from one iteration. So that's why usually if the task is eight story points or more, I'm trying to run another agent, which is splitting the story for several stories. So and this is kind of one example. Here. How to really limit AI to do exactly what you want to do. So here you see already that ticket assigned back to me. AI generated description is prepared.
+
+Uladzimir Klyshevich
+00:22:51
+You can see that it knows that those authorization methods already in the app. Because it did check code, understood what is possible, what's not. And prepared right description. And then we have scenarios according to the definition of ready. What we have there on the page. So there is acceptance criteria one. Account creation. And some other part. Right? Business rules. And also screenshot as well.
+
+Uladzimir Klyshevich
+00:23:20
+And it's nice structure. There is also questions. This week, Anthropic did release cloud 4.5. So and I see difference already that AI started to ask more questions before starting to perform. So you see the questions also kind of valid here. Yeah. So all of them are related to the topic. And also they are created based on the template. So we have background. We have the question. We have options to choose.
+
+Uladzimir Klyshevich
+00:23:49
+Again, based on the definition of ready for the question. So in the case, I just need to answer and choose the option. Option A, option B, et cetera. Yeah. So same as I did in video. So and then I can run the agent to do some magic. What else I can do? I also can do some magic like this. Let me show you. I can write like AI teammate. Prepare for me table with all labels on the attached screenshot in English, Dutch, and Russian.
+
+Uladzimir Klyshevich
+00:24:32
+So I can save it because it's again context. I can move it back to assessment. Not assessment. Sorry. Analysis. Assign back to AI teammate. Now, AI teammate understands. That the description is complete. If I would answer questions. So in the case, AI would adjust description based on my answers. So because I just added one statement here, I added it in description.
+
+Uladzimir Klyshevich
+00:25:02
+So where is this? I hope I saved it. Yes, it's here. Or I would add it in the comment. AI would react on this. So it's how it designed to react to the tagging. It's something similar. What you have in latest review agents or review agents. So it's similar approach. But from the JIRA trigger. So this is important to understand.
+
+Uladzimir Klyshevich
+00:25:31
+You can ask me, like, what if customer does not allow us to create this agent? It's basically seeing what happened in PostNL account where me and JIRA, we are working both together. So in the case, we have pretty similar approach with the same automations. But we did create another automation where customer or our users can choose agent what they want to run. So same like expert. Same like to do agent or acceptance criteria. And the customer or users can choose where customer wants to get answer. In description or acceptance criteria. Or criteria field or high level solution. The approach is completely same. And same if I click here, continue button or generate test cases.
+
+Uladzimir Klyshevich
+00:26:27
+It will trigger another automation in the another GitHub runner's workspace. Where the agent will perform the work. JIRA?
+
+Ira Skrypnik
+00:26:43
+Yeah. There are a lot of questions and processes. And steps. And Dimitri. From. Pennsylvania. He asked you, what validation still be a time consuming process? Because, you know, there are a lot of agents. And maybe we will have some problem here.
+
+Uladzimir Klyshevich
+00:27:10
+I can tell you the truth here. So the framework which we did develop here. It's from May this year. It's fully developed by AI. In the way. As I'm showing today. So. Yes. I do spend time on review. Yes. I do spend time answering questions.
+
+Uladzimir Klyshevich
+00:27:38
+Sometimes. Even I did not expect questions which AI is asking me. But. In real life. In PostNL, for instance. We are doing same. We are preparing the story. We are asking questions. To product owner. During refinement. When we are generating solution.
+
+Uladzimir Klyshevich
+00:28:00
+Again. We are really following to specific pattern. Like we are looking to acceptance criteria. And we are generating it. And if you have questions. We are going to talk to business analyst. Et cetera. So. It's same pattern. You basically have exactly the same in your current project. It's basically like peer review.
+
+Uladzimir Klyshevich
+00:28:20
+Right? So if you have several people who is working on the same level. Like business analyst. Or. Solution architects. For instance. Yeah. So they need to review themselves. Also you have grooming. Where developers do ask questions. And QA as well.
+
+Uladzimir Klyshevich
+00:28:36
+Right? So. That's why the review process anyway is in place. Will AI review process takes more time? For me. No. I see myself. That. I really. Make little corrections. Especially if I am.
+
+Uladzimir Klyshevich
+00:28:56
+I give a lot of details. Of what I want at the beginning. That's why my way of working transformed from. How to do things. To way. How I give a task. Like. Follow smart methodology. Et cetera. Yeah. So this is important.
+
+Uladzimir Klyshevich
+00:29:16
+If you're working in AI native. Way. So we need to. Really. Give. Instructions. When. AI performs. A task. For us.
+
+Ira Skrypnik
+00:29:27
+Yeah. Fantastic. I see. And in between.
+
+Uladzimir Klyshevich
+00:29:31
+We have a table. Right?
+
+Ira Skrypnik
+00:29:32
+Okay. Great.
+
+Uladzimir Klyshevich
+00:29:35
+And even it's collected. Now. All questions. What it asked. Before. Kind of. And. Kind of saying that. We still did not answer. Some. Yeah.
+
+Uladzimir Klyshevich
+00:29:46
+So. Remind us about it. Yeah, yeah, let's let's discuss.
+
+Ira Skrypnik
+00:29:51
+Yeah, yeah, I I I believe people. Yeah, but everybody knows that models hallucinate. What if it just makes up some nonsense?
+
+Uladzimir Klyshevich
+00:30:08
+Yes, it gallucinates. I don't want to kind of convince you that it's it doesn't Yeah. But the problem usually not in the models. Usually the problem usually in the people who is writing the prompts. So let me show you one example. So this is diagram of the agent which is performing the work each agent. It's small agent. so for instance if user request is coming in so usually one it can be combination of different agents but all agents just perform one request and taking one response and process the response. I never sent full history of the talk to the agents. So the work law what we are using is really decomposed on small pieces.
+
+Uladzimir Klyshevich
+00:31:04
+In post nL we have good work for it. track and trace. So basically that is that what we are doing if we need to run agents for generating test cases. for instance. Yeah So first agent will take the context, so based on the context it will formulate the prompt for another agent. So then this another agent will push the prompt to one more agent. This agent will think okay, do I need code? Do I need confluence? Do I need tracker if need? So then it will take the information from
+
+Uladzimir Klyshevich
+00:31:58
+filtered list of test cases, Then this filtered list is going to another agent and then at the end we have a result which is published to the Jira or to confluence Depend depending on the agent or to Confluence page like documentation. Yes so differences are different aspects here.
+
+Ira Skrypnik
+00:32:20
+By way there does the agents actually pull pull into from info from Confluence, Jira and something else?
+
+Uladzimir Klyshevich
+00:32:35
+Yeah in short the agents. in most of the cases in most of the projects what we have the confluence can be then it can be Confluence. In most cases it's Confluence for the tracking, some documentation and really important to have Figma files right? So as in this way of working there is Figma files. Let me basically run it just to show is that it's also real and you see how it can work. Yes so if I have Figma file I have also description and also some screenshot I just to generate acceptance criteria to acceptance criteria field I click the button and your runner when you started. It has let me show you pretty simple configuration. So we have cursor because there is main orchestrator in post nL we have
+
+Uladzimir Klyshevich
+00:34:17
+post that's why we gemini. I also even did try I Dare as well but cursor now is the best tool here. Then we install Java and we install Dm tools. So installation is one line of code here and all since Dm tools one line code here. then we have secure variables for cursor for confluence for Jira for Figma and that's it. And then we execute agents. So basically different agents have access only to tools what you configure for them. In the case Jira confluence of images so how it's done, then in post nL that in post nL we have different configurations. So in short like if you run it from this project if then we have much less agents.
+
+Uladzimir Klyshevich
+00:35:41
+it's all expert to do acceptance criteria, review, etc. So we did split these permissions model based on the project. If your account has access to project where you are working on, you will have access to specific agents. If your account does not have access to another project, you will not have access to the agents and if people want to have new agents, they just configure them, connect them to the code or connect them to the
+
+Ira Skrypnik
+00:36:24
+conference or everything in our teams hats. And maybe we have a legacy project and legacy code. What we can do in this situation?
+
+Uladzimir Klyshevich
+00:36:40
+That is really good question. So first you can do work with agents. Yes probably it will work days or weeks, but you can do this in post nL We did have legacy document and documentation which was hosted in Raleigh. So what we did we did sort these legacy documentation in logical queue how it would was done. So let me show you what we have. So a I built for us basically nice looking documentation. it's even was one year ago. Yeah so based on the stories, descriptions with images and all workflows, what we have with nice looking text and with logical behavior if some feature did replace another one that did adjust in the descriptions on the pages and that did documentate for us everything.
+
+Uladzimir Klyshevich
+00:38:13
+So basically in the case based on the documentation, if you have a code, you can do same based on your code if you have some other artifacts. For instance we did have for some specific cases, we did have unit tests in javaScript. we did same based on the unit tests. We did have integration tests, we did same based on the integration tests. We also did experiment with postman collections even so and we did restore documentation based on how to say based on some Pdf files or artifacts Excels which were hosted in sharePoint. So people did host test cases in sharePoint and we also via Ai did
+
+Ira Skrypnik
+00:39:37
+text and we did test our
+
+Uladzimir Klyshevich
+00:39:47
+sharePoint If you want to really copy as it is, that's one way of working right? So but for for instance when I did it from my codebase because my code probably also is my C bit so I did share these templates. First of all I said okay, let's generate epic level based on my code and then generated it and I did ask to create it in Jira. Then I said okay let's for each area, start to generate stories in this template in this template. It's difficult to put kind of box or behavior which we don't expect right and you need to validate it as a human if you really start let's say directly from the court and say okay just explain me one to one. Yes, I expect that the documentation will include the box right So we need to think when we start this exercise what is cheaper to write it from direction we want to have really cool
+
+Ira Skrypnik
+00:41:14
+I very complicated projects and my company for example runs 20 different systems. Salesforce sAP Custom api's a whole zoo what we can do here because okay I can
+
+Uladzimir Klyshevich
+00:41:45
+do is question about decomposition right? So first of all I want to show it here in post nL We have different
+Speaker 12
+00:41:55
+agents for different exercises. So for instance, Mobile Codebase Research and
+
+Uladzimir Klyshevich
+00:42:00
+Salesforce codebase research look into different codebases right? So developers as well Salesforce and React native look into different codebases. It's one aspect of work right? If you look into the Dm
+Speaker 12
+00:42:14
+tools and let me show you automations here again let me go here.
+
+Uladzimir Klyshevich
+00:42:24
+You can see first of all high level solution how recognize what models will be affected. kind of like end to end solution architect. If core model is affected then it will return Okay core through if aPI then aPI if uI uI and short description about it depending on this assessment first like when we have story prepared from all we have all answers and locations we have story prepared and as in the video I move ticket to solution architecture. So then this agent first is taken the task and it decides which agents needs to start then if it is cLAI core model separate ticket for core model will be created if it is aPI aPI ticket will be created and also if it is Ui Ui will be created. Even if the work is not required for Ui but assessment is required it will create first solution design and then the agent which will write solution design ticket will decide if we need separate story for development because the acceptance criteria are not covered out of the box then it create story for development. If not then it will not and it is managed by these rules so this one decide what we need to run next.
+
+Ira Skrypnik
+00:44:30
+Interesting question from Pavel and Pavel asked you not me in this situation it's good. On the skeptical side, the very essence of lMS is getting different outputs of the prompts, waiting for the machine to create something and after that correcting and so one what do you think about this idea.
+Speaker 12
+00:45:13
+People can do this with the same speed. Short answer So first of all lLM will do this with better quality. Let me show you also some some of latest let's say stories. What I did develop already with New Sonnet 3.5 Yeah so this is description because we wanted to improve this case generation
+
+Uladzimir Klyshevich
+00:45:42
+logic. so it is description of this and there is.
+Speaker 12
+00:46:01
+So if your developer or your solution architect mature enough probably the developer or solution architect
+
+Uladzimir Klyshevich
+00:46:10
+still know all of this. but if we bought new people on the project this description is really valuable because it gives all context what exactly needs to be done. So yeah there is was some Gallup nation to be honest because it does not need to write the code here so
+Speaker 12
+00:46:29
+it needs to write kind of high level solution kind of this diagram which was again
+
+Uladzimir Klyshevich
+00:46:35
+generated by Ai for full work Lows working. You can see here new logic highlighted in the diagram what is expected for from the aspect and by the way this is diagram about one agent which is generating test cases. If you think that generation of test cases is simple task. No it's simple when you have five test cases but when we have
+Speaker 12
+00:47:18
+in post nL 4000 plus test cases then it's becoming more interesting because the question not how to create new one but question how do not to create not how question is not to create
+
+Uladzimir Klyshevich
+00:47:33
+duplicates. That's why the duplication logic. It's pretty interesting. Partially designed
+Speaker 12
+00:47:38
+by Ai partially I helped here but overall I think we a here and
+
+Uladzimir Klyshevich
+00:47:44
+we're going to roll out the update next week. Now only one team faced with the issue but that really needs to improve the logic because now our context window 100 k of tokens already almost out. But we want to predict situations when people you know like when they click a button they will not have neutrous cases. we have it kind of one two person now situations and that we want to predict this is too detailed but I did read it and this is fully cool. Yeah
+
+Ira Skrypnik
+00:48:21
+yeah thank you and can be trained to detect risky tickets before acting and should we introduce a ticket validation step
+
+Uladzimir Klyshevich
+00:48:47
+it's it's also like rCA aspect what I also introduce for question tickets because I do mark
+Speaker 12
+00:48:53
+some of them as irrelevant
+
+Uladzimir Klyshevich
+00:48:55
+to help you to understand what questions I don't want to answer so that that basically you all time need to think for any agent what
+Speaker 12
+00:49:04
+will be learning pass for them what will be knowledge, how to
+
+Uladzimir Klyshevich
+00:49:08
+do like few shots and how do not do then
+Speaker 12
+00:49:13
+if you give it so then you have luck and in most of the cases agents do from first situation exactly what you want.
+
+Ira Skrypnik
+00:49:22
+Oh okay and I'm a manager one more time and what about security? Everything that goes into a i could become assembled external. Yeah
+
+Uladzimir Klyshevich
+00:49:50
+so first of all it's container secure perimeter where you are executing it right?
+Speaker 12
+00:49:58
+So in post nL account we have separately deployed Ai model in aWS and only
+
+Uladzimir Klyshevich
+00:50:20
+anywhere else except of things which we do allow them to use so in the case basically we did build this in this way if you have some service or agents deployed separately usually you just protect this secure perimeter from this right as explained we Did base our security model based on the Jira projects. If we have issues with security and access to the
+Speaker 12
+00:50:47
+data on the Jira project level, then probably we have access to the agent by people
+
+Uladzimir Klyshevich
+00:50:54
+who should not get access to right? But overall, we don't use any external mCPs We use
+Speaker 12
+00:51:01
+just cLI based connectors to Jira, Confluence, Figma, etc. so that's why it's completely safe.
+
+Ira Skrypnik
+00:51:09
+Oh, and
+
+Uladzimir Klyshevich
+00:51:27
+you github and connect them easy to Coursor, etc. and most many people just do it. And yes, that works. but I really can ask you to really read code of the mCPs with Coursor with Germany or cloud code before using it. So that's why we didn't build mCPs before it's post born. So that's why we have really secured. Sometimes you even don't need mCP you just need rest aPI to be connected to specific data. That's also important to understand because in of the cases mCP is just a wrapper on top of rest aPI and you can build it yourself if you want, right? So that's why please review the code of mCP if you use it. especially if you use it with production data.
+
+Ira Skrypnik
+00:52:22
+Nice, I see. And the big one. How much does it cost?
+
+Uladzimir Klyshevich
+00:52:31
+Good
+
+Ira Skrypnik
+00:52:47
+Please Tool and we can discuss about later.
+
+Uladzimir Klyshevich
+00:52:51
+Yes, definitely. So first of all the toolset right? So the toolset really is depending on your customer. If your customer is have already some
+Speaker 12
+00:53:01
+capabilities like aWS
+
+Uladzimir Klyshevich
+00:53:03
+Google Cloud platform, Azure, etc. So they usually do have some a toolset and you can use it in most of the toolset cases for free because it's part of enterprise accounts. If your customer does not does not have anything you can offer them event tools. Probably the event tools will be suitable for their exercises their tasks right. So like dL Alitea or Codemy. Also you can offer use cursor as well so it's cheap, it's powerful and it's really useful. So what is a price? The price for the post anal use case was kind of this so it was first try. We did not know what we do in adoption so we create a agents we helping people to use it properly in right use cases and really get benefits from the agents and this is work isn't going so but if you want to do it again because we know how so in the case the price already is much cheaper right if you right people on the board.
+
+Uladzimir Klyshevich
+00:54:34
+First of all if you have a Pammers on customer side who is working already in specific teams streams you have leads, you have delivery managers who needs to get approved to use the customer data with Ai and you can set up the agents. What I did show your self to speed up your teams. This is important to understand and in this case you are not earning money, you increasing your velocity, you showing value to customer speed because to set up the agents what I did show if we have kind of pretty similar stack we do have access to lMS It's kind of one hour of work. It's not more if you do something specific with different text tag it can take more. That's why we have Discovery Face and then yes, adoption scaling depending on your teams. If you use Coursor I don't believe that you will spend more than two hundred dollars if you don't use Opus Model. If you use Sonnet gPT-5 you still will be within the price. So this is really really cheap now and benefits so it's here if you need help to convince your customers to do the work, to help you to to sell it. So ask us talk to your managers so we help support and if teams also have different aI Ambassadors who can help you with this.
+
+Ira Skrypnik
+00:56:30
+Okay thank you And finally you said Ai Native teams. Who are these Ai Native teams, brand new hires or some Devs with some extra skills? Who is it?
+
+Uladzimir Klyshevich
+00:56:46
+Yes. So it's kind of ghosts. Let's say at current moment in the people who can do the work and it's really interesting to understand how many such people we have an organization. So first of all it's Ai thinking yeah so like we think first how to delegate the task instead of to Ai instead of performing ourselves. Yeah, we need to be hands-On All time with all Ai models for video we have Sora for instance right? or we use or we can use for music generation Gemini for speeches etc. right? So we need to really understand and sDLC process. This is important because if we others to start use it especially if people do not trust or don't believe to right we need to learn fast because the cursor did release cLAI several weeks ago only. and you see I'm using this in my kind of production project now right?
+
+Uladzimir Klyshevich
+00:58:04
+So Gemini cLAI was released months ago. This is important so we need to be really fast adopted and for this we have new title in fM aI Technology Solutions. It will be available soon in level up. Let's say we have also aI orchestration. that's why it's manager by default but with aI capabilities.
+
+Ira Skrypnik
+00:58:48
+Okay, that's all from my side. Thank you Over
+
+Uladzimir Klyshevich
+00:58:53
+I hope was amazing so please do it if you did not and thank you for your attention and see you later and again. If need any help with pitching on help on setup or in designing of agents solutions talk to us. We. Really. Can. Help. You. With. This.
+
+Uladzimir Klyshevich
+00:59:28
+And. We. Can. Save. A. Lot. Of. Time. For. You. Thanks.

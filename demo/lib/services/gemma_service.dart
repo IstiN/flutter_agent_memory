@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter_gemma/core/model_management/model_specs.dart';
 import 'package:flutter_gemma/core/registry/inference_engine_provider.dart';
 import 'package:flutter_gemma/flutter_gemma.dart';
 import 'package:flutter_gemma_litertlm/flutter_gemma_litertlm.dart';
@@ -125,6 +126,24 @@ class FlutterGemmaService implements GemmaService {
       }
     }
     final preferredBackend = backend ?? preset.preferredBackend;
+
+    // Make sure the requested preset is the active inference model.
+    // getActiveModel() uses whatever is currently active, so without this a
+    // previously-loaded model would keep being returned.
+    final manager = FlutterGemmaPlugin.instance.modelManager;
+    final active = manager.activeInferenceModel;
+    if (active == null || active.name != preset.filename) {
+      _log('loadModel(${preset.id}) setting active model...');
+      manager.setActiveModel(
+        InferenceModelSpec.fromLegacyUrl(
+          name: preset.filename,
+          modelUrl: preset.url,
+          modelType: preset.modelType,
+          fileType: preset.fileType,
+        ),
+      );
+    }
+
     _log('loadModel(${preset.id}) calling getActiveModel '
         'with backend=$preferredBackend...');
     final model = await FlutterGemma.getActiveModel(

@@ -1,0 +1,4871 @@
+April 8, 2026
+WEBVTT
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/676-0
+00:00:11.265 --> 00:00:16.404
+<v Uladzimir Klyshevich>more difficult and different and
+difficult approach when you have multi</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/676-1
+00:00:16.404 --> 00:00:21.258
+<v Uladzimir Klyshevich>repositories and agents and you have
+agents in separate repository.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/676-2
+00:00:21.258 --> 00:00:27.111
+<v Uladzimir Klyshevich>Now we will try to kind of simplify a bit
+live just to use existing like 2 agents</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/647-0
+00:00:24.625 --> 00:00:24.825
+<v Stefan Murphy>There.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/676-3
+00:00:27.111 --> 00:00:30.465
+<v Uladzimir Klyshevich>and we will try to replicate exactly the
+same.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/698-0
+00:00:30.705 --> 00:00:37.825
+<v Uladzimir Klyshevich>Processes which we have in my tube and
+uses for for TM.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/702-0
+00:00:40.545 --> 00:00:41.585
+<v Uladzimir Klyshevich>All right.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/706-0
+00:00:43.505 --> 00:00:44.545
+<v Uladzimir Klyshevich>Let me.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/708-0
+00:00:45.105 --> 00:00:45.225
+<v Stefan Murphy>Yeah.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/716-0
+00:00:46.785 --> 00:00:48.305
+<v Uladzimir Klyshevich>Someone is not muted.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/720-0
+00:00:52.705 --> 00:00:53.585
+<v Uladzimir Klyshevich>And it's this.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/728-0
+00:00:55.905 --> 00:00:57.945
+<v Uladzimir Klyshevich>Can you have it? No, I don't.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/731-0
+00:01:06.865 --> 00:01:06.945
+<v Uladzimir Klyshevich>Ahh.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/733-0
+00:01:09.345 --> 00:01:10.065
+<v Uladzimir Klyshevich>Here.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/749-0
+00:01:16.465 --> 00:01:21.185
+<v Uladzimir Klyshevich>Going to share full screen, so that's why,
+uh, give me a second, just...</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/758-0
+00:01:22.545 --> 00:01:25.905
+<v Uladzimir Klyshevich>Really clean up everything.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/776-0
+00:01:27.105 --> 00:01:30.865
+<v Uladzimir Klyshevich>And I hope we will not have any
+interruptions in screen sharing.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/778-0
+00:01:32.385 --> 00:01:32.865
+<v Uladzimir Klyshevich>All right.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/845-0
+00:01:34.305 --> 00:01:39.731
+<v Uladzimir Klyshevich>fully from the beginning.
+We have TM dot AI, EPAM dot AI,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/845-1
+00:01:39.731 --> 00:01:45.437
+<v Uladzimir Klyshevich>and there is nothing.
+So we don't have anything here at all.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/845-2
+00:01:45.437 --> 00:01:51.985
+<v Uladzimir Klyshevich>So even releases, so there is no releases.
+Currently, if you install.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/856-0
+00:01:53.905 --> 00:01:57.345
+<v Uladzimir Klyshevich>Sorry, GM Tools, so it will go.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/858-0
+00:01:58.385 --> 00:01:58.945
+<v Uladzimir Klyshevich>Tur.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/863-0
+00:02:00.145 --> 00:02:01.585
+<v Uladzimir Klyshevich>This model.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/910-0
+00:02:02.665 --> 00:02:10.616
+<v Uladzimir Klyshevich>Which is exactly the same as EPAM, so,
+and there is, we also don't have nothing,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/910-1
+00:02:10.616 --> 00:02:15.425
+<v Uladzimir Klyshevich>and ideas that we have agents which are
+used in.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/917-0
+00:02:17.505 --> 00:02:19.505
+<v Uladzimir Klyshevich>In my tube.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/942-0
+00:02:20.385 --> 00:02:25.985
+<v Uladzimir Klyshevich>And we are going to inject them to GM.ai.
+We have already Jira.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/974-0
+00:02:27.345 --> 00:02:32.738
+<v Uladzimir Klyshevich>Or gem tools which we are going to use,
+but the JIRA is not the same,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/974-1
+00:02:32.738 --> 00:02:35.665
+<v Uladzimir Klyshevich>so actually if you look into workflow.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/1049-0
+00:02:40.225 --> 00:02:46.254
+<v Uladzimir Klyshevich>So, not this one to this one,
+so there is less statuses than should be</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/1049-1
+00:02:46.254 --> 00:02:51.179
+<v Uladzimir Klyshevich>in the reality,
+so we we again probably in production you</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/1049-2
+00:02:51.179 --> 00:02:57.802
+<v Uladzimir Klyshevich>will not be able to do this. I mean,
+not many projects allow you to to to set</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/1049-3
+00:02:57.802 --> 00:02:58.905
+<v Uladzimir Klyshevich>up it, but...</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/1098-0
+00:02:59.505 --> 00:03:05.747
+<v Uladzimir Klyshevich>It's simplest way we we need to replicate
+the same statuses like we have here,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/1098-1
+00:03:05.747 --> 00:03:12.305
+<v Uladzimir Klyshevich>just to to to make sure that our agents
+will be working out of the box, let's see.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/1148-0
+00:03:13.505 --> 00:03:18.652
+<v Uladzimir Klyshevich>So alright, what what I do?
+I have superset,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/1148-1
+00:03:18.652 --> 00:03:28.145
+<v Uladzimir Klyshevich>so let's just do everything from scratch.
+So I'm creating new project. Let's just.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/1154-0
+00:03:29.785 --> 00:03:32.465
+<v Uladzimir Klyshevich>OK, location, let's choose Gate.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/1171-0
+00:03:35.345 --> 00:03:41.585
+<v Uladzimir Klyshevich>Let's name it GM dot AI. OK,
+so we have GM dot AI.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/1190-0
+00:03:43.265 --> 00:03:48.865
+<v Uladzimir Klyshevich>clone so we can clone and we can clone
+immediately this one.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/1201-0
+00:03:51.225 --> 00:03:54.065
+<v Uladzimir Klyshevich>Uh, quote, yes, this one.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/1207-0
+00:03:58.585 --> 00:03:59.665
+<v Uladzimir Klyshevich>Probably it will work.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/1209-0
+00:04:00.705 --> 00:04:01.105
+<v Uladzimir Klyshevich>Not sure.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/1226-0
+00:04:03.985 --> 00:04:08.705
+<v Uladzimir Klyshevich>Okay, GM.ai created. I'm using Copilot.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/1244-0
+00:04:17.585 --> 00:04:22.225
+<v Uladzimir Klyshevich>YOLA mod, what model do we have here?</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/1246-0
+00:04:27.105 --> 00:04:27.825
+<v Uladzimir Klyshevich>Okay.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/1254-0
+00:04:29.025 --> 00:04:30.865
+<v Uladzimir Klyshevich>I need to run the VPN, yes.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/1257-0
+00:04:36.705 --> 00:04:36.785
+<v Uladzimir Klyshevich>Ohh.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/1280-0
+00:04:41.505 --> 00:04:46.225
+<v Uladzimir Klyshevich>You can ask questions while we're waiting.
+Feel free, just interrupt me.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/1290-0
+00:04:49.985 --> 00:04:51.425
+<v Aliaksei Yermachonak>Why do we need VPN now?</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/1306-0
+00:04:52.385 --> 00:04:55.825
+<v Uladzimir Klyshevich>Because Copilot does not work without VPN
+from Belarus.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/1324-0
+00:05:01.745 --> 00:05:05.985
+<v Sergey Makarevich>And a choice of superset as ID.
+Could you remind?</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/1332-0
+00:05:07.425 --> 00:05:08.865
+<v Uladzimir Klyshevich>Actually, I don't need ID.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/1378-0
+00:05:10.705 --> 00:05:16.523
+<v Uladzimir Klyshevich>because I don't review the code.
+So sometimes, yes, I do,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/1378-1
+00:05:16.523 --> 00:05:23.745
+<v Uladzimir Klyshevich>but I don't need IDE at all, to be honest.
+So it's actually not needed.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/1382-0
+00:05:24.905 --> 00:05:26.545
+<v Uladzimir Klyshevich>So I think IDE.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/1405-0
+00:05:27.745 --> 00:05:32.065
+<v Uladzimir Klyshevich>So all IDEs,
+even what they do have like intelligent,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/1405-1
+00:05:32.065 --> 00:05:33.585
+<v Uladzimir Klyshevich>Android Studio, so.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/1432-0
+00:05:34.865 --> 00:05:41.265
+<v Uladzimir Klyshevich>I think all of them will will die at some
+point, so, because I need this.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/1493-0
+00:05:42.465 --> 00:05:46.677
+<v Uladzimir Klyshevich>And I don't like superset,
+just to be honest with you.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/1493-1
+00:05:46.677 --> 00:05:50.736
+<v Uladzimir Klyshevich>I don't like it because, yeah, it's slow.
+It's like,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/1493-2
+00:05:50.736 --> 00:05:56.785
+<v Uladzimir Klyshevich>you see all the projects on the left side.
+Actually, when I'm working, like...</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/1534-0
+00:05:58.385 --> 00:06:02.803
+<v Uladzimir Klyshevich>Several weeks ago,
+I did restart my laptop kind of like each</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/1534-1
+00:06:02.803 --> 00:06:06.785
+<v Uladzimir Klyshevich>sort day or each few days.
+So now I do restart laptop.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/1625-0
+00:06:08.065 --> 00:06:14.123
+<v Uladzimir Klyshevich>So today already three times.
+So because I don't know how much space</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/1625-1
+00:06:14.123 --> 00:06:18.601
+<v Uladzimir Klyshevich>they have now,
+we can even check at the end of the</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/1625-2
+00:06:18.601 --> 00:06:25.976
+<v Uladzimir Klyshevich>session. OK, 40 gigabytes. In the morning,
+it was 60. I don't know where the space.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/1625-3
+00:06:25.976 --> 00:06:28.785
+<v Uladzimir Klyshevich>So, and I did remove everything.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/1647-0
+00:06:29.025 --> 00:06:36.077
+<v Uladzimir Klyshevich>I mean, like, it just caching, I think,
+as it said, nothing else. OK, user switch,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/1647-1
+00:06:36.077 --> 00:06:38.625
+<v Uladzimir Klyshevich>let's just check that we have.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/1651-0
+00:06:41.385 --> 00:06:42.705
+<v Uladzimir Klyshevich>EPAM license.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/1658-0
+00:06:45.905 --> 00:06:47.665
+<v Uladzimir Klyshevich>Let's check model.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/1678-0
+00:06:48.945 --> 00:06:55.265
+<v Uladzimir Klyshevich>Sonic, it's enough.
+So we have DMS tools here. Cool.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/1699-0
+00:06:57.425 --> 00:07:01.038
+<v Uladzimir Klyshevich>If you want to install DM tools,
+which is actually DM.ai, right?</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/1699-1
+00:07:01.038 --> 00:07:02.705
+<v Uladzimir Klyshevich>So you can just write it like.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/1707-0
+00:07:04.585 --> 00:07:07.105
+<v Uladzimir Klyshevich>Help me to configure it.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/1784-0
+00:07:09.025 --> 00:07:13.881
+<v Uladzimir Klyshevich>So, to install skill,
+you can go to DM Tools CLEI at current</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/1784-1
+00:07:13.881 --> 00:07:19.214
+<v Uladzimir Klyshevich>moment, but we will deploy today, I think,
+first release to DM.ai,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/1784-2
+00:07:19.214 --> 00:07:24.785
+<v Uladzimir Klyshevich>and there is you have common line to
+install skill, so it's this one.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/1793-0
+00:07:25.985 --> 00:07:29.425
+<v Uladzimir Klyshevich>just install skill. What it does,
+it actually just...</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/1873-0
+00:07:31.185 --> 00:07:34.936
+<v Uladzimir Klyshevich>Copy the folder,
+which is DM Tools AI Docs,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/1873-1
+00:07:34.936 --> 00:07:40.135
+<v Uladzimir Klyshevich>to your Clot or Copilot or Coursor or
+whatever else you use.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/1873-2
+00:07:40.135 --> 00:07:46.442
+<v Uladzimir Klyshevich>Clot is supported by everything,
+so I mean if you have it in Clot folder,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/1873-3
+00:07:46.442 --> 00:07:49.425
+<v Uladzimir Klyshevich>then it should work out of the box.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/1957-0
+00:07:49.905 --> 00:07:55.847
+<v Uladzimir Klyshevich>So, when you have it, so you see it,
+it asks me, like, like in YouTube video,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/1957-1
+00:07:55.847 --> 00:07:59.351
+<v Uladzimir Klyshevich>yeah,
+so it asks me what I want to configure,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/1957-2
+00:07:59.351 --> 00:08:05.369
+<v Uladzimir Klyshevich>so, and then, okay, Jira and conference,
+for instance, and you see it checked,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/1957-3
+00:08:05.369 --> 00:08:09.025
+<v Uladzimir Klyshevich>so gem tools installed, cool, Java,
+not ignore.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/2022-0
+00:08:09.265 --> 00:08:12.935
+<v Uladzimir Klyshevich>No, so actually,
+if you don't have TM tools,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/2022-1
+00:08:12.935 --> 00:08:19.132
+<v Uladzimir Klyshevich>so it will help you to install it as well,
+and then it's also suggest LLMs,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/2022-2
+00:08:19.132 --> 00:08:24.025
+<v Uladzimir Klyshevich>but actually we'll need Gemini, I think.
+So, at some point,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/2022-3
+00:08:24.025 --> 00:08:30.385
+<v Uladzimir Klyshevich>probably I will talk to guys from Audit
+the Code Me team, and we will switch.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/2058-0
+00:08:30.425 --> 00:08:38.025
+<v Uladzimir Klyshevich>to do LLM, which is under light LLM.
+So I have specific token for this as well.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/2058-1
+00:08:38.025 --> 00:08:41.825
+<v Uladzimir Klyshevich>So we can use, OK, Gemini, for instance.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/2164-0
+00:08:46.305 --> 00:08:49.337
+<v Uladzimir Klyshevich>Gemming is used like there is two types
+of agents,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/2164-1
+00:08:49.337 --> 00:08:53.438
+<v Uladzimir Klyshevich>like teammate and test case generator
+actually now, and also expert,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/2164-2
+00:08:53.438 --> 00:08:56.529
+<v Uladzimir Klyshevich>and there is more,
+but like for reporting purposes,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/2164-3
+00:08:56.529 --> 00:09:01.166
+<v Uladzimir Klyshevich>et cetera, but more common on those. So,
+and it it tells you what to do next,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/2164-4
+00:09:01.166 --> 00:09:05.505
+<v Uladzimir Klyshevich>right? So, like base pass, GRML,
+GRP token, and instructions what to do.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/2202-0
+00:09:06.145 --> 00:09:15.152
+<v Uladzimir Klyshevich>So, and when you fill it,
+so you see that it creates the DM tools.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/2202-1
+00:09:15.152 --> 00:09:19.185
+<v Uladzimir Klyshevich>env, so let me just show here.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/2222-0
+00:09:22.065 --> 00:09:27.825
+<v Uladzimir Klyshevich>It creates one more folder event.
+So you have this file.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/2284-0
+00:09:28.905 --> 00:09:36.278
+<v Uladzimir Klyshevich>which is already in Gitignore and it
+knows how to communicate to the end tools.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/2284-1
+00:09:36.278 --> 00:09:43.281
+<v Uladzimir Klyshevich>Let me just hide my screen a bit and I
+just fills data and you can ask some</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/2284-2
+00:09:43.281 --> 00:09:45.585
+<v Uladzimir Klyshevich>questions if you have it.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/2293-0
+00:09:49.745 --> 00:09:51.105
+<v Aliaksandr Tarasevich>Or the factory itself.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/2306-0
+00:09:52.425 --> 00:09:57.425
+<v Aliaksandr Tarasevich>Do we really need the DM tools dot in?</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/2384-0
+00:10:00.385 --> 00:10:04.746
+<v Uladzimir Klyshevich>So actually,
+you like when I do run it myself,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/2384-1
+00:10:04.746 --> 00:10:11.055
+<v Uladzimir Klyshevich>I want to test it locally.
+So especially if I do run it in for real</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/2384-2
+00:10:11.055 --> 00:10:15.231
+<v Uladzimir Klyshevich>customers,
+when I have the agent configured,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/2384-3
+00:10:15.231 --> 00:10:18.385
+<v Uladzimir Klyshevich>I can run it locally on my laptop.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/2437-0
+00:10:18.945 --> 00:10:24.893
+<v Uladzimir Klyshevich>to check connectivity, to do LLM,
+to co-pilot, to and other stuff.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/2437-1
+00:10:24.893 --> 00:10:30.397
+<v Uladzimir Klyshevich>So usually that helps. That's why, yes.
+So it's, I would say,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/2437-2
+00:10:30.397 --> 00:10:32.705
+<v Uladzimir Klyshevich>one of the preferable way.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/2445-0
+00:10:35.265 --> 00:10:38.145
+<v Uladzimir Klyshevich>But in common, probably not.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/2495-0
+00:10:41.105 --> 00:10:45.779
+<v Alexandre Griniuk>Is there a chance you can explain your
+environment setup?</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/2449-0
+00:10:41.425 --> 00:10:41.785
+<v Uladzimir Klyshevich>Tier.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/2495-1
+00:10:45.779 --> 00:10:52.305
+<v Alexandre Griniuk>Like the first time I hear the MDM tools
+here, right? How these core components?</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/2499-0
+00:10:53.345 --> 00:10:55.105
+<v Alexandre Griniuk>Work together in your environment.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/2505-0
+00:10:58.465 --> 00:10:59.305
+<v Uladzimir Klyshevich>Give me a second.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/2507-0
+00:11:00.545 --> 00:11:01.345
+<v Uladzimir Klyshevich>Stop.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/2606-0
+00:11:09.465 --> 00:11:14.581
+<v Uladzimir Klyshevich>What do you mean environment setup?
+We actually use infrastructure what</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/2606-1
+00:11:14.581 --> 00:11:17.779
+<v Uladzimir Klyshevich>customers have.
+We use their tracker system,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/2606-2
+00:11:17.779 --> 00:11:21.403
+<v Uladzimir Klyshevich>we use source code repository,
+and we use runners.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/2606-3
+00:11:21.403 --> 00:11:26.945
+<v Uladzimir Klyshevich>It can be pipelines in GitLab or runner
+workflows, runner sections in GitHub.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/2683-0
+00:11:27.345 --> 00:11:33.515
+<v Uladzimir Klyshevich>or pipelines in Bitbucket or Azure DevOps
+pipelines or anything else what they do</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/2683-1
+00:11:33.515 --> 00:11:36.976
+<v Uladzimir Klyshevich>have.
+Actually some runner which can run some</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/2683-2
+00:11:36.976 --> 00:11:41.716
+<v Uladzimir Klyshevich>virtual kind of machine which we
+container which we configure.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/2683-3
+00:11:41.716 --> 00:11:45.628
+<v Uladzimir Klyshevich>So DMS tools,
+all of this is just local application</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/2683-4
+00:11:45.628 --> 00:11:46.305
+<v Uladzimir Klyshevich>which is.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/2713-0
+00:11:46.465 --> 00:11:53.601
+<v Uladzimir Klyshevich>connector to different tools, systems,
+let's say, like tracker, source code, etc.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/2713-1
+00:11:53.601 --> 00:11:56.385
+<v Uladzimir Klyshevich>And on top of this, CLEI agents.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/2750-0
+00:11:58.025 --> 00:12:04.511
+<v Uladzimir Klyshevich>So, yeah, agents, what I mean,
+like Copilot, Code, Codex, Kiro, whatever,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/2750-1
+00:12:04.511 --> 00:12:09.945
+<v Uladzimir Klyshevich>everything that can be executed in
+terminal in headless mode.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/2756-0
+00:12:13.105 --> 00:12:14.385
+<v Uladzimir Klyshevich>Did I answer your question?</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/2759-0
+00:12:16.265 --> 00:12:17.025
+<v Alexandre Griniuk>No, partially.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/2806-0
+00:12:17.985 --> 00:12:24.545
+<v Sergey Makarevich>Will it be fair to call the DMS tools the
+harness within kind of specialized SDLC</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/2806-1
+00:12:24.545 --> 00:12:29.025
+<v Sergey Makarevich>harness within the more common harness
+like cloud code?</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/2836-0
+00:12:31.825 --> 00:12:36.010
+<v Uladzimir Klyshevich>I would not compare it with code,
+so it it's not designed for this,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/2836-1
+00:12:36.010 --> 00:12:37.425
+<v Uladzimir Klyshevich>so it's kind of like...</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/2885-0
+00:12:39.745 --> 00:12:47.242
+<v Uladzimir Klyshevich>tool which help you to configure
+pipelines, workflows, let's say,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/2885-1
+00:12:47.242 --> 00:12:54.625
+<v Uladzimir Klyshevich>with high level of customizations and
+pre-built connectors to...</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/2934-0
+00:12:55.665 --> 00:13:02.592
+<v Uladzimir Klyshevich>Enterprise systems like Jira,
+Azure DevOps, GitHub, Bitbucket, Bitrise,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/2934-1
+00:13:02.592 --> 00:13:08.172
+<v Uladzimir Klyshevich>or Bitrise, no,
+so like most of the things which in Figma</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/2934-2
+00:13:08.172 --> 00:13:10.865
+<v Uladzimir Klyshevich>as well, so it's main thing.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/3001-0
+00:13:12.865 --> 00:13:17.346
+<v Uladzimir Klyshevich>It's then tools that like doesn't need AI,
+let's say.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/3001-1
+00:13:17.346 --> 00:13:24.316
+<v Uladzimir Klyshevich>It can execute some internal prompts for
+specific agents like test case generation,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/3001-2
+00:13:24.316 --> 00:13:30.705
+<v Uladzimir Klyshevich>but actually just gives you kind of MCP
+for everything, but VSCLEI, not MCP.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/3005-0
+00:13:31.105 --> 00:13:33.265
+<v Uladzimir Klyshevich>To all needed resources.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/3007-0
+00:13:37.665 --> 00:13:38.305
+<v Sergey Makarevich>Thanks.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/3045-0
+00:13:39.025 --> 00:13:43.058
+<v Alexandre Griniuk>I'm trying to understand,
+besides the connectors that you mentioned,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/3045-1
+00:13:43.058 --> 00:13:46.038
+<v Alexandre Griniuk>what's the purpose of these DMS tools?
+Is it like,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/3045-2
+00:13:46.038 --> 00:13:48.785
+<v Alexandre Griniuk>what is the difference from just command
+line?</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/3061-0
+00:13:56.065 --> 00:13:59.131
+<v Uladzimir Klyshevich>Uh,
+you should watch uh first 10 sessions</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/3061-1
+00:13:59.131 --> 00:14:00.225
+<v Uladzimir Klyshevich>from last year.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/3091-0
+00:14:02.145 --> 00:14:06.385
+<v Aliaksandr Tarasevich>Or you could try to ask Code Me Assistant.
+It contains all the extract.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/3069-0
+00:14:02.465 --> 00:14:02.945
+<v Alexandre Griniuk>Mhm.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/3094-0
+00:14:05.025 --> 00:14:07.345
+<v Uladzimir Klyshevich>Is this also that's also possible?</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/3098-0
+00:14:10.105 --> 00:14:10.625
+<v Uladzimir Klyshevich>All right.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/3101-0
+00:14:11.825 --> 00:14:12.785
+<v Uladzimir Klyshevich>So.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/3187-0
+00:14:15.425 --> 00:14:18.871
+<v Uladzimir Klyshevich>Actually, what we did,
+so I just did copy it,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/3187-1
+00:14:18.871 --> 00:14:24.863
+<v Uladzimir Klyshevich>so it has some prerequisites already,
+some connectors to need the tools for me.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/3187-2
+00:14:24.863 --> 00:14:28.608
+<v Uladzimir Klyshevich>So, actually,
+I did field DMS tools dot and file,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/3187-3
+00:14:28.608 --> 00:14:33.027
+<v Uladzimir Klyshevich>and what we can do,
+we can now just take a new ticket like</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/3187-4
+00:14:33.027 --> 00:14:34.225
+<v Uladzimir Klyshevich>this, so from...</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/3249-0
+00:14:35.025 --> 00:14:38.952
+<v Uladzimir Klyshevich>We also can use flags like mini,
+for instance,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/3249-1
+00:14:38.952 --> 00:14:45.386
+<v Uladzimir Klyshevich>which is give us only short details of
+the ticket. And we can, for instance,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/3249-2
+00:14:45.386 --> 00:14:51.904
+<v Uladzimir Klyshevich>like when you connect tokens, et cetera.
+So I even can ask also pilot, right?</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/3249-3
+00:14:51.904 --> 00:14:53.825
+<v Uladzimir Klyshevich>Give me short overview.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/3254-0
+00:14:55.225 --> 00:14:57.905
+<v Uladzimir Klyshevich>Hold that ticket like this.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/3287-0
+00:15:00.385 --> 00:15:02.940
+<v Uladzimir Klyshevich>And then Copilot also knows how to talk
+it.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/3287-1
+00:15:02.940 --> 00:15:06.945
+<v Uladzimir Klyshevich>So like if you want to orchestrate with
+Jira, you can also DM tools.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/3303-0
+00:15:08.625 --> 00:15:14.385
+<v Uladzimir Klyshevich>Give me open tickets from TMC Project.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/3306-0
+00:15:16.865 --> 00:15:17.665
+<v Uladzimir Klyshevich>Summary.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/3310-0
+00:15:18.865 --> 00:15:20.465
+<v Uladzimir Klyshevich>And description.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/3312-0
+00:15:21.465 --> 00:15:21.785
+<v Uladzimir Klyshevich>Insurance.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/3430-0
+00:15:24.225 --> 00:15:28.040
+<v Uladzimir Klyshevich>So, in under hood,
+you can see that it calls like TM tools,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/3430-1
+00:15:28.040 --> 00:15:32.490
+<v Uladzimir Klyshevich>so now it also again uses TM tools skill
+because it's configured. So,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/3430-2
+00:15:32.490 --> 00:15:36.368
+<v Uladzimir Klyshevich>on top of TM tools code base,
+it has also access to TM tools</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/3374-0
+00:15:34.765 --> 00:15:35.125
+<v Oscar Ramirez>Sí.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/3430-3
+00:15:36.368 --> 00:15:41.327
+<v Uladzimir Klyshevich>infrastructure, let's say Jira, GitHub,
+and or everything that is needed. So,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/3430-4
+00:15:41.327 --> 00:15:44.505
+<v Uladzimir Klyshevich>here you can see that, OK,
+it will call this JQL.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/3527-0
+00:15:45.345 --> 00:15:48.904
+<v Uladzimir Klyshevich>with mini format so that saves token
+tokens.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/3527-1
+00:15:48.904 --> 00:15:55.150
+<v Uladzimir Klyshevich>So actually if you don't need JSONs,
+you just use mini format and then outputs</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/3527-2
+00:15:55.150 --> 00:16:00.844
+<v Uladzimir Klyshevich>are transformed. So it also search docs,
+you see about available tools,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/3527-3
+00:16:00.844 --> 00:16:05.825
+<v Uladzimir Klyshevich>which is like Jira search by JQL, etc.
+So you can help your...</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/3574-0
+00:16:06.145 --> 00:16:11.282
+<v Uladzimir Klyshevich>agent to orchestrate with your tools if
+you just put some instructions.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/3574-1
+00:16:11.282 --> 00:16:16.489
+<v Uladzimir Klyshevich>Just not not ask like me now because it's
+not configured to do anything.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/3574-2
+00:16:16.489 --> 00:16:17.345
+<v Uladzimir Klyshevich>So but just.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/3649-0
+00:16:18.385 --> 00:16:23.480
+<v Uladzimir Klyshevich>Preconfigure some rules,
+so that means that you can have the rules</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/3649-1
+00:16:23.480 --> 00:16:29.640
+<v Uladzimir Klyshevich>for just co-pilot agents, code agents,
+etcetera. Yeah, so you see it's got data,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/3649-2
+00:16:29.640 --> 00:16:34.203
+<v Uladzimir Klyshevich>so it can parse,
+so the configuration is in place. Alright,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/3649-3
+00:16:34.203 --> 00:16:38.385
+<v Uladzimir Klyshevich>so then we want to connect this one as
+sub-repository.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/3726-0
+00:16:56.225 --> 00:17:00.085
+<v Uladzimir Klyshevich>Okay,
+so there is some tickets which are open,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/3726-1
+00:17:00.085 --> 00:17:04.929
+<v Uladzimir Klyshevich>by the way, right?
+I think all of this which is in review,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/3726-2
+00:17:04.929 --> 00:17:08.707
+<v Uladzimir Klyshevich>it's already done.
+I just forgot to close it.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/3726-3
+00:17:08.707 --> 00:17:14.865
+<v Uladzimir Klyshevich>I even can say just move it to done,
+by the way. Move the tickets to done.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/3743-0
+00:17:15.185 --> 00:17:20.508
+<v Uladzimir Klyshevich>State,
+and let's connect this repository as a</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/3743-1
+00:17:20.508 --> 00:17:21.665
+<v Uladzimir Klyshevich>model. OK.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/3745-0
+00:17:23.585 --> 00:17:24.145
+<v Uladzimir Klyshevich>Bull.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/3782-0
+00:17:25.265 --> 00:17:29.942
+<v Uladzimir Klyshevich>So what means next?
+When it will be connected,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/3782-1
+00:17:29.942 --> 00:17:37.105
+<v Uladzimir Klyshevich>we need to configure the keys, right?
+So if I'm going now to DMS tools.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/3796-0
+00:17:41.905 --> 00:17:46.865
+<v Uladzimir Klyshevich>Main repository, which is already old one,
+so to this.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/3819-0
+00:17:48.865 --> 00:17:53.961
+<v Uladzimir Klyshevich>Environment variables, we have secrets,
+actions,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/3819-1
+00:17:53.961 --> 00:17:58.225
+<v Uladzimir Klyshevich>and there is keys which are reconfigured.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/3825-0
+00:17:59.825 --> 00:18:00.705
+<v Uladzimir Klyshevich>To do something.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/3833-0
+00:18:01.745 --> 00:18:03.905
+<v Uladzimir Klyshevich>Right, so, and also variables.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/3912-0
+00:18:07.105 --> 00:18:14.375
+<v Uladzimir Klyshevich>which is also again means some co-pilots,
+some projects, etc. So first thing,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/3912-1
+00:18:14.375 --> 00:18:20.340
+<v Uladzimir Klyshevich>what we are going to do,
+we need to prepare the access to write</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/3912-2
+00:18:20.340 --> 00:18:25.745
+<v Uladzimir Klyshevich>your project and all of this. Again,
+which keys you need.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/3970-0
+00:18:25.985 --> 00:18:30.985
+<v Uladzimir Klyshevich>So you can chat with system.
+If you want to connect Jira,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/3970-1
+00:18:30.985 --> 00:18:35.984
+<v Uladzimir Klyshevich>you need Jira, right? You need Jira email,
+Jira IP token.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/3970-2
+00:18:35.984 --> 00:18:39.345
+<v Uladzimir Klyshevich>So if you want to connect Azure DevOps.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/4080-0
+00:18:40.465 --> 00:18:45.957
+<v Uladzimir Klyshevich>You need Adobe personal token and
+something else. If you need a Copilot,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/4080-1
+00:18:45.957 --> 00:18:51.674
+<v Uladzimir Klyshevich>so Copilot GitHub token. If you need,
+okay, there is also a GCP connection,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/4080-2
+00:18:51.674 --> 00:18:57.467
+<v Uladzimir Klyshevich>so we have GCP keys. In our case,
+we don't need it. We don't have GCP setup.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/4080-3
+00:18:57.467 --> 00:19:00.777
+<v Uladzimir Klyshevich>Figma, again, Figma token.
+In our use case,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/4080-4
+00:19:00.777 --> 00:19:05.065
+<v Uladzimir Klyshevich>probably we will not need this as well,
+but for testing.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/4159-0
+00:19:05.065 --> 00:19:08.796
+<v Uladzimir Klyshevich>In purposes,
+it will be needed because we want to</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/4159-1
+00:19:08.796 --> 00:19:13.348
+<v Uladzimir Klyshevich>connect full cycle,
+so if in future we will modify something</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/4159-2
+00:19:13.348 --> 00:19:16.855
+<v Uladzimir Klyshevich>in Figma,
+so our tester agent needs to talk to</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/4159-3
+00:19:16.855 --> 00:19:20.212
+<v Uladzimir Klyshevich>Figma,
+so that's why we will need to provide</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/4159-4
+00:19:20.212 --> 00:19:24.465
+<v Uladzimir Klyshevich>some token to allow our test agents to
+test it, so here.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/4200-0
+00:19:24.785 --> 00:19:29.828
+<v Uladzimir Klyshevich>variables, some configurations,
+which provider we use.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/4200-1
+00:19:29.828 --> 00:19:34.871
+<v Uladzimir Klyshevich>So we are going to use Copilot.
+So in this repository,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/4200-2
+00:19:34.871 --> 00:19:36.705
+<v Uladzimir Klyshevich>we support 3 agents.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/4212-0
+00:19:37.665 --> 00:19:42.785
+<v Uladzimir Klyshevich>We support course work on, actually,
+as well.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/4250-0
+00:19:45.825 --> 00:20:03.185
+<v Uladzimir Klyshevich>We can also use for test case generation,
+and some for here, like it actually.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/4291-0
+00:20:05.225 --> 00:20:14.906
+<v Uladzimir Klyshevich>So,
+we also log in and disable it if you have</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/4291-1
+00:20:14.906 --> 00:20:23.745
+<v Uladzimir Klyshevich>kind of like for from rest calls, so time.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/4335-0
+00:20:24.665 --> 00:20:33.126
+<v Uladzimir Klyshevich>And then, and yeah, compiler ID,
+but sorry, authorization,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/4335-1
+00:20:33.126 --> 00:20:38.145
+<v Uladzimir Klyshevich>so which is not part of the tables.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/4339-0
+00:20:37.425 --> 00:20:41.390
+<v Aliaksandr Tarasevich>Over, we barely hear you.
+You are interrupting for the last minute</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/4340-0
+00:20:41.345 --> 00:20:42.145
+<v Ira Skrypnik>Yeah, I am.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/4339-1
+00:20:41.390 --> 00:20:41.745
+<v Aliaksandr Tarasevich>or so.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/4344-0
+00:20:46.585 --> 00:20:47.185
+<v Uladzimir Klyshevich>And now?</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/4359-0
+00:20:48.865 --> 00:20:51.745
+<v Aliaksandr Tarasevich>Now it's better.
+You should get out of your bunker.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/4369-0
+00:20:53.905 --> 00:20:55.265
+<v Uladzimir Klyshevich>I cannot, unfortunately.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/4372-0
+00:20:59.665 --> 00:21:00.225
+<v Uladzimir Klyshevich>All right.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/4381-0
+00:21:01.905 --> 00:21:03.905
+<v Uladzimir Klyshevich>Actually, there is a keys and values.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/4387-0
+00:21:05.265 --> 00:21:06.785
+<v Uladzimir Klyshevich>Because that's clear, I hope.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/4389-0
+00:21:08.545 --> 00:21:09.025
+<v Uladzimir Klyshevich>Right.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/4394-0
+00:21:12.465 --> 00:21:13.025
+<v Uladzimir Klyshevich>Nice.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/4398-0
+00:21:13.425 --> 00:21:14.385
+<v Aliaksei Yermachonak>Yes, it is.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/4405-0
+00:21:14.785 --> 00:21:15.745
+<v Andrew Rae>Yeah, it's clear now.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/4403-0
+00:21:14.945 --> 00:21:15.665
+<v Uladzimir Klyshevich>Okay, cool.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/4419-0
+00:21:16.465 --> 00:21:19.265
+<v Aliaksei Yermachonak>But may I interrupt you for a second?</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/4410-0
+00:21:16.865 --> 00:21:17.425
+<v Uladzimir Klyshevich>Cool.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/4422-0
+00:21:19.905 --> 00:21:20.385
+<v Uladzimir Klyshevich>Yeah.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/4491-0
+00:21:20.945 --> 00:21:24.497
+<v Aliaksei Yermachonak>Just,
+just to summarize what we have already</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/4491-1
+00:21:24.497 --> 00:21:28.285
+<v Aliaksei Yermachonak>done,
+first you have downloaded DM AI from from</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/4491-2
+00:21:28.285 --> 00:21:34.125
+<v Aliaksei Yermachonak>the gate, then you have configured,
+you have already had it DM tools as a</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/4491-3
+00:21:34.125 --> 00:21:38.465
+<v Aliaksei Yermachonak>skill for for the cursor for the
+component, I believe.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/4495-0
+00:21:39.825 --> 00:21:41.025
+<v Aliaksei Yermachonak>Then we're tuning.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/4497-0
+00:21:39.905 --> 00:21:41.505
+<v Uladzimir Klyshevich>for most of them, yeah.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/4561-0
+00:21:42.465 --> 00:21:46.119
+<v Aliaksei Yermachonak>Then we were setting up the connections.
+For this example,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/4561-1
+00:21:46.119 --> 00:21:49.958
+<v Aliaksei Yermachonak>it was Jira and Confluence.
+And for set up these connections,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/4561-2
+00:21:49.958 --> 00:21:54.416
+<v Aliaksei Yermachonak>we also need to set up keys.
+That's what we have done till this moment.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/4545-0
+00:21:52.625 --> 00:21:53.105
+<v Uladzimir Klyshevich>Yes.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/4561-3
+00:21:54.416 --> 00:21:55.345
+<v Aliaksei Yermachonak>Just thank you.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/4582-0
+00:21:56.145 --> 00:22:03.345
+<v Uladzimir Klyshevich>Yeah, cool. Thanks for the summarization.
+And there is already some workflows.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/4607-0
+00:22:04.865 --> 00:22:12.305
+<v Uladzimir Klyshevich>And we probably will reuse this partially,
+but let's go to our my tool prep.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/4614-0
+00:22:15.585 --> 00:22:17.505
+<v Uladzimir Klyshevich>Yeah, I see my.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/4647-0
+00:22:19.185 --> 00:22:22.614
+<v Uladzimir Klyshevich>Someone raise a hand,
+you can ask questions guys.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/4647-1
+00:22:22.614 --> 00:22:26.385
+<v Uladzimir Klyshevich>So interrupt me because I do not look to
+chat usually.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/4652-0
+00:22:28.145 --> 00:22:29.425
+<v Uladzimir Klyshevich>If you have it, just Ask.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/4655-0
+00:22:35.185 --> 00:22:35.665
+<v Uladzimir Klyshevich>No.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/4702-0
+00:22:36.785 --> 00:22:40.520
+<v Uladzimir Klyshevich>Okay, then nope. Look,
+what we're going to do.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/4702-1
+00:22:40.520 --> 00:22:45.288
+<v Uladzimir Klyshevich>So there is in my tube,
+you should configure your workflow.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/4702-2
+00:22:45.288 --> 00:22:48.625
+<v Uladzimir Klyshevich>Actually, the workflow which will execute.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/4779-0
+00:22:49.865 --> 00:22:54.272
+<v Uladzimir Klyshevich>which your teammate will execute.
+So what that means,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/4779-1
+00:22:54.272 --> 00:23:00.800
+<v Uladzimir Klyshevich>if your teammate will do development,
+it needs to have all environments set up,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/4779-2
+00:23:00.800 --> 00:23:05.533
+<v Uladzimir Klyshevich>like Java, node, tools,
+whatever else you use, like keys,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/4779-3
+00:23:05.533 --> 00:23:08.225
+<v Uladzimir Klyshevich>et cetera, you need to set up it.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/4868-0
+00:23:09.185 --> 00:23:13.145
+<v Uladzimir Klyshevich>So, if your teammate needs to,
+I don't know,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/4868-1
+00:23:13.145 --> 00:23:18.425
+<v Uladzimir Klyshevich>go to Google Cloud Platform or AWS or
+whatever else, again,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/4868-2
+00:23:18.425 --> 00:23:24.937
+<v Uladzimir Klyshevich>it is should be here. So, in our case,
+we are going almost copy paste it,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/4868-3
+00:23:24.937 --> 00:23:30.305
+<v Uladzimir Klyshevich>so it is my workflow,
+and for each customer, usually it's...</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/4871-0
+00:23:30.345 --> 00:23:30.945
+<v Uladzimir Klyshevich>Different.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/4951-0
+00:23:32.105 --> 00:23:35.476
+<v Uladzimir Klyshevich>because different customers have
+different things,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/4951-1
+00:23:35.476 --> 00:23:38.450
+<v Uladzimir Klyshevich>but some things can be copied.
+So like this.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/4951-2
+00:23:38.450 --> 00:23:43.143
+<v Uladzimir Klyshevich>So usually when we run agent,
+we know what exactly the agent is doing.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/4951-3
+00:23:43.143 --> 00:23:46.580
+<v Uladzimir Klyshevich>Like, okay,
+story development or solution design or</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/4951-4
+00:23:46.580 --> 00:23:50.545
+<v Uladzimir Klyshevich>rework review, automation, et cetera.
+So we need this part.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/5017-0
+00:23:50.905 --> 00:23:55.443
+<v Uladzimir Klyshevich>Concurrency key,
+it's something that is coming on from</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/5017-1
+00:23:55.443 --> 00:23:59.569
+<v Uladzimir Klyshevich>JIRA or from Trigg.
+Then it's parameter actually,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/5017-2
+00:23:59.569 --> 00:24:06.005
+<v Uladzimir Klyshevich>then permissions, almost everything.
+It's scary. And not really scary for me,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/5017-3
+00:24:06.005 --> 00:24:10.625
+<v Uladzimir Klyshevich>but for most of the people it can be
+scary. So kind of.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/5085-0
+00:24:10.785 --> 00:24:14.616
+<v Uladzimir Klyshevich>we allow almost everything.
+So then Ubuntu,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/5085-1
+00:24:14.616 --> 00:24:18.882
+<v Uladzimir Klyshevich>if you need Ubuntu or Mac OS,
+sometimes Windows,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/5085-2
+00:24:18.882 --> 00:24:24.105
+<v Uladzimir Klyshevich>on Windows it also should work,
+at least on Windows Runner.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/5085-3
+00:24:24.105 --> 00:24:28.545
+<v Uladzimir Klyshevich>So on your laptop,
+potentially can be some issues.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/5199-0
+00:24:29.865 --> 00:24:33.494
+<v Uladzimir Klyshevich>What then happens,
+so we make pre-configured file,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/5199-1
+00:24:33.494 --> 00:24:39.257
+<v Uladzimir Klyshevich>so then we check out repository where we
+actually are working with some modules.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/5199-2
+00:24:39.257 --> 00:24:42.815
+<v Uladzimir Klyshevich>Then here we have authentication to
+Google Cloud,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/5199-3
+00:24:42.815 --> 00:24:47.653
+<v Uladzimir Klyshevich>we don't need it on our side.
+Then we have Java 23 setup. Actually,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/5199-4
+00:24:47.653 --> 00:24:52.705
+<v Uladzimir Klyshevich>DMS tools now works with Java 17,
+so we are going to use Java 17 here.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/5268-0
+00:24:53.265 --> 00:24:59.639
+<v Uladzimir Klyshevich>There is some setup workflow,
+core source that probably can be removed,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/5268-1
+00:24:59.639 --> 00:25:04.774
+<v Uladzimir Klyshevich>then not we need for a copilot actually,
+so nothing else.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/5268-2
+00:25:04.774 --> 00:25:12.298
+<v Uladzimir Klyshevich>And we need not for testing of JavaScript.
+So there is we have testing folder and AI</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/5268-3
+00:25:12.298 --> 00:25:14.865
+<v Uladzimir Klyshevich>can not here, but in engines.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/5293-0
+00:25:15.265 --> 00:25:23.185
+<v Uladzimir Klyshevich>AI can run some test scripts to test
+Graal JS agents. We are not then.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/5342-0
+00:25:24.305 --> 00:25:27.391
+<v Uladzimir Klyshevich>Again, like if you just set up it,
+you can skip it,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/5342-1
+00:25:27.391 --> 00:25:31.604
+<v Uladzimir Klyshevich>but I'm trying to also give some overview
+what is inside. As there is,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/5342-2
+00:25:31.604 --> 00:25:35.105
+<v Uladzimir Klyshevich>we also give playwright because we needed
+to test the MI2.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/5370-0
+00:25:37.105 --> 00:25:46.945
+<v Uladzimir Klyshevich>This website, right? So,
+that's why we also, right? Then, yes.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/5372-0
+00:25:47.985 --> 00:25:50.785
+<v Ira Skrypnik>Some value issues again.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/5376-0
+00:25:56.145 --> 00:25:56.945
+<v Uladzimir Klyshevich>Can you hear me?</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/5380-0
+00:25:57.825 --> 00:25:59.425
+<v Ira Skrypnik>And not good.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/5389-0
+00:26:01.505 --> 00:26:03.025
+<v Aliaksandr Tarasevich>Video is also Stalin.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/5392-0
+00:26:06.625 --> 00:26:07.265
+<v Uladzimir Klyshevich>No.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/5405-0
+00:26:08.865 --> 00:26:10.785
+<v Ira Skrypnik>You crashed your MacBook?</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/5399-0
+00:26:08.985 --> 00:26:09.345
+<v Aliaksandr Tarasevich>Mm.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/5413-0
+00:26:18.305 --> 00:26:19.985
+<v Andrew Rae>I think his bandwidth is too low.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/5443-0
+00:26:57.465 --> 00:27:03.345
+<v Ira Skrypnik>Koriagin. Good joke.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/5460-0
+00:27:14.865 --> 00:27:19.385
+<v Garegin Ghazaryan>Why are you thinking I'm joking?
+What makes you think I'm joking?</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/5462-0
+00:27:20.465 --> 00:27:20.785
+<v Garegin Ghazaryan>Yeah.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/5464-0
+00:27:21.825 --> 00:27:22.025
+<v Garegin Ghazaryan>Yeah.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/5470-0
+00:27:23.345 --> 00:27:24.625
+<v Garegin Ghazaryan>Connect Factory.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/5479-0
+00:27:25.665 --> 00:27:27.665
+<v Alexandre Griniuk>No, it's the AI I took over his computer.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/5482-0
+00:27:30.545 --> 00:27:30.705
+<v Ira Skrypnik>Mm.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/5490-0
+00:27:35.105 --> 00:27:36.625
+<v Andrew Rae>The factory's gone dark.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/5508-0
+00:27:36.145 --> 00:27:42.545
+<v Elizaveta Vdovitchenko>Collection of collection of the major
+jokes regarding the tech factory.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/5496-0
+00:27:37.865 --> 00:27:38.465
+<v Andrew Rae>Mm-hmm.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/5528-0
+00:27:51.905 --> 00:27:55.185
+<v Sergey Makarevich>You stole it from my tongue,
+dangerous keep permissions.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/5520-0
+00:27:52.785 --> 00:27:53.265
+<v Ira Skrypnik>But...</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/5544-0
+00:27:56.225 --> 00:28:00.465
+<v Ira Skrypnik>But perhaps this is connection issues.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/5558-0
+00:28:02.625 --> 00:28:06.945
+<v Ira Skrypnik>But the idea about the AI is very funny.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/5561-0
+00:28:09.825 --> 00:28:10.545
+<v Aliaksandr Tarasevich>Your book?</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/5566-0
+00:28:11.585 --> 00:28:12.865
+<v Ira Skrypnik>Why are you muted?</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/5568-0
+00:28:17.945 --> 00:28:18.465
+<v Uladzimir Klyshevich>Yeah.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/5595-0
+00:28:19.745 --> 00:28:23.019
+<v Uladzimir Klyshevich>Yeah,
+there is too many things which my</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/5595-1
+00:28:23.019 --> 00:28:26.865
+<v Uladzimir Klyshevich>daughter has, so, but yeah,
+I need to alright.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/5623-0
+00:28:29.585 --> 00:28:35.105
+<v Uladzimir Klyshevich>Now, Modem is here, so I can,
+I hope you can hear me pretty well.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/5622-0
+00:28:35.985 --> 00:28:36.385
+<v Aliaksandr Tarasevich>Burda.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/5629-0
+00:28:37.105 --> 00:28:38.185
+<v Uladzimir Klyshevich>All right.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/5627-0
+00:28:37.665 --> 00:28:38.065
+<v Ira Skrypnik>Yep.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/5632-0
+00:28:39.985 --> 00:28:40.865
+<v Uladzimir Klyshevich>Let's continue.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/5637-0
+00:28:42.305 --> 00:28:43.665
+<v Uladzimir Klyshevich>So, what we are going to do?</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/5646-0
+00:28:46.545 --> 00:28:48.625
+<v Uladzimir Klyshevich>We are going to almost copy this.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/5650-0
+00:28:50.905 --> 00:28:51.905
+<v Uladzimir Klyshevich>Like A reference.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/5652-0
+00:28:53.345 --> 00:28:53.985
+<v Uladzimir Klyshevich>Two.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/5656-0
+00:28:55.505 --> 00:28:56.145
+<v Uladzimir Klyshevich>Right.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/5658-0
+00:28:57.985 --> 00:28:58.145
+<v Uladzimir Klyshevich>Ahh.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/5661-0
+00:28:59.505 --> 00:28:59.985
+<v Uladzimir Klyshevich>Okay.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/5663-0
+00:29:01.345 --> 00:29:01.825
+<v Uladzimir Klyshevich>Top.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/5666-0
+00:29:11.505 --> 00:29:11.985
+<v Uladzimir Klyshevich>Clear.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/5668-0
+00:29:16.545 --> 00:29:17.025
+<v Uladzimir Klyshevich>So.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/5674-0
+00:29:18.225 --> 00:29:20.545
+<v Uladzimir Klyshevich>Uh, I need to have...</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/5702-0
+00:29:21.905 --> 00:29:36.065
+<v Uladzimir Klyshevich>AI to mate workflow and I want to set up
+TM TM tools agents in the repository.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/5721-0
+00:29:40.385 --> 00:29:46.145
+<v Uladzimir Klyshevich>I don't need all the configurations.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/5724-0
+00:29:47.265 --> 00:29:48.145
+<v Uladzimir Klyshevich>I need.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/5727-0
+00:29:49.505 --> 00:29:50.625
+<v Uladzimir Klyshevich>In pools.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/5730-0
+00:29:52.225 --> 00:29:53.985
+<v Uladzimir Klyshevich>Shira.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/5733-0
+00:29:55.065 --> 00:29:56.065
+<v Uladzimir Klyshevich>Long plans.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/5754-0
+00:29:58.705 --> 00:30:07.249
+<v Uladzimir Klyshevich>OK, Azure Dev Ops. OK,
+let's add to add all case, then what else?</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/5754-1
+00:30:07.249 --> 00:30:08.025
+<v Uladzimir Klyshevich>Figma.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/5756-0
+00:30:12.385 --> 00:30:12.785
+<v Uladzimir Klyshevich>In.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/5767-0
+00:30:14.145 --> 00:30:17.705
+<v Uladzimir Klyshevich>We are going to use Copilot.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/5774-0
+00:30:24.225 --> 00:30:26.785
+<v Uladzimir Klyshevich>And probably that's it.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/5776-0
+00:30:30.305 --> 00:30:31.425
+<v Uladzimir Klyshevich>Chapko.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/5779-0
+00:30:33.625 --> 00:30:34.145
+<v Uladzimir Klyshevich>As well.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/5782-0
+00:30:35.985 --> 00:30:37.345
+<v Uladzimir Klyshevich>And the lids.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/5788-0
+00:30:38.465 --> 00:30:41.105
+<v Uladzimir Klyshevich>He got everything with.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/5794-0
+00:30:42.545 --> 00:30:44.465
+<v Uladzimir Klyshevich>Java 17.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/5805-0
+00:30:48.705 --> 00:30:51.105
+<v Uladzimir Klyshevich>And, for now, we are going to use...</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/5825-0
+00:30:52.865 --> 00:30:58.145
+<v Uladzimir Klyshevich>OK, the same installation,
+but let's let's go to.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/5828-0
+00:30:59.665 --> 00:31:01.345
+<v Uladzimir Klyshevich>Not the agents, CLEI.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/5849-0
+00:31:22.705 --> 00:31:27.025
+<v Uladzimir Klyshevich>Okay, here,
+because we are going to actually...</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/5867-0
+00:31:28.705 --> 00:31:32.785
+<v Uladzimir Klyshevich>Test all the time, latest version,
+so we need to use main.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/5881-0
+00:31:35.425 --> 00:31:42.945
+<v Uladzimir Klyshevich>Let's use installation of the tools from
+main branch.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/5907-0
+00:31:47.025 --> 00:31:53.495
+<v Uladzimir Klyshevich>Sounds like it,
+and now it should do the workflow for us,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/5907-1
+00:31:53.495 --> 00:31:54.945
+<v Uladzimir Klyshevich>and after it.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/5966-0
+00:31:57.185 --> 00:32:02.895
+<v Uladzimir Klyshevich>it will create actually all needed keys
+and configuration.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/5966-1
+00:32:02.895 --> 00:32:10.636
+<v Uladzimir Klyshevich>And I found a way how to save time for
+myself to do all these not really useful</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/5966-2
+00:32:10.636 --> 00:32:13.345
+<v Uladzimir Klyshevich>part. So instead of going...</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/5970-0
+00:32:14.865 --> 00:32:16.065
+<v Uladzimir Klyshevich>And copy case.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/5980-0
+00:32:17.905 --> 00:32:21.265
+<v Uladzimir Klyshevich>We will ask to write a SAST script.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/6062-0
+00:32:22.985 --> 00:32:30.412
+<v Uladzimir Klyshevich>which will use my DM tools dot N file and
+copy secrets and copy variables to to to</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/6062-1
+00:32:30.412 --> 00:32:36.318
+<v Uladzimir Klyshevich>to write fields in EPAM DM.
+So this is approach which I did found</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/6062-2
+00:32:36.318 --> 00:32:43.745
+<v Uladzimir Klyshevich>myself to to simplify life. Unfortunately,
+we cannot do a lot of things with Jira.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/6111-0
+00:32:44.385 --> 00:32:51.193
+<v Uladzimir Klyshevich>because of it, but it already can help.
+Okay, integrations configured,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/6111-1
+00:32:51.193 --> 00:32:56.945
+<v Uladzimir Klyshevich>we have the file.
+I can even open this in intelligent idea.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/6116-0
+00:32:58.145 --> 00:33:00.545
+<v Uladzimir Klyshevich>Like a project, let's close others.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/6118-0
+00:33:02.225 --> 00:33:02.705
+<v Uladzimir Klyshevich>OK.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/6121-0
+00:33:07.545 --> 00:33:14.617
+<v Uladzimir Klyshevich>It's read me, I didn't open. OK, workflow,
+yeah, it's it's same part here, right?</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/6121-1
+00:33:14.617 --> 00:33:21.343
+<v Uladzimir Klyshevich>And that actually why I'm doing trying to
+do a lot of things open source with</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/6121-2
+00:33:21.343 --> 00:33:23.585
+<v Uladzimir Klyshevich>different form, because...</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/6149-0
+00:33:25.225 --> 00:33:31.905
+<v Uladzimir Klyshevich>When you set up it for different accounts
+customers, I need to find a template.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/6219-0
+00:33:32.945 --> 00:33:38.538
+<v Uladzimir Klyshevich>So I know that AI will do it for me and
+exactly in the same way if I do provide</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/6219-1
+00:33:38.538 --> 00:33:42.173
+<v Uladzimir Klyshevich>template.
+So that's why in some cases I just use my</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/6219-2
+00:33:42.173 --> 00:33:46.367
+<v Uladzimir Klyshevich>tool as one scenario. I'm just saying,
+okay, go to my tool,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/6219-3
+00:33:46.367 --> 00:33:47.905
+<v Uladzimir Klyshevich>check and do the same.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/6306-0
+00:33:48.785 --> 00:33:54.822
+<v Uladzimir Klyshevich>But for this customer with such changes,
+or if I need to do something more crazy</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/6306-1
+00:33:54.822 --> 00:34:00.933
+<v Uladzimir Klyshevich>with deployments, etcetera, and so on,
+we will do it as well, so we can use this,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/6306-2
+00:34:00.933 --> 00:34:06.373
+<v Uladzimir Klyshevich>like I will use my own project which is
+closed one, but it has back end,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/6306-3
+00:34:06.373 --> 00:34:08.385
+<v Uladzimir Klyshevich>it has unit test, it has...</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/6386-0
+00:34:08.545 --> 00:34:12.577
+<v Uladzimir Klyshevich>integration test Karate,
+it has also Flutter, so,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/6386-1
+00:34:12.577 --> 00:34:18.786
+<v Uladzimir Klyshevich>and I can use this like also deployment
+workflows, deployments to App Store,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/6386-2
+00:34:18.786 --> 00:34:25.559
+<v Uladzimir Klyshevich>Google Play, like templates. I am saying,
+okay, do the same, but with such changes.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/6386-3
+00:34:25.559 --> 00:34:28.865
+<v Uladzimir Klyshevich>And then it really helps me to set up it.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/6403-0
+00:34:29.825 --> 00:34:34.465
+<v Uladzimir Klyshevich>So we have this job info,
+cool part token for checkout.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/6419-0
+00:34:35.665 --> 00:34:42.145
+<v Uladzimir Klyshevich>Java 17, so cool, not OK, OK, so.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/6422-0
+00:34:43.425 --> 00:34:44.465
+<v Uladzimir Klyshevich>Copilot.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/6425-0
+00:34:47.265 --> 00:34:48.065
+<v Uladzimir Klyshevich>Good.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/6427-0
+00:34:50.705 --> 00:34:50.865
+<v Uladzimir Klyshevich>Uh...</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/6443-0
+00:34:53.345 --> 00:34:57.825
+<v Uladzimir Klyshevich>There is what I do suggest because we
+have the agents.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/6450-0
+00:35:01.225 --> 00:35:03.345
+<v Uladzimir Klyshevich>Did the chicken or any agents?</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/6453-0
+00:35:12.385 --> 00:35:12.545
+<v Uladzimir Klyshevich>Mm.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/6461-0
+00:35:21.305 --> 00:35:23.345
+<v Uladzimir Klyshevich>Interesting, let's check here.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/6473-0
+00:35:32.545 --> 00:35:36.945
+<v Uladzimir Klyshevich>Oh no, I did not. Okay,
+we'll do this later.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/6480-0
+00:35:41.025 --> 00:35:42.305
+<v Uladzimir Klyshevich>Let's ask one more time.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/6558-0
+00:36:18.625 --> 00:36:23.047
+<v Uladzimir Klyshevich>Let's see what else we have.
+So installation of Copilot,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/6558-1
+00:36:23.047 --> 00:36:28.555
+<v Uladzimir Klyshevich>what improvements we can do.
+So I see that it will install Copilot all</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/6558-2
+00:36:28.555 --> 00:36:32.434
+<v Uladzimir Klyshevich>the time,
+which is we don't need actually all the</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/6558-3
+00:36:32.434 --> 00:36:33.985
+<v Uladzimir Klyshevich>time. So we can say.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/6584-0
+00:36:36.505 --> 00:36:46.985
+<v Uladzimir Klyshevich>We need to install pilot only if the
+provider is set in and.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/6588-0
+00:36:48.545 --> 00:36:49.665
+<v Uladzimir Klyshevich>variables.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/6593-0
+00:36:54.385 --> 00:36:55.985
+<v Uladzimir Klyshevich>So, then...</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/6684-0
+00:36:56.865 --> 00:37:01.412
+<v Uladzimir Klyshevich>And if you want to use it,
+also there is hotkey like control Q,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/6684-1
+00:37:01.412 --> 00:37:06.952
+<v Uladzimir Klyshevich>which is adding your message to queue.
+So if you really trust and know that I</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/6684-2
+00:37:06.952 --> 00:37:10.291
+<v Uladzimir Klyshevich>can do some stuff, you like can just add,
+add,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/6684-3
+00:37:10.291 --> 00:37:15.192
+<v Uladzimir Klyshevich>add new commands and it will do it for
+you. So you see it change it.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/6684-4
+00:37:15.192 --> 00:37:17.465
+<v Uladzimir Klyshevich>Then DM tools, it installs from.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/6707-0
+00:37:17.585 --> 00:37:31.025
+<v Uladzimir Klyshevich>OK, DMS tools main main script.
+Let's use install from current repo.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/6730-0
+00:37:34.065 --> 00:37:40.545
+<v Uladzimir Klyshevich>Then it's okay, we check in version,
+we set up this AI teammate, let's.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/6737-0
+00:37:41.705 --> 00:37:43.585
+<v Uladzimir Klyshevich>Name it like this.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/6743-0
+00:37:49.905 --> 00:37:49.985
+<v Uladzimir Klyshevich>Uhh...</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/6746-0
+00:38:01.265 --> 00:38:01.745
+<v Uladzimir Klyshevich>And.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/6813-0
+00:38:02.905 --> 00:38:08.686
+<v Uladzimir Klyshevich>Okay, this is a fine, clear cache true,
+cache enable it. Okay,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/6813-1
+00:38:08.686 --> 00:38:15.018
+<v Uladzimir Klyshevich>Azure DevOps for testing,
+Figma personal token, blah blah blah. Yes,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/6813-2
+00:38:15.018 --> 00:38:20.065
+<v Uladzimir Klyshevich>we have it, we have it.
+Model actually will be set up.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/6816-0
+00:38:21.865 --> 00:38:22.625
+<v Uladzimir Klyshevich>Violet.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/6828-0
+00:38:30.905 --> 00:38:35.025
+<v Uladzimir Klyshevich>If you go variables.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/6835-0
+00:38:39.385 --> 00:38:41.825
+<v Uladzimir Klyshevich>Tools available, fine, prompt.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/6842-0
+00:38:43.025 --> 00:38:45.425
+<v Uladzimir Klyshevich>Silly comments allowed, OK.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/6862-0
+00:38:49.825 --> 00:38:56.385
+<v Uladzimir Klyshevich>And then we do run configuration,
+so looks looks fine, alright.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/6871-0
+00:39:00.305 --> 00:39:02.065
+<v Uladzimir Klyshevich>Wanted to check, do we have?</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/6879-0
+00:39:04.945 --> 00:39:07.065
+<v Uladzimir Klyshevich>DMS tools release? Yes, we do.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/6881-0
+00:39:10.865 --> 00:39:11.985
+<v Uladzimir Klyshevich>At the 10.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/6885-0
+00:39:16.465 --> 00:39:18.465
+<v Uladzimir Klyshevich>Feel right.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/6898-0
+00:39:19.505 --> 00:39:26.545
+<v Uladzimir Klyshevich>This is such a script which will copy
+needed.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/6904-0
+00:39:27.905 --> 00:39:30.145
+<v Uladzimir Klyshevich>Values to secrets.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/6910-0
+00:39:31.225 --> 00:39:33.105
+<v Uladzimir Klyshevich>So, it have Rapaka.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/6929-0
+00:39:34.145 --> 00:39:42.625
+<v Uladzimir Klyshevich>And variables from local team tools dot
+and file before.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/6933-0
+00:39:43.905 --> 00:39:45.105
+<v Uladzimir Klyshevich>Execution.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/6935-0
+00:39:47.505 --> 00:39:47.665
+<v Uladzimir Klyshevich>Uhh.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/6938-0
+00:39:48.865 --> 00:39:50.145
+<v Uladzimir Klyshevich>Sure, let me check.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/6943-0
+00:40:07.825 --> 00:40:08.625
+<v Uladzimir Klyshevich>Any questions?</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/6954-0
+00:40:11.505 --> 00:40:16.785
+<v Uladzimir Klyshevich>Nothing clear, right? Or, or all is OK.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/6956-0
+00:40:20.225 --> 00:40:20.785
+<v Uladzimir Klyshevich>And.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/7017-0
+00:40:21.505 --> 00:40:26.994
+<v Aliaksei Yermachonak>I'm just trying to replicate the steps
+similar in parallel with you and would</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/7017-1
+00:40:26.994 --> 00:40:31.427
+<v Aliaksei Yermachonak>like to wonder here you have DMAI,
+you have dot GitHub folder,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/6986-0
+00:40:27.425 --> 00:40:28.225
+<v Uladzimir Klyshevich>Ohh, cool.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/7017-2
+00:40:31.427 --> 00:40:34.945
+<v Aliaksei Yermachonak>but there is no DM tool skill inside this
+folder.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/7059-0
+00:40:36.385 --> 00:40:40.215
+<v Uladzimir Klyshevich>Yeah,
+because this is this is kind of source</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/7059-1
+00:40:40.215 --> 00:40:44.130
+<v Uladzimir Klyshevich>here,
+so that will be some of the tasks which</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/7033-0
+00:40:41.345 --> 00:40:42.145
+<v Aliaksei Yermachonak>Yeah, and.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/7059-2
+00:40:44.130 --> 00:40:48.385
+<v Uladzimir Klyshevich>we will,
+you can install them to globally skills.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/7093-0
+00:40:48.145 --> 00:40:54.429
+<v Aliaksei Yermachonak>Yeah, in the M tools, AI docs,
+as I saw in the scripts, it checks codecs,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/7093-1
+00:40:54.429 --> 00:40:57.825
+<v Aliaksei Yermachonak>it checks, but it doesn't check copilot.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/7099-0
+00:40:59.025 --> 00:41:00.625
+<v Uladzimir Klyshevich>Yeah, because Copilot used Cloud.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/7101-0
+00:41:01.665 --> 00:41:02.145
+<v Uladzimir Klyshevich>as well.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/7111-0
+00:41:03.105 --> 00:41:05.425
+<v Aliaksei Yermachonak>Okay, I didn't know that. Thank you.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/7186-0
+00:41:04.385 --> 00:41:11.448
+<v Uladzimir Klyshevich>So, yeah, actually, when I did, like,
+because first I did design it, like,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/7186-1
+00:41:11.448 --> 00:41:16.438
+<v Uladzimir Klyshevich>if it sees some folders like clot or
+co-pilot, etc.,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/7186-2
+00:41:16.438 --> 00:41:24.065
+<v Uladzimir Klyshevich>insert a skill automatically to not all
+on this, but then I saw that you have...</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/7284-0
+00:41:24.105 --> 00:41:28.953
+<v Uladzimir Klyshevich>two skills in Copilot, one from Claude,
+second one from Copilot.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/7284-1
+00:41:28.953 --> 00:41:35.144
+<v Uladzimir Klyshevich>If you install globally, you have three.
+So that's why I think we will set up task</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/7284-2
+00:41:35.144 --> 00:41:40.364
+<v Uladzimir Klyshevich>for Dark Factory to create kind of script
+for installation of skills,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/7284-3
+00:41:40.364 --> 00:41:45.585
+<v Uladzimir Klyshevich>but you will be able to choose what to
+install, like skills for Jira.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/7362-0
+00:41:45.665 --> 00:41:50.188
+<v Uladzimir Klyshevich>Skills for Azure DevOps,
+because now it just installs all skills.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/7362-1
+00:41:50.188 --> 00:41:54.232
+<v Uladzimir Klyshevich>If you have Azure DevOps,
+it or it also will install Jira,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/7362-2
+00:41:54.232 --> 00:41:59.646
+<v Uladzimir Klyshevich>but you don't need Jira in the case, so,
+and this is kind of a problem because</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/7362-3
+00:41:59.646 --> 00:42:04.512
+<v Uladzimir Klyshevich>usually you do commit it to the code
+because agents which are working,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/7362-4
+00:42:04.512 --> 00:42:05.745
+<v Uladzimir Klyshevich>they also need to.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/7415-0
+00:42:06.465 --> 00:42:13.997
+<v Uladzimir Klyshevich>To see the skills as well, right? So,
+we have these before executing secret</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/7415-1
+00:42:13.997 --> 00:42:21.825
+<v Uladzimir Klyshevich>shows name, source, and key variables,
+proceed mapping, configure, Jira, Jira.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/7418-0
+00:42:23.825 --> 00:42:25.345
+<v Uladzimir Klyshevich>Sure, sure, sure, OK.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/7429-0
+00:42:28.225 --> 00:42:30.945
+<v Uladzimir Klyshevich>My bit compiler, JPT menu.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/7432-0
+00:42:32.545 --> 00:42:33.025
+<v Uladzimir Klyshevich>Um...</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/7436-0
+00:42:34.705 --> 00:42:35.985
+<v Uladzimir Klyshevich>Scripts setup.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/7482-0
+00:42:36.905 --> 00:42:41.427
+<v Uladzimir Klyshevich>Some GitHub separates. Let's see.
+Set up GitHub. Why?</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/7482-1
+00:42:41.427 --> 00:42:46.785
+<v Uladzimir Klyshevich>I'm checking this a bit manually because
+one time I did run it.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/7553-0
+00:42:48.145 --> 00:42:54.988
+<v Uladzimir Klyshevich>I'm not sure which model I did use,
+but I saw my secrets in variables.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/7553-1
+00:42:54.988 --> 00:43:02.024
+<v Uladzimir Klyshevich>So that's why now I'm trying to check it
+before I execute it. Otherwise,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/7553-2
+00:43:02.024 --> 00:43:08.385
+<v Uladzimir Klyshevich>I need to go and refresh all my keys.
+So and I'm lazy to do this.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/7558-0
+00:43:10.145 --> 00:43:11.825
+<v Uladzimir Klyshevich>All right, looks.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/7562-0
+00:43:13.905 --> 00:43:15.185
+<v Uladzimir Klyshevich>Looks OK.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/7567-0
+00:43:17.025 --> 00:43:21.345
+<v Uladzimir Klyshevich>Uh huh, so compilot model did it in.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/7573-0
+00:43:25.985 --> 00:43:29.345
+<v Uladzimir Klyshevich>Alright, let's execute.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/7590-0
+00:43:34.185 --> 00:43:38.145
+<v Uladzimir Klyshevich>While it's executing, any questions, guys?
+OK, nobody sharing the camera.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/7616-0
+00:43:46.705 --> 00:43:49.772
+<v Uladzimir Klyshevich>Everything clear. Alex,
+where you are showed.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/7616-1
+00:43:49.772 --> 00:43:52.705
+<v Uladzimir Klyshevich>Do you set up your keys as well or not
+yet?</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/7629-0
+00:44:00.705 --> 00:44:05.105
+<v Aliaksei Yermachonak>I may ask, who are you asking? Because...</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/7642-0
+00:44:05.345 --> 00:44:07.825
+<v Uladzimir Klyshevich>Who is doing this in parallel with me?</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/7693-0
+00:44:08.865 --> 00:44:12.005
+<v Aliaksei Yermachonak>It was, it was me, but now I am,
+I have rejected,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/7693-1
+00:44:12.005 --> 00:44:16.023
+<v Aliaksei Yermachonak>I have globally installed,
+installed damn tools in cloud skill,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/7693-2
+00:44:16.023 --> 00:44:19.665
+<v Aliaksei Yermachonak>but I I don't see it,
+so I I now I have it locally in my.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/7757-0
+00:44:20.865 --> 00:44:26.485
+<v Aliaksei Yermachonak>skills in the MAI,
+but it is the step on which I am</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/7757-1
+00:44:26.485 --> 00:44:33.618
+<v Aliaksei Yermachonak>currently and I am using Windows.
+I'm pretty sure that the tools,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/7722-0
+00:44:27.585 --> 00:44:28.065
+<v Uladzimir Klyshevich>Mhm.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/7757-2
+00:44:33.618 --> 00:44:39.345
+<v Aliaksei Yermachonak>I'm not sure, okay,
+was it tested on Windows or not?</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/7759-0
+00:44:41.105 --> 00:44:42.625
+<v Uladzimir Klyshevich>Uh, it was...</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/7807-0
+00:44:43.745 --> 00:44:48.418
+<v Uladzimir Klyshevich>And even we do have kind of test pipeline
+for Windows,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/7807-1
+00:44:48.418 --> 00:44:53.092
+<v Uladzimir Klyshevich>and I did install it on my local mini
+Windows machine,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/7807-2
+00:44:53.092 --> 00:44:56.065
+<v Uladzimir Klyshevich>but I never use this in production.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/7814-0
+00:44:56.865 --> 00:44:57.345
+<v Aliaksei Yermachonak>Okay.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/7811-0
+00:44:58.385 --> 00:44:58.745
+<v Aliaksandr Tarasevich>Sky.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/7823-0
+00:45:00.385 --> 00:45:00.625
+<v Aliaksei Yermachonak>Okay.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/7829-0
+00:45:00.665 --> 00:45:01.665
+<v Uladzimir Klyshevich>because it is a Java.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/7832-0
+00:45:02.865 --> 00:45:04.545
+<v Uladzimir Klyshevich>But, uh...</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/7845-0
+00:45:05.985 --> 00:45:07.585
+<v Uladzimir Klyshevich>But, but...</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/7849-0
+00:45:06.185 --> 00:45:08.625
+<v Aliaksei Yermachonak>But no, it's not 17 Java, right?</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/7888-0
+00:45:09.505 --> 00:45:15.385
+<v Uladzimir Klyshevich>No, no, no, if it requires Java 23,
+that means you don't have latest version</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/7888-1
+00:45:15.385 --> 00:45:16.225
+<v Uladzimir Klyshevich>of Dentals.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/7924-0
+00:45:16.545 --> 00:45:20.846
+<v Aliaksei Yermachonak>Yeah, yeah, I understood this.
+This is why my setup is not yet ready for</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/7924-1
+00:45:20.846 --> 00:45:23.025
+<v Aliaksei Yermachonak>the M tools. That's why I'm updating.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/8023-0
+00:45:21.505 --> 00:45:25.396
+<v Uladzimir Klyshevich>Yeah,
+you just need to install latest version</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/7929-0
+00:45:25.025 --> 00:45:25.665
+<v Aliaksei Yermachonak>Yes.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/8023-1
+00:45:25.396 --> 00:45:30.132
+<v Uladzimir Klyshevich>because, yeah,
+at some point I decided to speed up with</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/8023-2
+00:45:30.132 --> 00:45:35.207
+<v Uladzimir Klyshevich>JS execution and I migrated to Java 23.
+But then in PostNL,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/8023-3
+00:45:35.207 --> 00:45:41.719
+<v Uladzimir Klyshevich>when I did production setup and also on
+my local laptop and I needed to test</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/8023-4
+00:45:41.719 --> 00:45:44.425
+<v Uladzimir Klyshevich>Android builds, which is usually</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/8084-0
+00:45:44.505 --> 00:45:50.146
+<v Uladzimir Klyshevich>running on Java 17,
+and then they start to conflict with each</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/8084-1
+00:45:50.146 --> 00:45:56.514
+<v Uladzimir Klyshevich>other. So because of the problem,
+I decided, okay, I did ask Copilot,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/8084-2
+00:45:56.514 --> 00:46:01.154
+<v Uladzimir Klyshevich>and we just did migration to Java 17.
+So actually,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/8084-3
+00:46:01.154 --> 00:46:04.065
+<v Uladzimir Klyshevich>that means that it uses Repnina.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/8167-0
+00:46:04.505 --> 00:46:08.855
+<v Uladzimir Klyshevich>Without acceleration,
+but so actually not Graal JS,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/8167-1
+00:46:08.855 --> 00:46:13.623
+<v Uladzimir Klyshevich>but Repnina in the case, or no, no, no,
+sorry, Graal JS,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/8167-2
+00:46:13.623 --> 00:46:19.563
+<v Uladzimir Klyshevich>but which is not built in to JDK,
+but which is installed like library,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/8167-3
+00:46:19.563 --> 00:46:23.745
+<v Uladzimir Klyshevich>and it's a bit slower than when you have
+Java 23.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/8192-0
+00:46:23.985 --> 00:46:28.318
+<v Uladzimir Klyshevich>But, because of on runners,
+usually you have Java 17 cached,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/8192-1
+00:46:28.318 --> 00:46:30.945
+<v Uladzimir Klyshevich>so it starts of this is faster, so...</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/8195-0
+00:46:33.585 --> 00:46:34.065
+<v Uladzimir Klyshevich>Okay.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/8227-0
+00:46:36.305 --> 00:46:40.297
+<v Aliaksei Yermachonak>So, yeah, I, I'm just updating my setup.
+This way I might be, I,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/8227-1
+00:46:40.297 --> 00:46:42.385
+<v Aliaksei Yermachonak>I'm moving slower than you, sorry.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/8231-0
+00:46:43.185 --> 00:46:44.625
+<v Uladzimir Klyshevich>No problem, because that's good.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/8233-0
+00:46:46.225 --> 00:46:46.305
+<v Uladzimir Klyshevich>Uh...</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/8235-0
+00:46:49.585 --> 00:46:50.145
+<v Uladzimir Klyshevich>Okay.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/8240-0
+00:46:50.945 --> 00:46:51.985
+<v Sergey Makarevich>At least you are moving.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/8269-0
+00:46:51.345 --> 00:46:59.560
+<v Uladzimir Klyshevich>It says,
+so we I did run the execution of updating</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/8269-1
+00:46:59.560 --> 00:47:03.265
+<v Uladzimir Klyshevich>scripts and I see that.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/8329-0
+00:47:04.945 --> 00:47:10.923
+<v Uladzimir Klyshevich>My AI teammate does not have access to it,
+so that's why I'm going to invite AI</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/8329-1
+00:47:10.923 --> 00:47:15.706
+<v Uladzimir Klyshevich>teammate to this repository.
+I hope we don't need to go to EPAM</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/8329-2
+00:47:15.706 --> 00:47:18.545
+<v Uladzimir Klyshevich>security for this. Let's see if I can.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/8341-0
+00:47:19.585 --> 00:47:22.331
+<v Sergey Makarevich>So at the moment you are not sharing,
+it's probably intentional, right,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/8341-1
+00:47:22.331 --> 00:47:22.865
+<v Sergey Makarevich>at this point.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/8377-0
+00:47:22.705 --> 00:47:26.265
+<v Uladzimir Klyshevich>Yeah, yeah, yeah,
+just want to to to to connect,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/8377-1
+00:47:26.265 --> 00:47:31.132
+<v Uladzimir Klyshevich>let's say this part a bit.
+I don't want to share who has access to</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/8377-2
+00:47:31.132 --> 00:47:31.785
+<v Uladzimir Klyshevich>the repo.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/8379-0
+00:47:33.905 --> 00:47:33.945
+<v Uladzimir Klyshevich>Uhh...</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/8382-0
+00:47:40.785 --> 00:47:41.505
+<v Uladzimir Klyshevich>Okay.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/8389-0
+00:47:48.305 --> 00:47:48.865
+<v Uladzimir Klyshevich>Like this.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/8398-0
+00:47:51.505 --> 00:47:53.505
+<v Uladzimir Klyshevich>Now, I need to accept it.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/8409-0
+00:48:10.145 --> 00:48:11.425
+<v Uladzimir Klyshevich>OK, now it has.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/8450-0
+00:48:28.865 --> 00:48:34.114
+<v Uladzimir Klyshevich>The checkout was not good,
+so it has now DM.ai and DM.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/8450-1
+00:48:34.114 --> 00:48:36.785
+<v Uladzimir Klyshevich>ai folders 2 together, so...</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/8452-0
+00:48:41.265 --> 00:48:44.305
+<v Uladzimir Klyshevich>Alright, while it's...</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/8457-0
+00:48:45.585 --> 00:48:46.705
+<v Uladzimir Klyshevich>Doing the work.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/8466-0
+00:48:48.065 --> 00:48:50.865
+<v Uladzimir Klyshevich>Let me show you a bit.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/8471-0
+00:48:52.745 --> 00:48:53.505
+<v Uladzimir Klyshevich>What we have?</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/8562-0
+00:48:59.425 --> 00:49:06.292
+<v Uladzimir Klyshevich>So, we have GM repo, right? Then,
+in this repo, we have repository engines,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/8562-1
+00:49:06.292 --> 00:49:12.435
+<v Uladzimir Klyshevich>which is GM tools agents. So,
+this part we did not move under EPAM,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/8562-2
+00:49:12.435 --> 00:49:17.314
+<v Uladzimir Klyshevich>but I think in future, at some point,
+we will do. So,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/8562-3
+00:49:17.314 --> 00:49:20.385
+<v Uladzimir Klyshevich>my assumption and I think opinion.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/8571-0
+00:49:20.545 --> 00:49:23.985
+<v Uladzimir Klyshevich>In future,
+we will have two types of agents.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/8651-0
+00:49:25.425 --> 00:49:29.538
+<v Uladzimir Klyshevich>So this is kind of open source,
+which everyone can use,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/8651-1
+00:49:29.538 --> 00:49:32.843
+<v Uladzimir Klyshevich>and we are going to use this for them
+tools.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/8651-2
+00:49:32.843 --> 00:49:37.102
+<v Uladzimir Klyshevich>Then we will have custom agents with some
+customizations,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/8651-3
+00:49:37.102 --> 00:49:42.316
+<v Uladzimir Klyshevich>what we have already in rituals,
+what we I think will have in Primark,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/8651-4
+00:49:42.316 --> 00:49:44.225
+<v Uladzimir Klyshevich>partial in PostNL as well.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/8699-0
+00:49:45.185 --> 00:49:49.968
+<v Uladzimir Klyshevich>Actually, in this case,
+you fork the repo and start to customize</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/8699-1
+00:49:49.968 --> 00:49:54.162
+<v Uladzimir Klyshevich>it. Why I recommend this approach?
+Because in this case,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/8699-2
+00:49:54.162 --> 00:49:57.105
+<v Uladzimir Klyshevich>it covers all the SDLC cycle. So like...</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/8787-0
+00:49:58.665 --> 00:50:03.255
+<v Uladzimir Klyshevich>All validation gates, etcetera, etcetera.
+Yes, so all of this covered,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/8787-1
+00:50:03.255 --> 00:50:08.232
+<v Uladzimir Klyshevich>so that's why I do recommend to fork it
+and then modify, because JavaScript,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/8787-2
+00:50:08.232 --> 00:50:11.269
+<v Uladzimir Klyshevich>so DM tools still is same,
+it's executed only,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/8787-3
+00:50:11.269 --> 00:50:16.311
+<v Uladzimir Klyshevich>and the agents are JavaScript and there
+is instructions what to do, it takes,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/8787-4
+00:50:16.311 --> 00:50:17.345
+<v Uladzimir Klyshevich>etcetera, right?</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/8872-0
+00:50:17.985 --> 00:50:23.311
+<v Uladzimir Klyshevich>So you just fork it and use.
+So I do have it like sub repository</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/8872-1
+00:50:23.311 --> 00:50:28.719
+<v Uladzimir Klyshevich>because we are going to modify agents if
+something will not work.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/8872-2
+00:50:28.719 --> 00:50:33.635
+<v Uladzimir Klyshevich>So actually I did already set up it in
+different pipelines,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/8872-3
+00:50:33.635 --> 00:50:38.305
+<v Uladzimir Klyshevich>but I don't know if it is flexible enough
+to do our job.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/8886-0
+00:50:38.785 --> 00:50:43.825
+<v Uladzimir Klyshevich>If you need to modify it and customize to
+run it, so we will do it.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/8961-0
+00:50:46.145 --> 00:50:51.711
+<v Uladzimir Klyshevich>But better just fork it, et cetera.
+Second type of agents will be,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/8961-1
+00:50:51.711 --> 00:50:58.773
+<v Uladzimir Klyshevich>and we will develop it for DMS tools with
+Dark Factory. When you have, for instance,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/8961-2
+00:50:58.773 --> 00:51:05.585
+<v Uladzimir Klyshevich>agent like artifact, which is packed. So,
+and you can install agent with license.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/8968-0
+00:51:06.945 --> 00:51:09.505
+<v Uladzimir Klyshevich>For example, I have here.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/9060-0
+00:51:10.785 --> 00:51:15.528
+<v Uladzimir Klyshevich>Maestro automation test,
+which is I am testing and executing now</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/9060-1
+00:51:15.528 --> 00:51:19.322
+<v Uladzimir Klyshevich>in PostNL,
+and I see that it is a really cool scene</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/9060-2
+00:51:19.322 --> 00:51:23.044
+<v Uladzimir Klyshevich>which I can use in future,
+but I will first route,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/9060-3
+00:51:23.044 --> 00:51:27.714
+<v Uladzimir Klyshevich>let's say I will see how it works in
+PostNL in real production,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/9060-4
+00:51:27.714 --> 00:51:30.705
+<v Uladzimir Klyshevich>and then I will check, okay, can I apply?</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/9139-0
+00:51:30.785 --> 00:51:36.782
+<v Uladzimir Klyshevich>Similar approach in Lauren. If I do,
+I will have super smart automation agent</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/9139-1
+00:51:36.782 --> 00:51:42.624
+<v Uladzimir Klyshevich>which will use Maestro to test your
+Android builds, iOS builds, web builds,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/9139-2
+00:51:42.624 --> 00:51:47.545
+<v Uladzimir Klyshevich>etc. So with right speed,
+without horrible Appium JavaScript or</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/9139-3
+00:51:47.545 --> 00:51:51.465
+<v Uladzimir Klyshevich>whatever quote it writes,
+so it's really horrible.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/9164-0
+00:51:52.785 --> 00:51:57.665
+<v Uladzimir Klyshevich>So, or for example,
+you have really cool agent which is</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/9164-1
+00:51:57.665 --> 00:52:02.545
+<v Uladzimir Klyshevich>writing react native code with super cool
+instructions.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/9171-0
+00:52:03.905 --> 00:52:05.905
+<v Uladzimir Klyshevich>Again, it's your property.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/9235-0
+00:52:07.025 --> 00:52:13.477
+<v Uladzimir Klyshevich>And you will be able to close this,
+host it, for example, in GitHub releases,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/9235-1
+00:52:13.477 --> 00:52:20.012
+<v Uladzimir Klyshevich>and then provide license key for your
+customers, and while they use DMS tools,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/9235-2
+00:52:20.012 --> 00:52:24.065
+<v Uladzimir Klyshevich>they are able to download the agent,
+install it.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/9255-0
+00:52:25.025 --> 00:52:31.345
+<v Uladzimir Klyshevich>Execute, and that's it. If they don't pay,
+license explore it, they cannot use it.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/9347-0
+00:52:33.185 --> 00:52:37.289
+<v Uladzimir Klyshevich>So actually,
+DMS tools provides this opportunity</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/9347-1
+00:52:37.289 --> 00:52:41.811
+<v Uladzimir Klyshevich>already now,
+because when I did design this approach,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/9347-2
+00:52:41.811 --> 00:52:46.417
+<v Uladzimir Klyshevich>I expected such easy extensions and that
+even in 2024,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/9347-3
+00:52:46.417 --> 00:52:52.865
+<v Uladzimir Klyshevich>I thought that we need to sell agents and
+outputs of the tokens in some way.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/9416-0
+00:52:53.345 --> 00:52:59.645
+<v Uladzimir Klyshevich>So that's why it needs to be easy
+installed and you can customize it.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/9416-1
+00:52:59.645 --> 00:53:06.845
+<v Uladzimir Klyshevich>So if you talk to some practice like,
+I don't know, data practice for instance,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/9416-2
+00:53:06.845 --> 00:53:12.065
+<v Uladzimir Klyshevich>or games, I never did write games,
+or I don't know, like.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/9512-0
+00:53:12.625 --> 00:53:16.539
+<v Uladzimir Klyshevich>some unity,
+it's also some kind of black box for me,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/9512-1
+00:53:16.539 --> 00:53:21.044
+<v Uladzimir Klyshevich>I never did it. So,
+and they develop their own agents and we</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/9512-2
+00:53:21.044 --> 00:53:26.656
+<v Uladzimir Klyshevich>can just easy inject it because it's
+JavaScript, kind of prehook, posthook,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/9512-3
+00:53:26.656 --> 00:53:31.825
+<v Uladzimir Klyshevich>and some LLM part in the middle.
+It can be combination of agents like</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/9512-4
+00:53:31.825 --> 00:53:32.785
+<v Uladzimir Klyshevich>Scrum Master.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/9562-0
+00:53:33.265 --> 00:53:39.457
+<v Uladzimir Klyshevich>or it can be report agent which is giving
+you report about specific part, etc. Yeah,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/9562-1
+00:53:39.457 --> 00:53:45.066
+<v Uladzimir Klyshevich>so that main idea why it is JavaScript
+and Java. So JavaScript is extension.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/9562-2
+00:53:45.066 --> 00:53:47.105
+<v Uladzimir Klyshevich>Java is orchestration level.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/9564-0
+00:53:48.625 --> 00:53:49.025
+<v Uladzimir Klyshevich>Um...</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/9569-0
+00:53:50.865 --> 00:53:53.105
+<v Uladzimir Klyshevich>All right, where we are, so...</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/9579-0
+00:53:54.945 --> 00:53:59.105
+<v Uladzimir Klyshevich>Cool, all done. It says, like, OK.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/9595-0
+00:54:00.225 --> 00:54:03.985
+<v Uladzimir Klyshevich>I did not want to share this, but I did,
+right?</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/9597-0
+00:54:05.505 --> 00:54:05.665
+<v Uladzimir Klyshevich>Um...</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/9607-0
+00:54:09.425 --> 00:54:10.705
+<v Uladzimir Klyshevich>So, we have separate sets.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/9612-0
+00:54:13.145 --> 00:54:15.345
+<v Uladzimir Klyshevich>Uh, we have variables.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/9623-0
+00:54:17.185 --> 00:54:20.305
+<v Uladzimir Klyshevich>Okay, Azure Devos Project, Rustem.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/9674-0
+00:54:21.385 --> 00:54:27.312
+<v Uladzimir Klyshevich>Organization cool,
+so Rustem you should rename it to DM dot</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/9674-1
+00:54:27.312 --> 00:54:33.535
+<v Uladzimir Klyshevich>AI already. OK, Copilot DM tools,
+Atlassian Copilot model. OK,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/9674-2
+00:54:33.535 --> 00:54:37.585
+<v Uladzimir Klyshevich>now we have money finally, so we can use.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/9684-0
+00:54:48.785 --> 00:54:51.345
+<v Uladzimir Klyshevich>A outs written like this.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/9702-0
+00:54:53.905 --> 00:54:57.955
+<v Uladzimir Klyshevich>By the way,
+who knows why Germany family disappeared</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/9702-1
+00:54:57.955 --> 00:54:59.025
+<v Uladzimir Klyshevich>from the list?</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/9705-0
+00:55:02.545 --> 00:55:03.105
+<v Uladzimir Klyshevich>Do you know?</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/9766-0
+00:55:05.985 --> 00:55:11.034
+<v Uladzimir Klyshevich>At some point,
+the Gemini models have disappeared from</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/9766-1
+00:55:11.034 --> 00:55:15.256
+<v Uladzimir Klyshevich>Copilot.
+I really like to use Gemini for some</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/9766-2
+00:55:15.256 --> 00:55:20.580
+<v Uladzimir Klyshevich>visual design,
+and then I see that it's not here anymore,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/9766-3
+00:55:20.580 --> 00:55:23.425
+<v Uladzimir Klyshevich>and yeah, it's not really nice.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/9779-0
+00:55:25.745 --> 00:55:30.065
+<v Uladzimir Klyshevich>Alright, Copilot cache enabled false.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/9866-0
+00:55:31.425 --> 00:55:38.048
+<v Uladzimir Klyshevich>In this scenario, for local run,
+I recommend to enable it for,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/9866-1
+00:55:38.048 --> 00:55:45.406
+<v Uladzimir Klyshevich>but also all Jira data or GitHub data or
+whatever, it will be cached.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/9866-2
+00:55:45.406 --> 00:55:51.083
+<v Uladzimir Klyshevich>So you see cache,
+cache folder here and actually just</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/9866-3
+00:55:51.083 --> 00:55:53.185
+<v Uladzimir Klyshevich>caches this to file.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/9928-0
+00:55:53.665 --> 00:55:59.398
+<v Uladzimir Klyshevich>To to to execute it faster,
+but I think we also will redesign this</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/9928-1
+00:55:59.398 --> 00:56:06.413
+<v Uladzimir Klyshevich>approach and cache it to some temp folder
+in in your repository or not repository</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/9928-2
+00:56:06.413 --> 00:56:11.461
+<v Uladzimir Klyshevich>in your system. OK,
+Figma basic call transform from tokens</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/9928-3
+00:56:11.461 --> 00:56:12.145
+<v Uladzimir Klyshevich>million.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/9953-0
+00:56:12.865 --> 00:56:22.705
+<v Uladzimir Klyshevich>Okay, we don't have Gemini here, right?
+Okay, we need it. Let's add it as well.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/9955-0
+00:56:27.185 --> 00:56:27.425
+<v Uladzimir Klyshevich>And.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/9962-0
+00:56:28.465 --> 00:56:29.985
+<v Uladzimir Klyshevich>Let me stop sharing.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/9966-0
+00:56:33.265 --> 00:56:34.145
+<v Uladzimir Klyshevich>Any questions?</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/9972-0
+00:56:38.585 --> 00:56:39.105
+<v Uladzimir Klyshevich>Not yet.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/9986-0
+00:56:39.945 --> 00:56:43.185
+<v Aliaksei Yermachonak>Am I right that all what you are doing
+right now?</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/10003-0
+00:56:45.505 --> 00:56:50.065
+<v Aliaksei Yermachonak>is possible to do locally or not. Oh.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/10053-0
+00:56:49.345 --> 00:56:55.105
+<v Uladzimir Klyshevich>Yes, exactly.
+It's actually like locally dmtools.env,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/10053-1
+00:56:55.105 --> 00:57:02.785
+<v Uladzimir Klyshevich>it's your actions variables and action
+secrets. It is dmtools.env. And.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/10043-0
+00:57:02.105 --> 00:57:03.265
+<v Aliaksei Yermachonak>Where is it located?</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/10148-0
+00:57:04.705 --> 00:57:09.829
+<v Uladzimir Klyshevich>in the root folder of your project where
+you do run DMS tools.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/10148-1
+00:57:09.829 --> 00:57:16.417
+<v Uladzimir Klyshevich>So it also can be dot and file as well.
+So you place dot and or DM tools dot and</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/10148-2
+00:57:16.417 --> 00:57:20.809
+<v Uladzimir Klyshevich>DM tools are read it.
+So that's why in post NL folder</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/10148-3
+00:57:20.809 --> 00:57:24.225
+<v Uladzimir Klyshevich>repository I do have DM tools for post NL.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/10207-0
+00:57:24.785 --> 00:57:29.559
+<v Uladzimir Klyshevich>in rituals for rituals, for primarking,
+for primark, etc. Yes,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/10207-1
+00:57:29.559 --> 00:57:34.029
+<v Uladzimir Klyshevich>so actually it is how it's designed.
+So you just create a.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/10207-2
+00:57:34.029 --> 00:57:38.878
+<v Uladzimir Klyshevich>n file as usually you do when you develop
+some services, right?</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/10207-3
+00:57:38.878 --> 00:57:40.545
+<v Uladzimir Klyshevich>And then you use this.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/10218-0
+00:58:11.025 --> 00:58:12.465
+<v Uladzimir Klyshevich>Secrets and.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/10226-0
+00:58:17.665 --> 00:58:19.025
+<v Uladzimir Klyshevich>For example.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/10255-0
+00:58:20.465 --> 00:58:24.855
+<v Uladzimir Klyshevich>If some of you tell me,
+my customer does not allow me to use the</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/10255-1
+00:58:24.855 --> 00:58:25.665
+<v Uladzimir Klyshevich>IMS project.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/10268-0
+00:58:27.265 --> 00:58:30.225
+<v Uladzimir Klyshevich>Actually,
+that means that you can install Olha.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/10331-0
+00:58:32.065 --> 00:58:36.778
+<v Uladzimir Klyshevich>Locally,
+because Olha has cloud models and local</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/10331-1
+00:58:36.778 --> 00:58:44.087
+<v Uladzimir Klyshevich>models, or you can install MLX with proxy,
+like which is OpenAI compatible,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/10331-2
+00:58:44.087 --> 00:58:50.145
+<v Uladzimir Klyshevich>and use some QAN models for instance,
+and you can run locally.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/10416-0
+00:58:50.385 --> 00:58:55.971
+<v Uladzimir Klyshevich>So you can execute DMS tools test cases
+generator locally with your local LLMs.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/10416-1
+00:58:55.971 --> 00:58:59.811
+<v Uladzimir Klyshevich>You will not be able to use Copilot,
+but for instance,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/10416-2
+00:58:59.811 --> 00:59:05.467
+<v Uladzimir Klyshevich>you will be able to generate test cases.
+You will be able to review your current</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/10416-3
+00:59:05.467 --> 00:59:09.865
+<v Uladzimir Klyshevich>list of test cases and link related.
+So you will be able to...</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/10429-0
+00:59:09.985 --> 00:59:15.185
+<v Uladzimir Klyshevich>To write your acceptance criteria as well,
+if you use then.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/10446-0
+00:59:17.025 --> 00:59:21.850
+<v Uladzimir Klyshevich>Ah, in Olha,
+you can configure even code code to use</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/10446-1
+00:59:21.850 --> 00:59:22.305
+<v Uladzimir Klyshevich>Olha.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/10549-0
+00:59:23.505 --> 00:59:28.786
+<v Uladzimir Klyshevich>You can try and use cloud code for
+researching in code base,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/10549-1
+00:59:28.786 --> 00:59:34.067
+<v Uladzimir Klyshevich>and then will be CLI mode,
+or you can use open code as well,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/10549-2
+00:59:34.067 --> 00:59:39.348
+<v Uladzimir Klyshevich>like CLI orchestrator.
+I would say almost each client now is</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/10549-3
+00:59:39.348 --> 00:59:44.370
+<v Uladzimir Klyshevich>prepared for AI.
+There will be some questions for sure on</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/10549-4
+00:59:44.370 --> 00:59:48.265
+<v Uladzimir Klyshevich>VDI,
+so on VDI probably will not be able to.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/10557-0
+00:59:48.265 --> 00:59:51.825
+<v Uladzimir Klyshevich>executed so easy, but on your laptops.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/10649-0
+00:59:53.585 --> 00:59:57.250
+<v Uladzimir Klyshevich>You can.
+Nobody knows that you do here if you</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/10649-1
+00:59:57.250 --> 01:00:02.428
+<v Uladzimir Klyshevich>don't talk to external LLM.
+So even if you talk to external LLM,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/10649-2
+01:00:02.428 --> 01:00:06.650
+<v Uladzimir Klyshevich>which is not sharing the data,
+so then yes, as well.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/10649-3
+01:00:06.650 --> 01:00:10.872
+<v Uladzimir Klyshevich>So probably possible,
+but be careful with this part.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/10649-4
+01:00:10.872 --> 01:00:12.465
+<v Uladzimir Klyshevich>But with local LLMs,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/10690-0
+01:00:12.785 --> 01:00:20.906
+<v Uladzimir Klyshevich>You can. Your experience will be not good.
+Probably you will not be able to use your</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/10690-1
+01:00:20.906 --> 01:00:26.065
+<v Uladzimir Klyshevich>own laptop during running,
+but you can try. So, okay.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/10695-0
+01:00:27.185 --> 01:00:28.385
+<v Uladzimir Klyshevich>We have this setup.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/10697-0
+01:00:30.425 --> 01:00:30.865
+<v Uladzimir Klyshevich>All right.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/10699-0
+01:00:35.065 --> 01:00:35.225
+<v Uladzimir Klyshevich>Mm.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/10704-0
+01:00:39.385 --> 01:00:40.385
+<v Uladzimir Klyshevich>Need and.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/10714-0
+01:00:54.145 --> 01:00:57.825
+<v Uladzimir Klyshevich>So, next, what we are going to do?</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/10718-0
+01:01:00.385 --> 01:01:01.185
+<v Uladzimir Klyshevich>Gira setup.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/10739-0
+01:01:03.905 --> 01:01:09.825
+<v Uladzimir Klyshevich>In Jira, let's find something.
+I'm not sure, by the way, I maybe I have.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/10758-0
+01:01:11.745 --> 01:01:15.185
+<v Uladzimir Klyshevich>DMC1 - do I have the ticket or not?</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/10761-0
+01:01:19.505 --> 01:01:19.785
+<v Uladzimir Klyshevich>No.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/10773-0
+01:01:27.025 --> 01:01:29.265
+<v Uladzimir Klyshevich>Let's see which epics I have.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/10834-0
+01:01:36.865 --> 01:01:41.244
+<v Uladzimir Klyshevich>Okay,
+so I need to choose some of epic which I</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/10834-1
+01:01:41.244 --> 01:01:47.672
+<v Uladzimir Klyshevich>will use like intake in the case.
+Let's imagine that it's brownfield</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/10834-2
+01:01:47.672 --> 01:01:51.025
+<v Uladzimir Klyshevich>project. So we have 100 and 101, so.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/10849-0
+01:01:52.225 --> 01:01:58.785
+<v Uladzimir Klyshevich>There is 1 ticket, there is will be a lot.
+So that's why let's.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/10867-0
+01:02:00.225 --> 01:02:04.865
+<v Uladzimir Klyshevich>Things there is not a lot of description,
+nothing else, nothing here, OK.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/10871-0
+01:02:08.385 --> 01:02:09.105
+<v Uladzimir Klyshevich>This one.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/10875-0
+01:02:11.025 --> 01:02:12.465
+<v Uladzimir Klyshevich>Uh, did-din.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/10880-0
+01:02:15.905 --> 01:02:17.105
+<v Uladzimir Klyshevich>Let's clone it.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/10889-0
+01:02:27.505 --> 01:02:28.945
+<v Uladzimir Klyshevich>It will be our intake.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/10917-0
+01:02:30.545 --> 01:02:38.625
+<v Uladzimir Klyshevich>So something where we will have a role in
+common request from anyone.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/10959-0
+01:02:39.705 --> 01:02:45.408
+<v Uladzimir Klyshevich>who is approving this part. Like me,
+probably some whitelisted people,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/10959-1
+01:02:45.408 --> 01:02:49.585
+<v Uladzimir Klyshevich>maybe some people who is creating issues
+in GitHub.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/11003-0
+01:02:50.785 --> 01:02:55.080
+<v Uladzimir Klyshevich>and the issue is approved and it created
+from whitelisted people,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/11003-1
+01:02:55.080 --> 01:03:00.545
+<v Uladzimir Klyshevich>so then we can easily assign it to intake
+and then Dark Factory will start to work.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/11046-0
+01:03:02.625 --> 01:03:08.958
+<v Uladzimir Klyshevich>We have this technical container,
+let's the previous one renamed. Okay,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/11046-1
+01:03:08.958 --> 01:03:14.499
+<v Uladzimir Klyshevich>cool. Remove clone, it's not needed.
+Then we have this ticket,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/11046-2
+01:03:14.499 --> 01:03:16.785
+<v Uladzimir Klyshevich>we need to move it to 850.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/11048-0
+01:03:18.065 --> 01:03:18.105
+<v Uladzimir Klyshevich>Ohh.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/11069-0
+01:03:43.905 --> 01:03:48.945
+<v Uladzimir Klyshevich>Okay, moved.
+Now we'll have intake completely.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/11071-0
+01:03:50.225 --> 01:03:50.865
+<v Uladzimir Klyshevich>Clear.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/11073-0
+01:03:52.865 --> 01:03:53.345
+<v Uladzimir Klyshevich>Remo.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/11076-0
+01:03:55.905 --> 01:03:56.865
+<v Uladzimir Klyshevich>So.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/11082-0
+01:04:00.465 --> 01:04:01.425
+<v Uladzimir Klyshevich>Now, we can say...</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/11091-0
+01:04:03.825 --> 01:04:06.785
+<v Uladzimir Klyshevich>I have in the ticket.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/11109-0
+01:04:09.265 --> 01:04:14.385
+<v Uladzimir Klyshevich>Then I'm going to say that we are going
+to use.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/11112-0
+01:04:15.505 --> 01:04:16.465
+<v Uladzimir Klyshevich>Scrum Master.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/11116-0
+01:04:17.905 --> 01:04:18.785
+<v Uladzimir Klyshevich>From my tube.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/11119-0
+01:04:23.265 --> 01:04:23.745
+<v Uladzimir Klyshevich>Check.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/11123-0
+01:04:25.425 --> 01:04:27.985
+<v Uladzimir Klyshevich>A SM agent.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/11128-0
+01:04:30.865 --> 01:04:32.305
+<v Uladzimir Klyshevich>Was set up.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/11130-0
+01:04:34.065 --> 01:04:34.625
+<v Uladzimir Klyshevich>Sure.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/11142-0
+01:04:44.625 --> 01:04:48.545
+<v Uladzimir Klyshevich>and replicate SM workflow.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/11173-0
+01:04:49.585 --> 01:04:55.497
+<v Uladzimir Klyshevich>In current repo Scrum Master workflow,
+it does actually polling model,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/11173-1
+01:04:55.497 --> 01:04:57.745
+<v Uladzimir Klyshevich>so you can use automations.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/11208-0
+01:04:59.105 --> 01:05:04.585
+<v Uladzimir Klyshevich>to get it pretty fast,
+like just if ticket moved to state to 6,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/11208-1
+01:05:04.585 --> 01:05:08.865
+<v Uladzimir Klyshevich>so then you will call automation.
+It's kind of...</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/11282-0
+01:05:11.265 --> 01:05:17.734
+<v Uladzimir Klyshevich>webhook approach, triggers approach, etc.
+So because I don't want to pay for Jira</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/11282-1
+01:05:17.734 --> 01:05:24.203
+<v Uladzimir Klyshevich>and I want to replace Jira to be honest,
+so that's something what we will do also</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/11282-2
+01:05:24.203 --> 01:05:28.305
+<v Uladzimir Klyshevich>for our direct factory.
+So we do this Scrum Master.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/11347-0
+01:05:29.145 --> 01:05:34.621
+<v Uladzimir Klyshevich>which is kind of each 10 minute,
+but it's approximate because GitHub does</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/11347-1
+01:05:34.621 --> 01:05:40.318
+<v Uladzimir Klyshevich>not allow to schedule it pretty regularly.
+So GitHub decides when to run it,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/11347-2
+01:05:40.318 --> 01:05:46.311
+<v Uladzimir Klyshevich>but we can see that it's still running.
+So you see like, yeah, almost each hour,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/11347-3
+01:05:46.311 --> 01:05:47.865
+<v Uladzimir Klyshevich>so it does something.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/11438-0
+01:05:48.545 --> 01:05:52.771
+<v Uladzimir Klyshevich>So,
+and if now I create ticket in my top one,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/11438-1
+01:05:52.771 --> 01:05:59.108
+<v Uladzimir Klyshevich>which is intake for my top.
+So for example, I want to, I don't know,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/11438-2
+01:05:59.108 --> 01:06:06.181
+<v Uladzimir Klyshevich>there is my videos and for example,
+I want to able to manage something else.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/11438-3
+01:06:06.181 --> 01:06:08.385
+<v Uladzimir Klyshevich>I can create a task and.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/11518-0
+01:06:09.265 --> 01:06:15.585
+<v Uladzimir Klyshevich>Scrum Master will be copied and will
+develop it without without my involvement</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/11518-1
+01:06:15.585 --> 01:06:20.625
+<v Uladzimir Klyshevich>fully, so same approach here.
+We want to set up this pipeline,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/11518-2
+01:06:20.625 --> 01:06:25.345
+<v Uladzimir Klyshevich>which is actually what what is doing,
+so using part token,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/11518-3
+01:06:25.345 --> 01:06:30.705
+<v Uladzimir Klyshevich>so we don't need GCP here, so okay,
+GDK we need all the DMS tools.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/11541-0
+01:06:31.505 --> 01:06:39.792
+<v Uladzimir Klyshevich>And the same credentials,
+which is triggering Dmytro Scrum Master</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/11541-1
+01:06:39.792 --> 01:06:40.545
+<v Uladzimir Klyshevich>agent.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/11582-0
+01:06:41.505 --> 01:06:47.670
+<v Uladzimir Klyshevich>Like this, which is OK,
+let's ask to to run it,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/11582-1
+01:06:47.670 --> 01:06:56.145
+<v Uladzimir Klyshevich>so workflow in current report with
+configuration for DMC project.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/11584-0
+01:07:00.385 --> 01:07:00.945
+<v Uladzimir Klyshevich>Um...</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/11608-0
+01:07:02.225 --> 01:07:07.125
+<v Uladzimir Klyshevich>So what the agent does?
+If you're going to agents, we have SM,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/11608-1
+01:07:07.125 --> 01:07:07.825
+<v Uladzimir Klyshevich>SM agent.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/11612-0
+01:07:09.265 --> 01:07:10.145
+<v Uladzimir Klyshevich>Which is?</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/11616-0
+01:07:11.145 --> 01:07:12.625
+<v Uladzimir Klyshevich>Actually, using...</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/11706-0
+01:07:13.905 --> 01:07:18.365
+<v Uladzimir Klyshevich>some templates of JQLs and start sessions
+locally.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/11706-1
+01:07:18.365 --> 01:07:25.097
+<v Uladzimir Klyshevich>If it does not require any AI logic,
+so we just run it locally like TM tools</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/11706-2
+01:07:25.097 --> 01:07:30.955
+<v Uladzimir Klyshevich>part, it executes just JSON like PA check,
+which is just subtasks.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/11706-3
+01:07:30.955 --> 01:07:37.425
+<v Uladzimir Klyshevich>So if all BA tasks are closed,
+so it will move ticket to specific status.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/11765-0
+01:07:38.865 --> 01:07:45.309
+<v Uladzimir Klyshevich>and set label that the agent was
+triggered and then be a story analysis,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/11765-1
+01:07:45.309 --> 01:07:50.253
+<v Uladzimir Klyshevich>architecture, some questions,
+verifications, all of it.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/11765-2
+01:07:50.253 --> 01:07:56.785
+<v Uladzimir Klyshevich>So our Scrum Master actually does
+automation. If we want to do something.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/11777-0
+01:07:56.865 --> 01:08:01.185
+<v Uladzimir Klyshevich>Manually,
+you just go to Sales Scrum Master.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/11781-0
+01:08:02.465 --> 01:08:03.745
+<v Uladzimir Klyshevich>and write false.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/11822-0
+01:08:05.945 --> 01:08:12.070
+<v Uladzimir Klyshevich>or true, that's it.
+So if you don't allow AI to auto-merge</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/11822-1
+01:08:12.070 --> 01:08:17.676
+<v Uladzimir Klyshevich>pull requests,
+you need to just disable this agent in</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/11822-2
+01:08:17.676 --> 01:08:19.025
+<v Uladzimir Klyshevich>Scrum Master.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/11824-0
+01:08:22.945 --> 01:08:23.505
+<v Uladzimir Klyshevich>What?</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/11847-0
+01:08:25.665 --> 01:08:32.305
+<v Uladzimir Klyshevich>Okay, so it's while it's searching,
+so we will have it. So in future.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/11902-0
+01:08:33.745 --> 01:08:41.397
+<v Uladzimir Klyshevich>We will design workflow which will pick
+up issues from our GM.ai.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/11902-1
+01:08:41.397 --> 01:08:49.745
+<v Uladzimir Klyshevich>So there is one already. I did create it.
+Actually, it will pick up it.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/11951-0
+01:08:53.505 --> 01:08:57.117
+<v Uladzimir Klyshevich>If it's created from me,
+it will just pick up it.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/11951-1
+01:08:57.117 --> 01:09:02.462
+<v Uladzimir Klyshevich>If it is created from someone else,
+it will actually wait for my approve,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/11951-2
+01:09:02.462 --> 01:09:06.145
+<v Uladzimir Klyshevich>for instance,
+or for approve from specific people.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/11973-0
+01:09:07.825 --> 01:09:12.684
+<v Uladzimir Klyshevich>When it's approved,
+it will create automatically intake</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/11973-1
+01:09:12.684 --> 01:09:13.985
+<v Uladzimir Klyshevich>ticket in Jira.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/11975-0
+01:09:15.505 --> 01:09:15.985
+<v Uladzimir Klyshevich>Kirill.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/12000-0
+01:09:17.265 --> 01:09:21.985
+<v Uladzimir Klyshevich>Like a task to start to work on this,
+and then we we have all AI.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/12031-0
+01:09:23.345 --> 01:09:33.285
+<v Uladzimir Klyshevich>agents to perform the job and at the end
+we'll have pull requests and all what is</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/12031-1
+01:09:33.285 --> 01:09:35.345
+<v Uladzimir Klyshevich>needed. So, okay.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/12037-0
+01:09:36.465 --> 01:09:38.505
+<v Uladzimir Klyshevich>And those raised, Sergey, yeah.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/12094-0
+01:09:38.865 --> 01:09:45.244
+<v Sergey Makarevich>Do I understand correctly that you assume
+that the initial idea grooming and</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/12094-1
+01:09:45.244 --> 01:09:51.706
+<v Sergey Makarevich>backlog grooming happens so far outside
+of the main workflow here and it just</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/12094-2
+01:09:51.706 --> 01:09:52.865
+<v Sergey Makarevich>starts coming?</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/12087-0
+01:09:52.305 --> 01:09:53.185
+<v Uladzimir Klyshevich>It's happening.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/12134-0
+01:09:54.465 --> 01:09:58.747
+<v Uladzimir Klyshevich>It's happening.
+It's kind of question answers game.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/12134-1
+01:09:58.747 --> 01:10:03.193
+<v Uladzimir Klyshevich>So if you look to my tube, okay, let's,
+for instance,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/12134-2
+01:10:03.193 --> 01:10:05.745
+<v Uladzimir Klyshevich>let's open acceptance feedback.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/12141-0
+01:10:07.105 --> 01:10:09.345
+<v Uladzimir Klyshevich>If I open, OK, there is a box.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/12145-0
+01:10:10.705 --> 01:10:11.585
+<v Uladzimir Klyshevich>Visual design.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/12162-0
+01:10:13.105 --> 01:10:16.385
+<v Uladzimir Klyshevich>If I open any ticket, for example,
+this one.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/12172-0
+01:10:20.145 --> 01:10:23.265
+<v Uladzimir Klyshevich>This is your your grooming.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/12191-0
+01:10:24.945 --> 01:10:29.505
+<v Uladzimir Klyshevich>But AI just chatting with each other,
+so one AI is asking question.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/12193-0
+01:10:30.345 --> 01:10:30.625
+<v Sergey Makarevich>Mm.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/12200-0
+01:10:30.865 --> 01:10:33.345
+<v Uladzimir Klyshevich>Another AI answering the question.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/12250-0
+01:10:36.185 --> 01:10:38.902
+<v Sergey Makarevich>I see.
+So what is the minimal form and what is</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/12250-1
+01:10:38.902 --> 01:10:42.429
+<v Sergey Makarevich>the entry point for the absolutely new
+feature, for example,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/12250-2
+01:10:42.429 --> 01:10:44.625
+<v Sergey Makarevich>that just came from the product owner?</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/12286-0
+01:10:43.345 --> 01:10:49.291
+<v Uladzimir Klyshevich>Just intake ticket, just like this.
+You see, intake ticket,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/12286-1
+01:10:49.291 --> 01:10:55.039
+<v Uladzimir Klyshevich>and I just send POC zip,
+which is I did wipe code myself,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/12286-2
+01:10:55.039 --> 01:10:58.705
+<v Uladzimir Klyshevich>and say just these two lines of text.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/12370-0
+01:11:00.785 --> 01:11:06.014
+<v Sergey Makarevich>So intake, okay, I actually missed that.
+So intake is actually the beginning of</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/12370-1
+01:11:06.014 --> 01:11:09.739
+<v Sergey Makarevich>the grooming process.
+And then what you said a couple of</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/12334-0
+01:11:06.305 --> 01:11:10.305
+<v Uladzimir Klyshevich>Yes, it's kind of like your first point.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/12370-2
+01:11:09.739 --> 01:11:15.099
+<v Sergey Makarevich>minutes ago was about allowing it or not
+allowing it to go into the dark factory.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/12370-3
+01:11:15.099 --> 01:11:15.425
+<v Sergey Makarevich>Okay.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/12459-0
+01:11:15.185 --> 01:11:20.604
+<v Uladzimir Klyshevich>Yeah, so, and here you see,
+so I did create and take tickets and we</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/12459-1
+01:11:20.604 --> 01:11:25.544
+<v Uladzimir Klyshevich>have all train running,
+so it creates user stories here or or</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/12459-2
+01:11:25.544 --> 01:11:30.723
+<v Uladzimir Klyshevich>bugs or epics and it will link it
+properly in in Jira structure,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/12459-3
+01:11:30.723 --> 01:11:35.265
+<v Uladzimir Klyshevich>and so then for it starts to this
+critical path as well.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/12554-0
+01:11:35.545 --> 01:11:39.952
+<v Uladzimir Klyshevich>And then it starts to run the agent.
+So when the first is ready for</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/12554-1
+01:11:39.952 --> 01:11:44.229
+<v Uladzimir Klyshevich>development, so first,
+then it start to chatting with each other,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/12554-2
+01:11:44.229 --> 01:11:48.959
+<v Uladzimir Klyshevich>it actually ask answer questions,
+then it push a ball to next agent when</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/12554-3
+01:11:48.959 --> 01:11:53.301
+<v Uladzimir Klyshevich>all answers provided to write acceptance
+criteria. Then like this,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/12554-4
+01:11:53.301 --> 01:11:58.225
+<v Uladzimir Klyshevich>when acceptance criteria are written,
+it push a ball to solution architect.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/12576-0
+01:11:58.545 --> 01:12:02.979
+<v Uladzimir Klyshevich>to write solution architecture and next,
+next, next, next.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/12576-1
+01:12:02.979 --> 01:12:05.985
+<v Uladzimir Klyshevich>And on each stage you can disable agent.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/12611-0
+01:12:07.505 --> 01:12:11.865
+<v Uladzimir Klyshevich>and say I'm going so I don't want agent
+to decide instead of me.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/12611-1
+01:12:11.865 --> 01:12:14.145
+<v Uladzimir Klyshevich>I want to answer questions myself.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/12684-0
+01:12:15.665 --> 01:12:22.582
+<v Uladzimir Klyshevich>So then you just disable agent.
+I even would say you should disable agent</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/12684-1
+01:12:22.582 --> 01:12:29.218
+<v Uladzimir Klyshevich>to move ticket to done status,
+but you should use agent to provide the</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/12684-2
+01:12:29.218 --> 01:12:34.265
+<v Uladzimir Klyshevich>answer because you see how detailed it is,
+right? So.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/12692-0
+01:12:34.585 --> 01:12:37.345
+<v Uladzimir Klyshevich>When human does it,
+usually you will see it like this.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/12695-0
+01:12:38.745 --> 01:12:39.185
+<v Sergey Makarevich>All right.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/12725-0
+01:12:39.585 --> 01:12:45.095
+<v Uladzimir Klyshevich>But agent provides really good answer
+with explanation why it is like this.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/12725-1
+01:12:45.095 --> 01:12:46.545
+<v Uladzimir Klyshevich>In some cases it is.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/12802-0
+01:12:48.905 --> 01:12:52.067
+<v Uladzimir Klyshevich>To be honest,
+I did not validate it myself.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/12802-1
+01:12:52.067 --> 01:12:58.030
+<v Uladzimir Klyshevich>It probably would be interesting exercise
+to check is it different opinion or not.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/12802-2
+01:12:58.030 --> 01:13:02.197
+<v Uladzimir Klyshevich>But also you can set up different models.
+So for example,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/12802-3
+01:13:02.197 --> 01:13:07.585
+<v Uladzimir Klyshevich>Sonnet asking questions or Ops asking
+questions and Gemini answering this.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/12850-0
+01:13:08.065 --> 01:13:13.073
+<v Uladzimir Klyshevich>or there is no agent,
+but we will introduce agent, which will,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/12850-1
+01:13:13.073 --> 01:13:18.159
+<v Uladzimir Klyshevich>I think in Duran, we will play with this.
+We will create agent,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/12850-2
+01:13:18.159 --> 01:13:20.305
+<v Uladzimir Klyshevich>which will act as designer.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/12929-0
+01:13:21.185 --> 01:13:24.743
+<v Uladzimir Klyshevich>So,
+and the agent will ask design related</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/12929-1
+01:13:24.743 --> 01:13:28.554
+<v Uladzimir Klyshevich>questions,
+and then Jeremy will answer this,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/12929-2
+01:13:28.554 --> 01:13:35.076
+<v Uladzimir Klyshevich>or maybe we will use even AI Studio and
+Nana Banana models to prepare visual</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/12929-3
+01:13:35.076 --> 01:13:42.190
+<v Uladzimir Klyshevich>design for vision, how it should work to,
+and then another agents will read this as</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/12929-4
+01:13:42.190 --> 01:13:43.545
+<v Uladzimir Klyshevich>a reference. So,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/12995-0
+01:13:44.465 --> 01:13:49.653
+<v Uladzimir Klyshevich>We'll think about it because I also want
+to connect analytics agent,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/12995-1
+01:13:49.653 --> 01:13:55.818
+<v Uladzimir Klyshevich>which will do an answer in the questions
+if needed. We'll use analytics to check,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/12995-2
+01:13:55.818 --> 01:14:02.208
+<v Uladzimir Klyshevich>for instance, user behavior, how it would,
+like how it should be, etc. Or each week,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/12995-3
+01:14:02.208 --> 01:14:03.185
+<v Uladzimir Klyshevich>for instance,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/13054-0
+01:14:03.665 --> 01:14:10.710
+<v Uladzimir Klyshevich>The agent needs to check behavior of
+users and create intake tickets.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/13054-1
+01:14:10.710 --> 01:14:17.252
+<v Uladzimir Klyshevich>What to do? So, for instance,
+I don't see that subscriptions are</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/13054-2
+01:14:17.252 --> 01:14:22.385
+<v Uladzimir Klyshevich>growing,
+so I don't need to analyze the user flow.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/13081-0
+01:14:23.265 --> 01:14:29.025
+<v Uladzimir Klyshevich>And think about some ideas how to improve
+it if Agent TC is the user stacked, right?</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/13050-0
+01:14:23.665 --> 01:14:23.785
+<v Sergey Makarevich>And.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/13177-0
+01:14:30.425 --> 01:14:33.215
+<v Sergey Makarevich>Right.
+So you're planning to put much more meat</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/13177-1
+01:14:33.215 --> 01:14:37.575
+<v Sergey Makarevich>on the bones. As far as I understand,
+in all of these deliberative stages,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/13177-2
+01:14:37.575 --> 01:14:40.423
+<v Sergey Makarevich>right,
+in the grooming of the ticket and also at</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/13177-3
+01:14:40.423 --> 01:14:43.853
+<v Sergey Makarevich>the testing stage,
+it is quite important to make sure that</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/13177-4
+01:14:43.853 --> 01:14:48.445
+<v Sergey Makarevich>there is less correlation between the
+agent, or at least the session creating,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/13177-5
+01:14:48.445 --> 01:14:50.305
+<v Sergey Makarevich>and the agent evaluating, right?</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/13183-0
+01:14:50.865 --> 01:14:52.465
+<v Sergey Makarevich>I believe in quote quote.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/13212-0
+01:14:51.265 --> 01:14:55.773
+<v Uladzimir Klyshevich>It's all time clear context.
+All the time they have clear context.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/13212-1
+01:14:55.773 --> 01:14:57.185
+<v Uladzimir Klyshevich>If you're about this.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/13303-0
+01:14:55.905 --> 01:14:59.009
+<v Sergey Makarevich>Right, right.
+So this is one of the recommendations of</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/13303-1
+01:14:59.009 --> 01:15:02.620
+<v Sergey Makarevich>the Cloud Core architects to start with a
+clear context, right?</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/13303-2
+01:15:02.620 --> 01:15:06.570
+<v Sergey Makarevich>But also you are saying a little bit more
+about the different agents,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/13303-3
+01:15:06.570 --> 01:15:10.690
+<v Sergey Makarevich>which is even more kind of reduction of
+the correlation between the two,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/13303-4
+01:15:10.690 --> 01:15:14.865
+<v Sergey Makarevich>which is what we want between the tester
+and developer. Okay, understood.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/13311-0
+01:15:15.265 --> 01:15:18.385
+<v Sergey Makarevich>And all of the, all, all, all of the...</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/13373-0
+01:15:19.665 --> 01:15:25.001
+<v Sergey Makarevich>The skills related to this,
+all of the all of the definitions of done,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/13373-1
+01:15:25.001 --> 01:15:28.608
+<v Sergey Makarevich>for example, right,
+and style guides and stuff,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/13373-2
+01:15:28.608 --> 01:15:32.065
+<v Sergey Makarevich>stuff like that,
+do have a ripper in YouTube.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/13361-0
+01:15:28.945 --> 01:15:30.225
+<v Uladzimir Klyshevich>It's all in my tube.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/13376-0
+01:15:33.665 --> 01:15:34.145
+<v Sergey Makarevich>And.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/13404-0
+01:15:33.665 --> 01:15:41.112
+<v Uladzimir Klyshevich>Yeah, in this repo, them tools agents,
+so here instructions, so, for instance,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/13390-0
+01:15:36.305 --> 01:15:37.185
+<v Sergey Makarevich>Okay, thanks.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/13404-1
+01:15:41.112 --> 01:15:43.185
+<v Uladzimir Klyshevich>story questions agent.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/13427-0
+01:15:46.225 --> 01:15:51.547
+<v Uladzimir Klyshevich>Just format like this, so you can combine,
+so you can customize it.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/13427-1
+01:15:51.547 --> 01:15:53.425
+<v Uladzimir Klyshevich>There is still a prompt.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/13495-0
+01:15:55.025 --> 01:16:00.236
+<v Uladzimir Klyshevich>prompts here,
+actually level of instructions. First,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/13495-1
+01:16:00.236 --> 01:16:06.724
+<v Uladzimir Klyshevich>the top ones is, and then all the rest.
+It's not super difficult.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/13495-2
+01:16:06.724 --> 01:16:13.311
+<v Uladzimir Klyshevich>It's like all written with AI with my
+short validation, let's say.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/13495-3
+01:16:13.311 --> 01:16:14.785
+<v Uladzimir Klyshevich>Question about.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/13563-0
+01:16:15.185 --> 01:16:21.675
+<v Uladzimir Klyshevich>Yeah, prompt like this, your task, blah,
+blah, blah, correct, wrong, critical.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/13563-1
+01:16:21.675 --> 01:16:28.247
+<v Uladzimir Klyshevich>So not big one. And in real production,
+there is also new features in DMS tools</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/13563-2
+01:16:28.247 --> 01:16:34.162
+<v Uladzimir Klyshevich>where I can create extensions.
+So I can actually inherit the logic from</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/13563-3
+01:16:34.162 --> 01:16:35.065
+<v Uladzimir Klyshevich>this agent.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/13648-0
+01:16:35.425 --> 01:16:40.010
+<v Uladzimir Klyshevich>and extend only instructions.
+That means that you, for instance,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/13648-1
+01:16:40.010 --> 01:16:45.935
+<v Uladzimir Klyshevich>if you want to inject it to your project,
+but you don't want really to override all</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/13648-2
+01:16:45.935 --> 01:16:50.731
+<v Uladzimir Klyshevich>the agents which are here,
+so you just use the agent and you create</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/13648-3
+01:16:50.731 --> 01:16:53.905
+<v Uladzimir Klyshevich>your agent and say,
+your parent is this one.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/13723-0
+01:16:54.385 --> 01:16:59.153
+<v Uladzimir Klyshevich>and just add instructions and add in your
+instructions,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/13723-1
+01:16:59.153 --> 01:17:05.538
+<v Uladzimir Klyshevich>which is in your already commands file or
+your cloud MD or agents MD, etc.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/13723-2
+01:17:05.538 --> 01:17:09.794
+<v Uladzimir Klyshevich>So it's kind of extension logic in place
+as well.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/13723-3
+01:17:09.794 --> 01:17:13.625
+<v Uladzimir Klyshevich>And you can override if you don't like
+this.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/13773-0
+01:17:14.465 --> 01:17:18.840
+<v Uladzimir Klyshevich>action,
+so you cannot create subtasks by some</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/13773-1
+01:17:18.840 --> 01:17:24.832
+<v Uladzimir Klyshevich>reason, you just override it. And again,
+like I did design it,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/13773-2
+01:17:24.832 --> 01:17:31.585
+<v Uladzimir Klyshevich>but I don't remember the format. Sorry.
+So I can chat in another chat.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/13769-0
+01:17:32.065 --> 01:17:32.545
+<v Sergey Makarevich>Mhm.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/13793-0
+01:17:32.705 --> 01:17:44.829
+<v Uladzimir Klyshevich>About it, the tools,
+how to make a variant of teammate agent</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/13793-1
+01:17:44.829 --> 01:17:45.425
+<v Uladzimir Klyshevich>in.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/13813-0
+01:17:46.585 --> 01:17:50.124
+<v Uladzimir Klyshevich>Alright, Jason,
+it should be in instructions. OK,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/13813-1
+01:17:50.124 --> 01:17:54.865
+<v Uladzimir Klyshevich>while it's working, we can switch. Good,
+it's all here. Let's try.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/13815-0
+01:17:56.625 --> 01:17:57.345
+<v Uladzimir Klyshevich>Amit.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/13817-0
+01:17:58.865 --> 01:17:59.185
+<v Uladzimir Klyshevich>And.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/13824-0
+01:18:00.905 --> 01:18:04.465
+<v Uladzimir Klyshevich>Okay, it will not work. Get it in.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/13855-0
+01:18:06.065 --> 01:18:22.105
+<v Uladzimir Klyshevich>Compare for me my two project setup in
+JIRA and DMC project setup if we don't.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/13857-0
+01:18:23.025 --> 01:18:23.265
+<v Uladzimir Klyshevich>Yeah.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/13866-0
+01:18:26.065 --> 01:18:29.745
+<v Uladzimir Klyshevich>Don't have specific statuses.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/13869-0
+01:18:31.425 --> 01:18:32.865
+<v Uladzimir Klyshevich>Create Sam.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/13878-0
+01:18:33.425 --> 01:18:35.825
+<v Sergey Makarevich>You miss the word have, don't have.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/13954-0
+01:18:36.865 --> 01:18:41.208
+<v Uladzimir Klyshevich>Yeah, it's my bad now.
+So I'm skipping the words pretty often</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/13954-1
+01:18:41.208 --> 01:18:45.340
+<v Uladzimir Klyshevich>and making a lot of mistakes.
+But it was interesting part,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/13954-2
+01:18:45.340 --> 01:18:50.592
+<v Uladzimir Klyshevich>if you did watch my last session about
+video making, when I did finish it,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/13954-3
+01:18:50.592 --> 01:18:56.545
+<v Uladzimir Klyshevich>I did show it to my wife and my wife said,
+why is there so many mistakes in Russian?</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/14032-0
+01:18:56.705 --> 01:19:01.143
+<v Uladzimir Klyshevich>So I did read it and for me it was okay,
+but she said,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/14032-1
+01:19:01.143 --> 01:19:04.773
+<v Uladzimir Klyshevich>why is there so many mistakes?
+And she said,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/14032-2
+01:19:04.773 --> 01:19:10.098
+<v Uladzimir Klyshevich>you need to instruct your agent to write
+it without mistakes. So,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/14032-3
+01:19:10.098 --> 01:19:15.665
+<v Uladzimir Klyshevich>and we needed to redefine all text,
+but it was pretty fun. Actually.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/14061-0
+01:19:15.825 --> 01:19:20.992
+<v Uladzimir Klyshevich>Probably it's learning from me, so,
+and I'm not really good,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/14061-1
+01:19:20.992 --> 01:19:25.905
+<v Uladzimir Klyshevich>good guy in languages, status is create,
+create them, OK?</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/14065-0
+01:19:27.985 --> 01:19:29.745
+<v Uladzimir Klyshevich>The impulse has also.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/14106-0
+01:19:32.465 --> 01:19:39.717
+<v Uladzimir Klyshevich>Tools to to to to administer Jira,
+so that's why potential it will work.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/14106-1
+01:19:39.717 --> 01:19:44.385
+<v Uladzimir Klyshevich>If no, so then no,
+if you cannot do something.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/14122-0
+01:19:45.585 --> 01:19:51.905
+<v Uladzimir Klyshevich>Just tell me, and I will manage it myself.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/14140-0
+01:19:56.145 --> 01:20:01.025
+<v Uladzimir Klyshevich>Let me check my agenda for today. Okay,
+I will have one more talk.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/14221-0
+01:20:03.185 --> 01:20:07.956
+<v Uladzimir Klyshevich>Right,
+you so you see like base agent like this</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/14221-1
+01:20:07.956 --> 01:20:13.025
+<v Uladzimir Klyshevich>and then QA,
+so it's you can set like pass to base</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/14221-2
+01:20:13.025 --> 01:20:17.796
+<v Uladzimir Klyshevich>agent and then say merge or append for
+example,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/14221-3
+01:20:17.796 --> 01:20:22.865
+<v Uladzimir Klyshevich>and then you define which parameters to
+extend or.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/14233-0
+01:20:23.025 --> 01:20:28.225
+<v Uladzimir Klyshevich>replace or append, et cetera.
+So and that how you can customize it.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/14259-0
+01:20:29.425 --> 01:20:33.555
+<v Uladzimir Klyshevich>Yeah,
+so there is a merge and there is also</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/14259-1
+01:20:33.555 --> 01:20:36.465
+<v Uladzimir Klyshevich>merge. Actually, again, like...</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/14278-0
+01:20:37.505 --> 01:20:42.385
+<v Uladzimir Klyshevich>Now you don't hit me and that's what I'm
+trying to say is that...</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/14340-0
+01:20:43.505 --> 01:20:49.161
+<v Uladzimir Klyshevich>I shifted to more to kind of product
+owner for the DM tools, DM.ai.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/14340-1
+01:20:49.161 --> 01:20:53.736
+<v Uladzimir Klyshevich>I have some vision what it needs to do
+out of the box,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/14340-2
+01:20:53.736 --> 01:20:56.065
+<v Uladzimir Klyshevich>which allows me to apply it.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/14418-0
+01:20:57.225 --> 01:21:02.643
+<v Uladzimir Klyshevich>Pretty easy for my customers,
+and but I don't write the code.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/14418-1
+01:21:02.643 --> 01:21:09.459
+<v Uladzimir Klyshevich>I really trying to to to kind of kill
+wrong decisions if it's really breaking</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/14418-2
+01:21:09.459 --> 01:21:14.876
+<v Uladzimir Klyshevich>my vision and just guiding it if I do
+miss some features. So,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/14418-3
+01:21:14.876 --> 01:21:17.585
+<v Uladzimir Klyshevich>at some point I saw that, okay.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/14493-0
+01:21:17.745 --> 01:21:21.228
+<v Uladzimir Klyshevich>I need these extensions without
+overriding my agent,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/14493-1
+01:21:21.228 --> 01:21:24.185
+<v Uladzimir Klyshevich>because if you just need to change one
+line,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/14493-2
+01:21:24.185 --> 01:21:29.048
+<v Uladzimir Klyshevich>so why you need to override everything?
+So, and I did define the feature,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/14493-3
+01:21:29.048 --> 01:21:33.320
+<v Uladzimir Klyshevich>and I did develop it for me,
+so I did test it in PostNL already,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/14493-4
+01:21:33.320 --> 01:21:34.305
+<v Uladzimir Klyshevich>and that works.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/14527-0
+01:21:35.785 --> 01:21:41.679
+<v Uladzimir Klyshevich>That's why, as I'm saying, the agents,
+it's free because it's first agents only.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/14527-1
+01:21:41.679 --> 01:21:44.225
+<v Uladzimir Klyshevich>I know all mistakes what they have.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/14611-0
+01:21:45.345 --> 01:21:48.657
+<v Uladzimir Klyshevich>And I know everything how to make it
+better,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/14611-1
+01:21:48.657 --> 01:21:53.882
+<v Uladzimir Klyshevich>but I don't have time for it usually.
+But that's why it's open source.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/14611-2
+01:21:53.882 --> 01:21:59.622
+<v Uladzimir Klyshevich>And closed agents, which is, let's say,
+potentially can be sold via licenses,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/14611-3
+01:21:59.622 --> 01:22:03.375
+<v Uladzimir Klyshevich>which will act like open claw in specific
+domains,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/14611-4
+01:22:03.375 --> 01:22:06.465
+<v Uladzimir Klyshevich>but with really good artifacts at the end.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/14663-0
+01:22:06.945 --> 01:22:12.444
+<v Uladzimir Klyshevich>So they should be designed in a really
+good way with all practices,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/14663-1
+01:22:12.444 --> 01:22:17.620
+<v Uladzimir Klyshevich>so PE is really good prompting and right
+testing approach, etc.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/14663-2
+01:22:17.620 --> 01:22:21.825
+<v Uladzimir Klyshevich>But this is really cool playground.
+I mean, like...</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/14696-0
+01:22:23.345 --> 01:22:29.404
+<v Uladzimir Klyshevich>I like that I can really pull things
+really fast and test it really fast and</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/14696-1
+01:22:29.404 --> 01:22:32.865
+<v Uladzimir Klyshevich>so it gives me this opportunity.
+All right.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/14721-0
+01:22:36.945 --> 01:22:43.585
+<v Uladzimir Klyshevich>So, you see, actually, what DMS tools did?
+OK, so it just checked this API.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/14761-0
+01:22:45.265 --> 01:22:49.754
+<v Uladzimir Klyshevich>Huh, is that it found hack?
+It's actually just did use REST API to do</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/14761-1
+01:22:49.754 --> 01:22:53.665
+<v Uladzimir Klyshevich>all of the magic,
+but DMS also has some tools method for it.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/14787-0
+01:22:55.345 --> 01:22:59.714
+<v Uladzimir Klyshevich>Created, created,
+so statuses were created.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/14787-1
+01:22:59.714 --> 01:23:03.585
+<v Uladzimir Klyshevich>I was needs to be manually OK, project.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/14813-0
+01:23:16.225 --> 01:23:23.025
+<v Uladzimir Klyshevich>Strange. OK, let's try.
+I did replicate it. Let's let me check it.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/14824-0
+01:23:24.865 --> 01:23:27.665
+<v Uladzimir Klyshevich>And not this one in release.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/14826-0
+01:23:34.465 --> 01:23:34.625
+<v Uladzimir Klyshevich>Mm.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/14836-0
+01:23:36.225 --> 01:23:38.745
+<v Uladzimir Klyshevich>Does it have cloud? No, let's create it.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/14859-0
+01:23:46.305 --> 01:23:48.538
+<v Uladzimir Klyshevich>Well,
+let's install latest skill because I</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/14859-1
+01:23:48.538 --> 01:23:51.185
+<v Uladzimir Klyshevich>think it uses global one,
+which is not up to date.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/14861-0
+01:23:52.785 --> 01:23:53.745
+<v Uladzimir Klyshevich>Ohh.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/14876-0
+01:23:54.625 --> 01:23:58.785
+<v Uladzimir Klyshevich>Damn to silly eye, we have it,
+but we don't have skill.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/14879-0
+01:24:05.745 --> 01:24:06.385
+<v Uladzimir Klyshevich>Right.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/14915-0
+01:24:08.185 --> 01:24:14.656
+<v Uladzimir Klyshevich>So I just created clot and you see here,
+so it's just created skill.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/14915-1
+01:24:14.656 --> 01:24:19.345
+<v Uladzimir Klyshevich>And now what I can do,
+so let's kill the session.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/14919-0
+01:24:29.985 --> 01:24:30.145
+<v Uladzimir Klyshevich>Yeah.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/14926-0
+01:24:32.385 --> 01:24:33.585
+<v Uladzimir Klyshevich>Just check.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/14934-0
+01:24:35.265 --> 01:24:38.785
+<v Uladzimir Klyshevich>Jim, Jim, toes, scale.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/14937-0
+01:24:39.705 --> 01:24:40.465
+<v Uladzimir Klyshevich>And.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/14942-0
+01:24:41.585 --> 01:24:43.265
+<v Uladzimir Klyshevich>Sure, yeah, that's.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/14950-0
+01:24:44.665 --> 01:24:48.785
+<v Uladzimir Klyshevich>How to create statuses?</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/14958-0
+01:24:50.705 --> 01:24:52.865
+<v Uladzimir Klyshevich>Is your tights?</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/14968-0
+01:24:55.505 --> 01:24:59.185
+<v Uladzimir Klyshevich>You don't have it in skill.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/14979-0
+01:25:01.105 --> 01:25:05.425
+<v Uladzimir Klyshevich>Just search in Jira client.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/14983-0
+01:25:06.785 --> 01:25:08.145
+<v Uladzimir Klyshevich>General class.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/15057-0
+01:25:11.465 --> 01:25:15.830
+<v Uladzimir Klyshevich>First task for DM Factory will be
+documentation,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/15057-1
+01:25:15.830 --> 01:25:20.284
+<v Uladzimir Klyshevich>so documentation of DM tools, because,
+and Sasha,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/15057-2
+01:25:20.284 --> 01:25:27.054
+<v Uladzimir Klyshevich>who did create this pull request about
+Jira Jira skill, Jira DM tool skill,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/15057-3
+01:25:27.054 --> 01:25:33.735
+<v Uladzimir Klyshevich>so potentially we you can migrate it
+already to this repository and we can</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/15057-4
+01:25:33.735 --> 01:25:34.625
+<v Uladzimir Klyshevich>review it.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/15059-0
+01:25:44.625 --> 01:25:44.785
+<v Uladzimir Klyshevich>Mm.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/15063-0
+01:25:47.345 --> 01:25:48.145
+<v Uladzimir Klyshevich>Any questions?</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/15065-0
+01:25:55.905 --> 01:25:56.225
+<v Uladzimir Klyshevich>No.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/15102-0
+01:25:58.385 --> 01:26:03.156
+<v Uladzimir Klyshevich>Let me try to run one button,
+what I wanted to do at the beginning.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/15102-1
+01:26:03.156 --> 01:26:06.945
+<v Uladzimir Klyshevich>So actually,
+let's create first release in this repo.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/15139-0
+01:26:09.745 --> 01:26:15.330
+<v Uladzimir Klyshevich>Because we configured the keys,
+it should be possible to run.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/15139-1
+01:26:15.330 --> 01:26:21.905
+<v Uladzimir Klyshevich>Let's see if it will work. I mean,
+release DM tools as DM.ai. Let's see.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/15141-0
+01:26:24.945 --> 01:26:25.265
+<v Uladzimir Klyshevich>Um...</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/15204-0
+01:26:27.905 --> 01:26:34.263
+<v Uladzimir Klyshevich>I think we will have next session,
+but actually if you do everything correct,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/15204-1
+01:26:34.263 --> 01:26:40.458
+<v Uladzimir Klyshevich>so in next session we will be able
+already execute it and maybe I will have</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/15204-2
+01:26:40.458 --> 01:26:45.185
+<v Uladzimir Klyshevich>time to do this earlier a bit.
+And what we still need is.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/15237-0
+01:26:46.705 --> 01:26:50.899
+<v Uladzimir Klyshevich>guardrails,
+so we need to set up unit tests,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/15237-1
+01:26:50.899 --> 01:26:55.185
+<v Uladzimir Klyshevich>we need to protect main branch,
+we need to...</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/15268-0
+01:26:59.025 --> 01:27:03.273
+<v Uladzimir Klyshevich>Yes, there is already test,
+but I don't see unit test here.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/15268-1
+01:27:03.273 --> 01:27:07.025
+<v Uladzimir Klyshevich>So actually some more environment.
+If you look to...</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/15279-0
+01:27:08.385 --> 01:27:11.505
+<v Uladzimir Klyshevich>Two DMS tools, not DMS tools, my tool.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/15284-0
+01:27:12.945 --> 01:27:13.905
+<v Uladzimir Klyshevich>You can see it.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/15289-0
+01:27:15.825 --> 01:27:17.505
+<v Uladzimir Klyshevich>that we have.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/15320-0
+01:27:18.705 --> 01:27:25.453
+<v Uladzimir Klyshevich>Match trigger, we have out updates,
+pull requests, so we have unit tests,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/15320-1
+01:27:25.453 --> 01:27:27.185
+<v Uladzimir Klyshevich>all of this needed.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/15385-0
+01:27:28.145 --> 01:27:33.630
+<v Uladzimir Klyshevich>to organize agents to queue.
+What I mean is that at the end,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/15385-1
+01:27:33.630 --> 01:27:39.653
+<v Uladzimir Klyshevich>when pull request is ready,
+you must be sure that all the time you</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/15385-2
+01:27:39.653 --> 01:27:44.868
+<v Uladzimir Klyshevich>have green tests.
+That means that if something is merged,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/15385-3
+01:27:44.868 --> 01:27:47.025
+<v Uladzimir Klyshevich>all other pull requests.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/15400-0
+01:27:47.105 --> 01:27:48.305
+<v Uladzimir Klyshevich>Must be up to date.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/15480-0
+01:27:49.265 --> 01:27:53.853
+<v Uladzimir Klyshevich>So that means that you need to merge main
+branch on top of it,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/15480-1
+01:27:53.853 --> 01:27:58.659
+<v Uladzimir Klyshevich>and if there is conflict,
+rework agents start to work and fix the</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/15480-2
+01:27:58.659 --> 01:28:04.193
+<v Uladzimir Klyshevich>conflict. Without this approach,
+your factory will stuck in one, two hours,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/15480-3
+01:28:04.193 --> 01:28:08.635
+<v Uladzimir Klyshevich>because the agents will start break the
+code for each other.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/15480-4
+01:28:08.635 --> 01:28:12.785
+<v Uladzimir Klyshevich>And this is one of the prerequisite what
+you need to do.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/15483-0
+01:28:13.265 --> 01:28:13.745
+<v Uladzimir Klyshevich>As well.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/15486-0
+01:28:16.545 --> 01:28:17.025
+<v Uladzimir Klyshevich>Greg.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/15540-0
+01:28:19.025 --> 01:28:23.689
+<v Uladzimir Klyshevich>If you have questions, welcome. Ask it.
+So try it yourself.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/15540-1
+01:28:23.689 --> 01:28:27.575
+<v Uladzimir Klyshevich>If you can do something,
+something does not work,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/15540-2
+01:28:27.575 --> 01:28:32.705
+<v Uladzimir Klyshevich>just let us know in the chat and we will
+try to handle next time.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/15585-0
+01:28:35.905 --> 01:28:40.512
+<v Aliaksandr Tarasevich>I haven't used Copilot CLI.
+Do I understand correctly,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/15585-1
+01:28:40.512 --> 01:28:46.625
+<v Aliaksandr Tarasevich>but it is possible to specify which model
+I would like to use each time.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/15597-0
+01:28:47.425 --> 01:28:50.903
+<v Uladzimir Klyshevich>Sure, sure.
+You just write slash model and specify</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/15597-1
+01:28:50.903 --> 01:28:51.585
+<v Uladzimir Klyshevich>the model.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/15623-0
+01:28:53.265 --> 01:29:00.385
+<v Uladzimir Klyshevich>Or you send model as argument to your
+headless CLI as well.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/15692-0
+01:29:03.025 --> 01:29:09.061
+<v Uladzimir Klyshevich>And even with DMS tools,
+you can specify dot and variable and</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/15635-0
+01:29:03.985 --> 01:29:04.545
+<v Aliaksandr Tarasevich>And.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/15692-1
+01:29:09.061 --> 01:29:16.850
+<v Uladzimir Klyshevich>specify exact model what you want to use
+with Copilot. Let me quickly show you.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/15692-2
+01:29:16.850 --> 01:29:21.425
+<v Uladzimir Klyshevich>I hope guys will wait me a bit to where
+it is.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/15714-0
+01:29:23.905 --> 01:29:27.905
+<v Uladzimir Klyshevich>It's pretty stupid, for instance.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/15751-0
+01:29:24.625 --> 01:29:30.253
+<v Aliaksandr Tarasevich>And while you are looking to understand
+correctly,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/15751-1
+01:29:30.253 --> 01:29:38.971
+<v Aliaksandr Tarasevich>that it is possible to use EPAM GitHub
+Copilot tokens to perform some activity</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/15751-2
+01:29:38.971 --> 01:29:43.385
+<v Aliaksandr Tarasevich>in outside repositories outside of EPAM.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/15757-0
+01:29:45.185 --> 01:29:46.065
+<v Aliaksandr Tarasevich>repositories.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/15799-0
+01:29:45.345 --> 01:29:53.725
+<v Uladzimir Klyshevich>That's for me, for DM tools, for DM.ai,
+for EPAM repository,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/15799-1
+01:29:53.725 --> 01:29:58.945
+<v Uladzimir Klyshevich>I allowed to use EPAM Copilot license.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/15839-0
+01:30:00.465 --> 01:30:11.079
+<v Uladzimir Klyshevich>It was kind of agreement between me and
+AI run that I do move it to under EPAM to</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/15839-1
+01:30:11.079 --> 01:30:11.985
+<v Uladzimir Klyshevich>AI run.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/15845-0
+01:30:13.145 --> 01:30:14.625
+<v Uladzimir Klyshevich>And they do give me.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/15906-0
+01:30:15.705 --> 01:30:19.989
+<v Uladzimir Klyshevich>Kind of Benefits to use AI models to
+support it,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/15906-1
+01:30:19.989 --> 01:30:26.109
+<v Uladzimir Klyshevich>because before I did use my own licenses
+to build it and support, so,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/15906-2
+01:30:26.109 --> 01:30:30.305
+<v Uladzimir Klyshevich>and at some point I said, okay,
+it's kind of...</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/15958-0
+01:30:31.985 --> 01:30:38.260
+<v Uladzimir Klyshevich>I pay a lot for different things and here
+it's probably it's okay already to put on</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/15958-1
+01:30:38.260 --> 01:30:43.265
+<v Uladzimir Klyshevich>EPAM rails so and that was one of
+agreement for your pet projects.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/16035-0
+01:30:44.465 --> 01:30:48.595
+<v Uladzimir Klyshevich>I don't know,
+so probably at some point someone will</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/16035-1
+01:30:48.595 --> 01:30:54.594
+<v Uladzimir Klyshevich>talk to you and ask why you spent so much
+money. But actually, yes, you can.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/16035-2
+01:30:54.594 --> 01:30:59.891
+<v Uladzimir Klyshevich>And here you also can customize
+environment variables. For example,</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/16035-3
+01:30:59.891 --> 01:31:04.722
+<v Uladzimir Klyshevich>for specific parts,
+we can customize model for copilot to use</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/16035-4
+01:31:04.722 --> 01:31:06.825
+<v Uladzimir Klyshevich>this one or something else.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/16037-0
+01:31:09.025 --> 01:31:09.505
+<v Aliaksandr Tarasevich>Thanks.</v>
+
+ec1f680a-c4c4-4e0c-87a3-1c2ec885e48c/16060-0
+01:31:10.785 --> 01:31:15.825
+<v Uladzimir Klyshevich>Right, guys, need to run. Thank you,
+and see you later, then. Bye-bye.</v>
