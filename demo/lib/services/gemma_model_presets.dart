@@ -161,10 +161,11 @@ const List<GemmaModelPreset> gemmaModelPresets = [
     modelType: ModelType.gemma4,
     fileType: ModelFileType.litertlm,
     preferredBackend: PreferredBackend.gpu,
-    // macOS LiteRT-LM build reliably handles up to an 8192-token context with
-    // 2048 output tokens. Larger values cause malformed JSON / token soup on
-    // real transcripts, so we cap the preset here for stable demo usage.
-    maxTokens: 8192,
+    // Web LiteRT-LM (WebGPU/WASM) is more sensitive to KV-cache size than
+    // native desktop builds. 4096 tokens is a stable context window for the
+    // E2B web model; larger values can trigger very long first-run shader
+    // compilation or allocation failures in the browser.
+    maxTokens: 4096,
     maxOutputTokens: 2048,
     supportImage: true,
     supportAudio: true,

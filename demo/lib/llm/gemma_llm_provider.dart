@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
 
@@ -17,14 +18,38 @@ class GemmaLlmProvider implements LlmProvider {
   @override
   String get defaultModel => _preset.id;
 
+  /// Default timeout for on-device Gemma inference in the demo. WebGPU/WASM
+  /// models can spend 30–90 s on first-run shader compilation, so keep this
+  /// generous but not infinite.
+  static const _defaultTimeout = Duration(seconds: 120);
+
+  Future<String> _runWithTimeout(
+    Future<String> Function() fn, {
+    Duration? timeout,
+  }) async {
+    final effective = timeout ?? _defaultTimeout;
+    try {
+      return await fn().timeout(effective);
+    } on TimeoutException {
+      _log('inference timed out after ${effective.inSeconds}s');
+      throw TimeoutException(
+        'Gemma inference did not complete within ${effective.inSeconds}s. '
+        'Large web models often need one-time WebGPU shader compilation; '
+        'try again after keeping the page open for a minute.',
+      );
+    }
+  }
+
   @override
-  Future<String> chat(String prompt, {String? model}) => _run([
-    LlmMessage(role: 'user', content: prompt),
-  ]);
+  Future<String> chat(String prompt, {String? model}) => _runWithTimeout(
+    () => _run([
+      LlmMessage(role: 'user', content: prompt),
+    ]),
+  );
 
   @override
   Future<String> chatMessages(List<LlmMessage> messages, {String? model}) =>
-      _run(messages);
+      _runWithTimeout(() => _run(messages));
 
   void _log(String message) {
     // ignore: avoid_print
@@ -32,6 +57,7 @@ class GemmaLlmProvider implements LlmProvider {
   }
 
   Future<String> _run(List<LlmMessage> messages) async {
+    final sw = Stopwatch()..start();
     _log('_run start: ${messages.length} message(s), '
         'preset=${_preset.id}, maxTokens=${_preset.maxTokens}, '
         'maxOutputTokens=${_preset.maxOutputTokens}');
@@ -41,22 +67,23 @@ class GemmaLlmProvider implements LlmProvider {
           'text=${msg.content.length > 500 ? '${msg.content.substring(0, 500)}...' : msg.content}');
     }
 
+    _log('[timing] loading model...');
     final model = await _service.loadModel(_preset);
-    _log('model loaded, creating session...');
+    _log('[timing] model loaded in ${sw.elapsedMilliseconds}ms, creating session...');
     final session = await model.createSession(
       temperature: _preset.temperature,
       topK: _preset.topK,
       topP: _preset.topP,
       maxOutputTokens: _preset.maxOutputTokens,
     );
-    _log('session created');
+    _log('[timing] session created in ${sw.elapsedMilliseconds}ms');
     try {
       for (final msg in messages) {
         final gemmaMsg = _toGemmaMessage(msg);
         _log('addQueryChunk: role=${msg.role}, textLength=${msg.content.length}');
         await session.addQueryChunk(gemmaMsg);
       }
-      _log('waiting for response (streaming)...');
+      _log('[timing] waiting for response (streaming) at ${sw.elapsedMilliseconds}ms...');
 
       // Prefill/decode models (Gemma 4, FunctionGemma litertlm) do not support
       // the synchronous getResponse() path and return an empty/cancelled result.
@@ -66,14 +93,15 @@ class GemmaLlmProvider implements LlmProvider {
         buffer.write(token);
       }
       final response = buffer.toString();
-      _log('response received, length=${response.length}, '
+      _log('[timing] response received in ${sw.elapsedMilliseconds}ms, '
+          'length=${response.length}, '
           'preview=${response.length > 500 ? '${response.substring(0, 500)}...' : response}');
       return response;
     } catch (e, s) {
-      _log('inference error: $e\n$s');
+      _log('inference error after ${sw.elapsedMilliseconds}ms: $e\n$s');
       rethrow;
     } finally {
-      _log('closing session');
+      _log('[timing] closing session at ${sw.elapsedMilliseconds}ms');
       await session.close();
     }
   }

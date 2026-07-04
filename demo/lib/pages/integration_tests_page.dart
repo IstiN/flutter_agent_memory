@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
@@ -21,6 +22,8 @@ class _IntegrationTestsPageState extends State<IntegrationTestsPage> {
   final List<_TestResult> _results = [];
   bool _runningAll = false;
 
+  static const _testTimeout = Duration(seconds: 120);
+
   List<_TestDefinition> get _tests => [
     _TestDefinition(
       id: 'ping',
@@ -28,6 +31,7 @@ class _IntegrationTestsPageState extends State<IntegrationTestsPage> {
       description:
           'Sends a tiny prompt and checks that the model returns a non-empty response.',
       run: _runPing,
+      timeout: _testTimeout,
     ),
     _TestDefinition(
       id: 'json',
@@ -35,6 +39,7 @@ class _IntegrationTestsPageState extends State<IntegrationTestsPage> {
       description:
           'Asks the model to return strict JSON and verifies it parses.',
       run: _runJson,
+      timeout: _testTimeout,
     ),
     _TestDefinition(
       id: 'tags',
@@ -42,6 +47,7 @@ class _IntegrationTestsPageState extends State<IntegrationTestsPage> {
       description:
           'Runs the KB tag generator for a query and checks it returns relevant tags.',
       run: _runTagGenerator,
+      timeout: _testTimeout,
     ),
     _TestDefinition(
       id: 'analysis',
@@ -49,6 +55,7 @@ class _IntegrationTestsPageState extends State<IntegrationTestsPage> {
       description:
           'Analyzes a short conversation and checks that at least one question is extracted.',
       run: _runAnalysis,
+      timeout: _testTimeout,
     ),
     _TestDefinition(
       id: 'search',
@@ -56,6 +63,7 @@ class _IntegrationTestsPageState extends State<IntegrationTestsPage> {
       description:
           'Adds a sample record, searches by text, and checks the result is found.',
       run: _runSearchPipeline,
+      timeout: _testTimeout,
     ),
   ];
 
@@ -97,7 +105,15 @@ class _IntegrationTestsPageState extends State<IntegrationTestsPage> {
 
     final stopwatch = Stopwatch()..start();
     try {
-      final output = await test.run(_provider!);
+      final output = await test.run(_provider!).timeout(
+        test.timeout,
+        onTimeout: () {
+          throw TimeoutException(
+            '${test.name} did not complete within '
+            '${test.timeout.inSeconds}s',
+          );
+        },
+      );
       stopwatch.stop();
       setState(() {
         result.status = _Status.passed;
@@ -281,12 +297,14 @@ class _TestDefinition {
   final String name;
   final String description;
   final Future<String> Function(LlmProvider provider) run;
+  final Duration timeout;
 
   _TestDefinition({
     required this.id,
     required this.name,
     required this.description,
     required this.run,
+    this.timeout = const Duration(seconds: 60),
   });
 }
 
