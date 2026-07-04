@@ -26,6 +26,8 @@ dependencies:
 dependency_overrides:
   flutter_gemma_litertlm:
     path: plugins/flutter_gemma_litertlm
+  flutter_gemma_mediapipe:
+    path: /Users/Uladzimir_Klyshevich/git/references/flutter_gemma/packages/flutter_gemma_mediapipe
 
 dev_dependencies:
   flutter_test:
