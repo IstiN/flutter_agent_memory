@@ -18,6 +18,9 @@ abstract class GemmaService {
   /// Downloads and installs a model. Emits progress 0–100.
   Stream<double> installModel(GemmaModelPreset preset, {String? hfToken});
 
+  /// Deletes an installed model and its cached files.
+  Future<void> deleteModel(GemmaModelPreset preset);
+
   /// Loads the currently-active inference model.
   ///
   /// Throws if the model is not installed.
@@ -103,6 +106,17 @@ class FlutterGemmaService implements GemmaService {
       }
     });
     return controller.stream;
+  }
+
+  @override
+  Future<void> deleteModel(GemmaModelPreset preset) async {
+    _log('deleteModel(${preset.id}) start');
+    await _ensureInitialized();
+    await FlutterGemma.uninstallModel(preset.filename);
+    if (_loadedPreset?.id == preset.id) {
+      _loadedPreset = null;
+    }
+    _log('deleteModel(${preset.id}) done');
   }
 
   @override

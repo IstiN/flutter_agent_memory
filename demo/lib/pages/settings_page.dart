@@ -472,6 +472,23 @@ class _GemmaModelPresetsState extends State<_GemmaModelPresets> {
     }
   }
 
+  Future<void> _delete(GemmaModelPreset preset) async {
+    setState(() {
+      _installingId = preset.id;
+      _error = null;
+    });
+    try {
+      await widget.service.deleteModel(preset);
+      if (mounted) {
+        setState(() => _installed[preset.id] = false);
+      }
+    } catch (e) {
+      if (mounted) setState(() => _error = 'Delete failed: $e');
+    } finally {
+      if (mounted) setState(() => _installingId = null);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -520,11 +537,13 @@ class _GemmaModelPresetsState extends State<_GemmaModelPresets> {
                 deleteIcon: installing
                     ? const SizedBox.shrink()
                     : installed
-                        ? const Icon(Icons.check, size: 16)
+                        ? const Icon(Icons.delete, size: 16)
                         : const Icon(Icons.download, size: 16),
                 onDeleted: installing
                     ? null
-                    : () => _install(preset),
+                    : installed
+                        ? () => _delete(preset)
+                        : () => _install(preset),
               ),
             );
           }).toList(),

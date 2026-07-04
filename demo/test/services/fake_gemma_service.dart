@@ -24,6 +24,11 @@ class FakeGemmaService implements GemmaService {
   }
 
   @override
+  Future<void> deleteModel(GemmaModelPreset preset) async {
+    installed.remove(preset.id);
+  }
+
+  @override
   Future<InferenceModel> loadModel(
     GemmaModelPreset preset, {
     PreferredBackend? backend,
