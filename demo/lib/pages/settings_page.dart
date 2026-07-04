@@ -508,42 +508,53 @@ class _GemmaModelPresetsState extends State<_GemmaModelPresets> {
             final installing = _installingId == preset.id;
             final progress = _progress[preset.id] ?? 0;
             return ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 220),
-              child: InputChip(
-                label: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(preset.displayName),
-                    Text(
-                      preset.size,
-                      style: const TextStyle(fontSize: 10, color: AppColors.textMuted),
-                    ),
-                    if (installing)
-                      LinearProgressIndicator(
-                        value: progress > 0 ? progress / 100 : null,
-                        backgroundColor: AppColors.surfaceLow,
-                        color: AppColors.primary,
+              constraints: const BoxConstraints(maxWidth: 260),
+              child: Tooltip(
+                message: '${preset.displayName}\n${preset.bestFor}',
+                child: InputChip(
+                  label: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        preset.displayName,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(fontSize: 12),
                       ),
-                  ],
+                      Text(
+                        preset.size,
+                        style: const TextStyle(
+                          fontSize: 10,
+                          color: AppColors.textMuted,
+                        ),
+                      ),
+                      if (installing)
+                        LinearProgressIndicator(
+                          value: progress > 0 ? progress / 100 : null,
+                          backgroundColor: AppColors.surfaceLow,
+                          color: AppColors.primary,
+                        ),
+                    ],
+                  ),
+                  selected: isSelected,
+                  onSelected: installed
+                      ? (_) {
+                          widget.onSelected(preset);
+                          widget.onUse?.call();
+                        }
+                      : (_) => widget.onSelected(preset),
+                  deleteIcon: installing
+                      ? const SizedBox.shrink()
+                      : installed
+                          ? const Icon(Icons.delete, size: 16)
+                          : const Icon(Icons.download, size: 16),
+                  onDeleted: installing
+                      ? null
+                      : installed
+                          ? () => _delete(preset)
+                          : () => _install(preset),
                 ),
-                selected: isSelected,
-                onSelected: installed
-                    ? (_) {
-                        widget.onSelected(preset);
-                        widget.onUse?.call();
-                      }
-                    : (_) => widget.onSelected(preset),
-                deleteIcon: installing
-                    ? const SizedBox.shrink()
-                    : installed
-                        ? const Icon(Icons.delete, size: 16)
-                        : const Icon(Icons.download, size: 16),
-                onDeleted: installing
-                    ? null
-                    : installed
-                        ? () => _delete(preset)
-                        : () => _install(preset),
               ),
             );
           }).toList(),
