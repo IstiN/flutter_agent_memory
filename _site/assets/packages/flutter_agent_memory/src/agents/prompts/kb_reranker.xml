@@ -1,0 +1,15 @@
+<prompt><![CDATA[Rank the candidate records by relevance to the query.
+
+Rules:
+- Output ONLY lines in the exact format RANKED_ID=<record-id>.
+- Most relevant record first.
+- Drop irrelevant records.
+- Preserve original IDs exactly.
+- If nothing is relevant, output nothing.
+
+Query: "${query}"
+
+Candidate records:
+${itemsText}
+${extraInstructions}
+]]></prompt>

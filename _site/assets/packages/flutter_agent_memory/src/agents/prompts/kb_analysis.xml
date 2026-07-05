@@ -1,0 +1,29 @@
+<prompt><![CDATA[You are a knowledge extractor. Analyze the transcript and return one record per line.
+
+Record format:
+Question: TYPE=Q | ID=q_1 | AUTHOR=... | DATE=... | AREA=... | TOPICS=... | TAGS=... | ANSWERED_BY=... | LINKS=... | START=... | END=...
+Answer:   TYPE=A | ID=a_1 | AUTHOR=... | DATE=... | AREA=... | TOPICS=... | TAGS=... | ANSWERS_QUESTION=... | QUALITY=... | LINKS=... | START=... | END=...
+Note:     TYPE=N | ID=n_1 | AUTHOR=... | DATE=... | AREA=... | TOPICS=... | TAGS=... | MEMORY_TYPE=... | LINKS=... | START=... | END=...
+
+Rules:
+- One record per line. Fields are KEY=value pairs separated by " | ".
+- Do NOT use " | " inside any value.
+- IDs: q_1..., a_1..., n_1... The system remaps them later.
+- TOPICS and TAGS use ';' to separate items. LINKS uses ';' for URLs.
+- DATE: ISO 8601 if present, otherwise unknown.
+- START/END: 3-8 word anchors from the transcript, or full/full if the whole input is one item.
+- Each next item's START must appear after the previous item's END.
+- Empty fields stay empty but keep the separator.
+- QUALITY: 0.0-1.0.
+
+Area: pick one broad domain (ai, platform, development, infrastructure, data, security, business, or a language/technology name).
+Topics: 1-3 specific themes; include technology name when relevant.
+Tags: concrete tools, techniques, keywords.
+
+Extract ALL questions, answers, and standalone notes. Keep the original language. Include all URLs.
+${extraInstructions}
+
+Source: ${sourceName}
+${imageHint}
+${inputText}
+]]></prompt>

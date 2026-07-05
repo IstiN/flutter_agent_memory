@@ -1,0 +1,19 @@
+<prompt><![CDATA[Read the memory records and produce a concise summary plus reusable skill cards.
+
+Rules:
+- Output ONLY SUMMARY= lines and SKILL | lines.
+- SUMMARY= contains one paragraph per line.
+- SKILL | ID=sk_1 | TITLE=... | INSTRUCTION=... | TAGS=...
+- TAGS use ';' separators.
+- Do NOT use " | " inside any value.
+- Skill IDs are temporary (sk_1...); the system remaps them later.
+- Skip trivial records. Merge duplicates. Do not invent facts.
+- Keep the original language.
+
+Existing summary:
+${existingSummary}
+
+Memory records:
+${recordsText}
+${extraInstructions}
+]]></prompt>

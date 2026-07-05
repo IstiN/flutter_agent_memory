@@ -225,9 +225,14 @@ class WebLlmService {
   }
 }
 
-/// Available WebLLM presets for the demo. Focus on small models that run
-/// comfortably in a browser tab.
+/// Available WebLLM presets for the demo.
+///
+/// Sources are `@mlc-ai/web-llm` prebuilt models hosted on HuggingFace
+/// (`https://huggingface.co/mlc-ai/...`) with model libraries served from
+/// `https://raw.githubusercontent.com/mlc-ai/binary-mlc-llm-libs/main/web-llm-models/`.
+/// Sizes are approximate downloaded weight sizes.
 const List<WebLlmModelPreset> webLlmModelPresets = [
+  // === SmolLM2 ===
   WebLlmModelPreset(
     id: 'SmolLM2-135M-Instruct-q0f16-MLC',
     displayName: 'SmolLM2 135M',
@@ -247,6 +252,17 @@ const List<WebLlmModelPreset> webLlmModelPresets = [
     topP: 1.0,
   ),
   WebLlmModelPreset(
+    id: 'SmolLM2-1.7B-Instruct-q4f16_1-MLC',
+    displayName: 'SmolLM2 1.7B',
+    family: 'smollm',
+    size: '~1.8 GB',
+    defaultContextWindow: 2048,
+    temperature: 1.0,
+    topP: 1.0,
+  ),
+
+  // === Qwen 2.5 ===
+  WebLlmModelPreset(
     id: 'Qwen2.5-0.5B-Instruct-q0f16-MLC',
     displayName: 'Qwen2.5 0.5B',
     family: 'qwen',
@@ -265,6 +281,55 @@ const List<WebLlmModelPreset> webLlmModelPresets = [
     topP: 0.8,
   ),
   WebLlmModelPreset(
+    id: 'Qwen2.5-3B-Instruct-q4f16_1-MLC',
+    displayName: 'Qwen2.5 3B',
+    family: 'qwen',
+    size: '~1.9 GB',
+    defaultContextWindow: 2048,
+    temperature: 0.7,
+    topP: 0.8,
+  ),
+  WebLlmModelPreset(
+    id: 'Qwen2.5-7B-Instruct-q4f16_1-MLC',
+    displayName: 'Qwen2.5 7B',
+    family: 'qwen',
+    size: '~4.2 GB',
+    defaultContextWindow: 2048,
+    temperature: 0.7,
+    topP: 0.8,
+  ),
+
+  // === Qwen 3 ===
+  WebLlmModelPreset(
+    id: 'Qwen3-0.6B-q4f16_1-MLC',
+    displayName: 'Qwen3 0.6B',
+    family: 'qwen',
+    size: '~750 MB',
+    defaultContextWindow: 2048,
+    temperature: 0.7,
+    topP: 0.8,
+  ),
+  WebLlmModelPreset(
+    id: 'Qwen3-1.7B-q4f16_1-MLC',
+    displayName: 'Qwen3 1.7B',
+    family: 'qwen',
+    size: '~1.4 GB',
+    defaultContextWindow: 2048,
+    temperature: 0.7,
+    topP: 0.8,
+  ),
+  WebLlmModelPreset(
+    id: 'Qwen3-4B-q4f16_1-MLC',
+    displayName: 'Qwen3 4B',
+    family: 'qwen',
+    size: '~2.8 GB',
+    defaultContextWindow: 2048,
+    temperature: 0.7,
+    topP: 0.8,
+  ),
+
+  // === Phi ===
+  WebLlmModelPreset(
     id: 'Phi-3.5-mini-instruct-q4f16_1-MLC',
     displayName: 'Phi-3.5 mini',
     family: 'phi',
@@ -273,6 +338,26 @@ const List<WebLlmModelPreset> webLlmModelPresets = [
     temperature: 1.0,
     topP: 1.0,
   ),
+  WebLlmModelPreset(
+    id: 'Phi-3.5-mini-instruct-q4f16_1-MLC-1k',
+    displayName: 'Phi-3.5 mini (1k)',
+    family: 'phi',
+    size: '~1.6 GB',
+    defaultContextWindow: 1024,
+    temperature: 1.0,
+    topP: 1.0,
+  ),
+  WebLlmModelPreset(
+    id: 'Phi-4-mini-instruct-q4f16_1-MLC',
+    displayName: 'Phi-4 mini',
+    family: 'phi',
+    size: '~2.1 GB',
+    defaultContextWindow: 2048,
+    temperature: 1.0,
+    topP: 1.0,
+  ),
+
+  // === Gemma 2 ===
   WebLlmModelPreset(
     id: 'gemma-2-2b-it-q4f16_1-MLC',
     displayName: 'Gemma 2 2B',
@@ -283,6 +368,17 @@ const List<WebLlmModelPreset> webLlmModelPresets = [
     topP: 0.95,
   ),
   WebLlmModelPreset(
+    id: 'gemma-2-2b-it-q4f16_1-MLC-1k',
+    displayName: 'Gemma 2 2B (1k)',
+    family: 'gemma',
+    size: '~1.2 GB',
+    defaultContextWindow: 1024,
+    temperature: 0.7,
+    topP: 0.95,
+  ),
+
+  // === Llama 3.2 ===
+  WebLlmModelPreset(
     id: 'Llama-3.2-1B-Instruct-q4f16_1-MLC',
     displayName: 'Llama 3.2 1B',
     family: 'llama',
@@ -292,10 +388,59 @@ const List<WebLlmModelPreset> webLlmModelPresets = [
     topP: 0.9,
   ),
   WebLlmModelPreset(
+    id: 'Llama-3.2-1B-Instruct-q4f32_1-MLC',
+    displayName: 'Llama 3.2 1B (f32)',
+    family: 'llama',
+    size: '~1.4 GB',
+    defaultContextWindow: 2048,
+    temperature: 0.6,
+    topP: 0.9,
+  ),
+  WebLlmModelPreset(
     id: 'Llama-3.2-3B-Instruct-q4f16_1-MLC',
     displayName: 'Llama 3.2 3B',
     family: 'llama',
     size: '~1.9 GB',
+    defaultContextWindow: 2048,
+    temperature: 0.6,
+    topP: 0.9,
+  ),
+
+  // === Llama 3.1 ===
+  WebLlmModelPreset(
+    id: 'Llama-3.1-8B-Instruct-q4f16_1-MLC-1k',
+    displayName: 'Llama 3.1 8B (1k)',
+    family: 'llama',
+    size: '~4.3 GB',
+    defaultContextWindow: 1024,
+    temperature: 0.6,
+    topP: 0.9,
+  ),
+  WebLlmModelPreset(
+    id: 'Llama-3.1-8B-Instruct-q4f16_1-MLC',
+    displayName: 'Llama 3.1 8B',
+    family: 'llama',
+    size: '~4.6 GB',
+    defaultContextWindow: 2048,
+    temperature: 0.6,
+    topP: 0.9,
+  ),
+
+  // === Hermes / tool-calling variants ===
+  WebLlmModelPreset(
+    id: 'Hermes-3-Llama-3.2-3B-q4f16_1-MLC',
+    displayName: 'Hermes 3 Llama 3.2 3B',
+    family: 'llama',
+    size: '~1.9 GB',
+    defaultContextWindow: 2048,
+    temperature: 0.6,
+    topP: 0.9,
+  ),
+  WebLlmModelPreset(
+    id: 'Hermes-3-Llama-3.1-8B-q4f16_1-MLC',
+    displayName: 'Hermes 3 Llama 3.1 8B',
+    family: 'llama',
+    size: '~4.5 GB',
     defaultContextWindow: 2048,
     temperature: 0.6,
     topP: 0.9,

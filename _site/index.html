@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <!--
+    If you are serving your web app in a path other than the root, change the
+    href value below to reflect the base path you are serving from.
+
+    The path provided below has to start and end with a slash "/" in order for
+    it to work correctly.
+
+    For more details:
+    * https://developer.mozilla.org/en-US/docs/Web/HTML/Element/base
+
+    This is a placeholder for base href that will be replaced by the value of
+    the `--base-href` argument provided to `flutter build`.
+  -->
+  <base href="/flutter_agent_memory/">
+
+  <meta charset="UTF-8">
+  <meta content="IE=Edge" http-equiv="X-UA-Compatible">
+  <meta name="description" content="Interactive agent memory demo.">
+
+  <!-- Disable aggressive caching so updates deploy immediately. -->
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+
+  <!-- iOS meta tags & icons -->
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="apple-mobile-web-app-title" content="FAM Demo">
+  <link rel="apple-touch-icon" href="icons/Icon-192.png">
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="favicon.png"/>
+
+  <title>Flutter Agent Memory — Demo</title>
+  <link rel="manifest" href="manifest.json">
+</head>
+<body>
+  <!--
+    You can customize the "flutter_bootstrap.js" script.
+    This is useful to provide a custom configuration to the Flutter loader
+    or to give the user feedback during the initialization process.
+
+    For more details:
+    * https://docs.flutter.dev/platform-integration/web/initialization
+  -->
+  <script type="module">
+    import { FilesetResolver, LlmInference }
+      from 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-genai@0.10.27';
+    window.FilesetResolver = FilesetResolver;
+    window.LlmInference = LlmInference;
+  </script>
+  <!-- flutter_gemma web cache helpers (window.cacheHas/cachePut/cacheGet/etc.) -->
+  <script src="cache_api.js"></script>
+  <!-- flutter_gemma OPFS helper for large model streaming (>2GB) -->
+  <script src="opfs_helper.js"></script>
+  <!-- LiteRT-LM Web Inference for .litertlm models via WebGPU/WASM -->
+  <script type="module">
+    window.litertLmReady = (async () => {
+      const m = await import('https://cdn.jsdelivr.net/npm/@litert-lm/core@0.12.1/+esm');
+      window.Engine = m.Engine;
+      return m.Engine;
+    })();
+  </script>
+  <!-- WebLLM (@mlc-ai/web-llm) for running small LLMs in the browser via WebGPU -->
+  <script type="module">
+    import * as webllm from 'https://cdn.jsdelivr.net/npm/@mlc-ai/web-llm@0.2.81/+esm';
+    window.webllm = webllm;
+
+    // Streaming helper used by demo/lib/webllm/webllm_js_interop.dart.
+    // Calls onChunk(content) for every streamed delta and onDone() when the
+    // iterator finishes. Returns a cancel function that breaks the loop early.
+    window.webllmStreamWithCallbacks = (asyncIterable, options) => {
+      const maxTokens = options?.maxTokens ?? Number.MAX_SAFE_INTEGER;
+      const logPrefix = options?.logPrefix ?? '[WebLLM]';
+      let tokens = 0;
+      let done = false;
+      let iterator = null;
+      console.log(`${logPrefix} stream start, maxTokens=${maxTokens}`);
+
+      const cancel = () => {
+        if (done) return;
+        done = true;
+        console.log(`${logPrefix} stream cancelled by caller`);
+        if (iterator && typeof iterator.return === 'function') {
+          iterator.return().catch(() => {});
+        }
+      };
+
+      const run = async () => {
+        try {
+          iterator = asyncIterable[Symbol.asyncIterator]();
+          while (!done) {
+            const { value, done: iterDone } = await iterator.next();
+            if (iterDone || done) break;
+            const content = value?.choices?.[0]?.delta?.content ?? '';
+            if (content) {
+              tokens += 1;
+              console.log(`${logPrefix} chunk tokens=${tokens} content="${content.substring(0, 80).replace(/\n/g, '\\n')}"`);
+              options?.onChunk?.(content);
+            }
+            if (tokens >= maxTokens) {
+              console.log(`${logPrefix} stream stopped at maxTokens=${maxTokens}`);
+              break;
+            }
+          }
+        } catch (e) {
+          console.error(`${logPrefix} stream error:`, e);
+          options?.onError?.(String(e));
+        } finally {
+          done = true;
+          console.log(`${logPrefix} stream done, tokens=${tokens}`);
+          options?.onDone?.();
+        }
+      };
+
+      run();
+      return cancel;
+    };
+
+    // Helpers to inspect and manage WebLLM's browser cache.
+    window.webllmIsModelCached = async (modelId) => {
+      try {
+        const cacheNames = await caches.keys();
+        for (const name of cacheNames) {
+          const cache = await caches.open(name);
+          const keys = await cache.keys();
+          if (keys.some((req) => req.url.includes(modelId))) {
+            return true;
+          }
+        }
+        return false;
+      } catch {
+        return false;
+      }
+    };
+
+    window.webllmModelProgress = async (modelId) => {
+      try {
+        const cacheNames = await caches.keys();
+        for (const name of cacheNames) {
+          const cache = await caches.open(name);
+          const keys = await cache.keys();
+          const matched = keys.filter((req) => req.url.includes(modelId));
+          if (matched.length > 0) {
+            let downloaded = 0;
+            let total = 0;
+            for (const req of matched) {
+              const resp = await cache.match(req);
+              if (resp) {
+                const blob = await resp.blob();
+                downloaded += blob.size;
+              }
+            }
+            return 1; // presence means fully cached; partial tracking unreliable
+          }
+        }
+        return null;
+      } catch {
+        return null;
+      }
+    };
+
+    window.webllmDeleteModel = async (modelId) => {
+      const cacheNames = await caches.keys();
+      for (const name of cacheNames) {
+        const cache = await caches.open(name);
+        const keys = await cache.keys();
+        for (const req of keys) {
+          if (req.url.includes(modelId)) {
+            await cache.delete(req);
+          }
+        }
+      }
+    };
+  </script>
+  <script src="flutter_bootstrap.js" async></script>
+</body>
+</html>

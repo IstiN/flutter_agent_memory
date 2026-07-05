@@ -1,0 +1,13 @@
+<prompt><![CDATA[Write a concise Markdown description for the ${entityType} "${entityId}".
+
+Rules:
+- Use plain Markdown only. No frontmatter, no code blocks, no XML/JSON.
+- Use [[wiki-links]] for related entities.
+- Be specific and data-driven; avoid generic phrases.
+- People: 2-4 paragraphs covering expertise and concrete contributions.
+- Topic/area: 1-2 paragraphs plus bullet list of key themes.
+
+Entity data:
+${entityData}
+${extraInstructions}
+]]></prompt>

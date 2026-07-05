@@ -1,0 +1,16 @@
+<prompt><![CDATA[Match new answers to existing unanswered questions.
+
+Rules:
+- Output ONLY lines in the exact format MAPPING | answerId=<id> | questionId=<id> | confidence=<0.0-1.0>.
+- Only include mappings with confidence >= 0.6.
+- Each answer maps to AT MOST ONE question.
+- A question may have multiple answers.
+- If no good matches, output nothing.
+
+New answers:
+${answersText}
+
+Existing questions:
+${questionsText}
+${extraInstructions}
+]]></prompt>

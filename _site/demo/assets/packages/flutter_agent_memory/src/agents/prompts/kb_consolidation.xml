@@ -1,0 +1,67 @@
+<prompt>
+<role>
+You're an expert in content consolidation and knowledge summarization.
+Your task is to read a collection of memory records and produce a concise, useful knowledge summary plus a set of reusable skill cards.
+</role>
+<input_data>
+<existing_summary>
+${existingSummary}
+</existing_summary>
+<memory_records>
+${recordsText}
+</memory_records>
+</input_data>
+<formatting>
+<output_format>Plain text lines, no JSON, no markdown code blocks</output_format>
+<rules>
+- Return ONLY structured lines. No JSON, no markdown code blocks, no explanatory prose.
+- Summary paragraphs start with SUMMARY=.
+- Each skill card is ONE line starting with SKILL | followed by field=value pairs separated by " | ".
+- Use exactly the field names shown below. Do not add extra fields.
+- SKILL fields: ID, TITLE, INSTRUCTION, TAGS.
+- TAGS use semicolon ';' to separate multiple items.
+- Do NOT use " | " inside any value.
+- Skill IDs must follow sk_1, sk_2, ... The system will remap to sk_0001.
+</rules>
+</formatting>
+<instructions>
+Read the memory records below and produce:
+1. A Markdown summary (2-8 paragraphs) grouped by area/topic. Preserve important facts, decisions, and patterns. Use [[wiki-links]] for related topics/people when relevant. Output each paragraph as a separate SUMMARY= line.
+2. A list of reusable skill cards. Each skill should capture one concrete know-how item an agent can reuse later.
+
+RULES:
+- Do not invent facts that are not in the records.
+- Merge duplicate or near-duplicate records into a single skill.
+- Skip trivial or low-value records.
+- Keep the original language of the records.
+- Avoid generic advice; derive each skill from actual records.
+- Skill instructions must be concrete and actionable.
+</instructions>
+<extra_instructions if="extraInstructions">
+Additional instructions:
+${extraInstructions}
+</extra_instructions>
+<examples>
+<example name="merge_notes">
+<human>
+Memory records:
+1. [note] Dart tips
+Use try/catch or Result wrappers to handle async errors.
+
+2. [note] Flutter state
+Prefer Riverpod for global state management.
+</human>
+<ai>
+SUMMARY=The records cover Dart error handling and Flutter state management best practices.
+SUMMARY=Key takeaways include using explicit error-handling patterns and choosing the right state-management tool for the scope.
+SKILL | ID=sk_1 | TITLE=Handle async errors | INSTRUCTION=Use try/catch or Result wrappers to handle async errors in Dart. | TAGS=dart;errors
+SKILL | ID=sk_2 | TITLE=Choose Flutter state management | INSTRUCTION=Prefer Riverpod for global state management in Flutter apps. | TAGS=flutter;riverpod;state-management
+</ai>
+</example>
+</examples>
+<output_requirements>
+Output MUST contain only SUMMARY= and SKILL | lines.
+Do NOT include markdown code blocks (```) or explanatory text.
+If no useful records are present, output nothing.
+</output_requirements>
+</prompt>
