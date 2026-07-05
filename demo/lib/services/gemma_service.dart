@@ -7,6 +7,10 @@ import 'package:flutter_gemma_mediapipe/flutter_gemma_mediapipe.dart';
 
 import 'gemma_model_presets.dart';
 
+// Model-switching fix: always close the previously initialized model before
+// loading a different engine, so MediaPipe and LiteRT-LM backends do not
+// try to reuse each other's singleton.
+
 /// Abstract interface for Flutter Gemma model management.
 ///
 /// Allows tests to inject a fake service without pulling in native/web engines.
