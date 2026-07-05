@@ -24,6 +24,27 @@ class FakeLlmProvider implements LlmProvider {
     return _match(messages.map((m) => m.content).join('\n'));
   }
 
+  @override
+  Stream<String> chatStream(
+    String prompt, {
+    String? model,
+    void Function()? onCancel,
+  }) async* {
+    yield await chat(prompt, model: model, onCancel: onCancel);
+  }
+
+  @override
+  Stream<String> chatMessagesStream(
+    List<LlmMessage> messages, {
+    String? model,
+    void Function()? onCancel,
+  }) async* {
+    yield await chatMessages(messages, model: model, onCancel: onCancel);
+  }
+
+  @override
+  Future<void> cancel() async {}
+
   String _match(String prompt) {
     for (final entry in _responses.entries) {
       if (entry.key.isEmpty || prompt.contains(entry.key)) return entry.value;

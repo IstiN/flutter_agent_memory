@@ -92,6 +92,25 @@ class WebLlmService {
     required bool stream,
     int? maxTokens,
   }) async {
+    if (!stream) {
+      return _chatNonStream(messages: messages, maxTokens: maxTokens);
+    }
+    final buffer = StringBuffer();
+    final cancel = await chatStream(
+      messages: messages,
+      maxTokens: maxTokens,
+      onChunk: (chunk) => buffer.write(chunk),
+    );
+    try {
+      cancel();
+    } catch (_) {}
+    return buffer.toString();
+  }
+
+  Future<String> _chatNonStream({
+    required List<({String role, String content})> messages,
+    int? maxTokens,
+  }) async {
     final engine = _engine;
     if (engine == null) {
       throw StateError('No model loaded. Call loadModel() first.');
@@ -103,43 +122,60 @@ class WebLlmService {
         .toList()
         .toJS;
     final request = {
-      'stream': stream,
+      'stream': false,
       'messages': jsMessages,
       'max_tokens': maxTokens,
       'stop': ['<|endoftext|>', '<|im_end|>', '</s>'].jsify(),
     }.jsify() as JSObject;
 
-    _log('chatCompletion request stream=$stream maxTokens=$maxTokens messages=${messages.length}');
-
-    if (stream) {
-      final options = {
-        'maxTokens': maxTokens ?? 2048,
-        'logPrefix': '[WebLlmService]',
-      }.jsify() as JSObject;
-      final asyncIterable = await engine.chatCompletion(request).toDart as JSObject;
-      _log('streaming response, waiting for iterator');
-      final chunks = await webllmStreamToArray(asyncIterable, options).toDart;
-      _log('iterator drained, chunks=${chunks.length}');
-      final buffer = StringBuffer();
-      for (final chunk in chunks.toDart) {
-        final choices = chunk.getProperty<JSArray?>('choices'.toJS);
-        if (choices == null || choices.length == 0) continue;
-        final first = choices.toDart.first as JSObject;
-        final delta = first.getProperty<JSObject?>('delta'.toJS);
-        final content = delta?.getProperty<JSString?>('content'.toJS);
-        if (content != null) {
-          buffer.write(content.toDart);
-        }
-      }
-      return buffer.toString();
-    }
-
+    _log('chatCompletion request stream=false maxTokens=$maxTokens messages=${messages.length}');
     final response = await engine.chatCompletion(request).toDart as JSObject;
     final choices = response.getProperty<JSArray>('choices'.toJS);
     final first = choices.toDart.first as JSObject;
     final message = first.getProperty<JSObject>('message'.toJS);
     final content = message.getProperty<JSString>('content'.toJS);
     return content.toDart;
+  }
+
+  /// Streams a chat completion. Returns a cancel function that stops generation.
+  Future<void Function()> chatStream({
+    required List<({String role, String content})> messages,
+    required void Function(String chunk) onChunk,
+    int? maxTokens,
+  }) async {
+    final engine = _engine;
+    if (engine == null) {
+      throw StateError('No model loaded. Call loadModel() first.');
+    }
+    final jsMessages = messages
+        .map(
+          (m) => {'role': m.role, 'content': m.content}.jsify() as JSObject,
+        )
+        .toList()
+        .toJS;
+    final request = {
+      'stream': true,
+      'messages': jsMessages,
+      'max_tokens': maxTokens,
+      'stop': ['<|endoftext|>', '<|im_end|>', '</s>'].jsify(),
+    }.jsify() as JSObject;
+
+    _log('chatCompletion request stream=true maxTokens=$maxTokens messages=${messages.length}');
+    final asyncIterable = await engine.chatCompletion(request).toDart as JSObject;
+    _log('streaming response, registering callbacks');
+
+    final options = {
+      'maxTokens': maxTokens ?? 2048,
+      'logPrefix': '[WebLlmService]',
+      'onChunk': (JSString content) => onChunk(content.toDart),
+      'onError': (JSString error) => _log('stream error: ${error.toDart}'),
+      'onDone': () => _log('stream done'),
+    }.jsify() as JSObject;
+
+    final cancelFn = webllmStreamWithCallbacks(asyncIterable, options);
+    return () {
+      cancelFn.callAsFunction(null);
+    };
   }
 
   Future<void> interrupt() async {

@@ -69,32 +69,55 @@
     import * as webllm from 'https://cdn.jsdelivr.net/npm/@mlc-ai/web-llm@0.2.81/+esm';
     window.webllm = webllm;
 
-    // Helper used by demo/lib/webllm/webllm_js_interop.dart to drain streaming
-    // chat-completion async iterators without unsafe reflection.
-    window.webllmStreamToArray = async (asyncIterable, options) => {
+    // Streaming helper used by demo/lib/webllm/webllm_js_interop.dart.
+    // Calls onChunk(content) for every streamed delta and onDone() when the
+    // iterator finishes. Returns a cancel function that breaks the loop early.
+    window.webllmStreamWithCallbacks = (asyncIterable, options) => {
       const maxTokens = options?.maxTokens ?? Number.MAX_SAFE_INTEGER;
       const logPrefix = options?.logPrefix ?? '[WebLLM]';
-      const result = [];
       let tokens = 0;
-      console.log(`${logPrefix} stream drain start, maxTokens=${maxTokens}`);
-      for await (const chunk of asyncIterable) {
-        result.push(chunk);
-        const choices = chunk.choices;
-        const delta = choices?.[0]?.delta;
-        const content = delta?.content ?? '';
-        tokens += content.length > 0 ? 1 : 0;
-        if (content) {
-          console.log(`${logPrefix} stream chunk #${result.length} tokens=${tokens} content="${content.substring(0, 80).replace(/\n/g, '\\n')}"`);
-        } else {
-          console.log(`${logPrefix} stream chunk #${result.length} tokens=${tokens} (no content)`);
+      let done = false;
+      let iterator = null;
+      console.log(`${logPrefix} stream start, maxTokens=${maxTokens}`);
+
+      const cancel = () => {
+        if (done) return;
+        done = true;
+        console.log(`${logPrefix} stream cancelled by caller`);
+        if (iterator && typeof iterator.return === 'function') {
+          iterator.return().catch(() => {});
         }
-        if (tokens >= maxTokens) {
-          console.log(`${logPrefix} stream drain stopping at maxTokens=${maxTokens}`);
-          break;
+      };
+
+      const run = async () => {
+        try {
+          iterator = asyncIterable[Symbol.asyncIterator]();
+          while (!done) {
+            const { value, done: iterDone } = await iterator.next();
+            if (iterDone || done) break;
+            const content = value?.choices?.[0]?.delta?.content ?? '';
+            if (content) {
+              tokens += 1;
+              console.log(`${logPrefix} chunk tokens=${tokens} content="${content.substring(0, 80).replace(/\n/g, '\\n')}"`);
+              options?.onChunk?.(content);
+            }
+            if (tokens >= maxTokens) {
+              console.log(`${logPrefix} stream stopped at maxTokens=${maxTokens}`);
+              break;
+            }
+          }
+        } catch (e) {
+          console.error(`${logPrefix} stream error:`, e);
+          options?.onError?.(String(e));
+        } finally {
+          done = true;
+          console.log(`${logPrefix} stream done, tokens=${tokens}`);
+          options?.onDone?.();
         }
-      }
-      console.log(`${logPrefix} stream drain done, chunks=${result.length}, tokens=${tokens}`);
-      return result;
+      };
+
+      run();
+      return cancel;
     };
 
     // Helpers to inspect and manage WebLLM's browser cache.

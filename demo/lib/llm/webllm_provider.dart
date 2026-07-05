@@ -39,9 +39,7 @@ class WebLlmProvider implements LlmProvider {
 
   @override
   Future<String> chat(String prompt, {String? model, void Function()? onCancel}) => _runWithTimeout(
-    () => _run([
-      (role: 'user', content: prompt),
-    ]),
+    () => _run([(role: 'user', content: prompt)]),
     onCancel: onCancel,
   );
 
@@ -50,10 +48,32 @@ class WebLlmProvider implements LlmProvider {
     List<LlmMessage> messages, {
     String? model,
     void Function()? onCancel,
-  }) =>
-      _runWithTimeout(() => _run(messages.map(_toWebLlmMessage).toList()), onCancel: onCancel);
+  }) async {
+    return _runWithTimeout(
+      () => _run(messages.map(_toWebLlmMessage).toList()),
+      onCancel: onCancel,
+    );
+  }
 
-  /// Interrupt an ongoing generation. Safe to call even when nothing is running.
+  @override
+  Stream<String> chatStream(
+    String prompt, {
+    String? model,
+    void Function()? onCancel,
+  }) async* {
+    yield* _streamRun([(role: 'user', content: prompt)], onCancel: onCancel);
+  }
+
+  @override
+  Stream<String> chatMessagesStream(
+    List<LlmMessage> messages, {
+    String? model,
+    void Function()? onCancel,
+  }) async* {
+    yield* _streamRun(messages.map(_toWebLlmMessage).toList(), onCancel: onCancel);
+  }
+
+  @override
   Future<void> cancel() async {
     _log('cancel requested');
     await _service.interrupt();
@@ -62,6 +82,51 @@ class WebLlmProvider implements LlmProvider {
   void _log(String message) {
     // ignore: avoid_print
     print('[WebLlmProvider] $message');
+  }
+
+  Stream<String> _streamRun(
+    List<({String role, String content})> messages, {
+    void Function()? onCancel,
+  }) async* {
+    final sw = Stopwatch()..start();
+    _log('_streamRun start: ${messages.length} message(s), preset=${_preset.id}, '
+        'contextWindow=${_settings.webLlmContextWindowSize}, '
+        'maxOutputTokens=${_settings.webLlmMaxOutputTokens}');
+
+    await _service.loadModel(
+      _preset,
+      contextWindowSize: _settings.webLlmContextWindowSize,
+    );
+    _log('model ready in ${sw.elapsedMilliseconds}ms');
+
+    final effectiveMaxTokens = _settings.webLlmMaxOutputTokens.clamp(16, 2048);
+    _log('calling chatStream with maxTokens=$effectiveMaxTokens');
+
+    final controller = StreamController<String>();
+    void Function()? cancelFn;
+    try {
+      cancelFn = await _service.chatStream(
+        messages: messages,
+        maxTokens: effectiveMaxTokens,
+        onChunk: controller.add,
+      );
+      await for (final chunk in controller.stream) {
+        yield chunk;
+      }
+      _log('stream completed in ${sw.elapsedMilliseconds}ms');
+    } on TimeoutException {
+      _log('stream timed out after ${sw.elapsedMilliseconds}ms');
+      onCancel?.call();
+      cancelFn?.call();
+      rethrow;
+    } catch (e, s) {
+      _log('stream error after ${sw.elapsedMilliseconds}ms: $e\n$s');
+      rethrow;
+    } finally {
+      _log('stream finally after ${sw.elapsedMilliseconds}ms');
+      cancelFn?.call();
+      await controller.close();
+    }
   }
 
   Future<String> _run(List<({String role, String content})> messages) async {
@@ -81,7 +146,7 @@ class WebLlmProvider implements LlmProvider {
       _log('calling chat with maxTokens=$effectiveMaxTokens');
       final response = await _service.chat(
         messages: messages,
-        stream: true,
+        stream: false,
         maxTokens: effectiveMaxTokens,
       );
       _log('response received in ${sw.elapsedMilliseconds}ms, '

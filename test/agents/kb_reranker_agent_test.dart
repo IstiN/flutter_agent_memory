@@ -23,6 +23,27 @@ RANKED_ID=n_0001
     String? model,
     void Function()? onCancel,
   }) async => chat(messages.last.content);
+
+  @override
+  Stream<String> chatStream(
+    String prompt, {
+    String? model,
+    void Function()? onCancel,
+  }) async* {
+    yield await chat(prompt, model: model, onCancel: onCancel);
+  }
+
+  @override
+  Stream<String> chatMessagesStream(
+    List<LlmMessage> messages, {
+    String? model,
+    void Function()? onCancel,
+  }) async* {
+    yield await chatMessages(messages, model: model, onCancel: onCancel);
+  }
+
+  @override
+  Future<void> cancel() async {}
 }
 
 MemoryRecord _noteRecord(String id, String text) {

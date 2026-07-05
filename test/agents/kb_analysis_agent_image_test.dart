@@ -23,6 +23,28 @@ class _VisionFakeProvider implements LlmProvider {
     capturedMessages = messages;
     return '{"questions":[],"answers":[],"notes":[]}';
   }
+
+
+  @override
+  Stream<String> chatStream(
+    String prompt, {
+    String? model,
+    void Function()? onCancel,
+  }) async* {
+    yield await chat(prompt, model: model, onCancel: onCancel);
+  }
+
+  @override
+  Stream<String> chatMessagesStream(
+    List<LlmMessage> messages, {
+    String? model,
+    void Function()? onCancel,
+  }) async* {
+    yield await chatMessages(messages, model: model, onCancel: onCancel);
+  }
+
+  @override
+  Future<void> cancel() async {}
 }
 
 void main() {

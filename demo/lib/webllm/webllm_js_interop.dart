@@ -44,18 +44,21 @@ class WebLlmEngineConfig {
 @JS('webllm.prebuiltAppConfig')
 external JSObject? get prebuiltAppConfig;
 
-/// Helper installed by [demo/web/index.html] that drains a JS async iterator
-/// into a plain array. Dart's JS interop cannot iterate async iterables
-/// directly without unsafe reflection, so we use a tiny JS wrapper.
+/// Helper installed by [demo/web/index.html] that streams chat-completion
+/// chunks through JS callbacks.
 ///
-/// The optional [options] object may contain:
-///   - maxTokens: stop iterating after roughly this many content tokens.
-///   - logPrefix: prefix used for console logging.
+/// Returns a cancel function that stops the iterator. The [options] object
+/// must contain onChunk(content), and may contain onDone() / onError(msg),
+/// maxTokens and logPrefix.
+@JS('webllmStreamWithCallbacks')
+external JSFunction webllmStreamWithCallbacks(
+  JSObject asyncIterable,
+  JSObject options,
+);
+
+/// Legacy helper kept for callers that do not need real-time cancellation.
 @JS('webllmStreamToArray')
-external JSPromise<JSArray<JSObject>> webllmStreamToArray(
-  JSObject asyncIterable, [
-  JSObject? options,
-]);
+external JSPromise<JSArray<JSObject>> webllmStreamToArray(JSObject asyncIterable);
 
 /// Returns whether a model's weights are already cached by the browser.
 @JS('webllmIsModelCached')

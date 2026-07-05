@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
@@ -61,6 +62,27 @@ class OpenAiProvider implements LlmProvider {
     final json = jsonDecode(response.body) as Map<String, dynamic>;
     return _extractContent(json);
   }
+
+  @override
+  Stream<String> chatStream(
+    String prompt, {
+    String? model,
+    void Function()? onCancel,
+  }) async* {
+    yield await chat(prompt, model: model, onCancel: onCancel);
+  }
+
+  @override
+  Stream<String> chatMessagesStream(
+    List<LlmMessage> messages, {
+    String? model,
+    void Function()? onCancel,
+  }) async* {
+    yield await chatMessages(messages, model: model, onCancel: onCancel);
+  }
+
+  @override
+  Future<void> cancel() async {}
 
   Map<String, dynamic> _buildPayload(List<LlmMessage> messages, String model) {
     final payload = <String, dynamic>{

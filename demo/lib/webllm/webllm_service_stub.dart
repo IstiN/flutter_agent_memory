@@ -45,6 +45,13 @@ class WebLlmService {
   }) async =>
       throw UnsupportedError('WebLLM is only supported on the web.');
 
+  Future<void Function()> chatStream({
+    required List<({String role, String content})> messages,
+    required void Function(String chunk) onChunk,
+    int? maxTokens,
+  }) async =>
+      throw UnsupportedError('WebLLM is only supported on the web.');
+
   Future<void> interrupt() async {}
   Future<void> dispose() async {}
 }

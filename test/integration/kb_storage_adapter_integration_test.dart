@@ -33,6 +33,27 @@ class _KeywordProvider implements LlmProvider {
     void Function()? onCancel,
   }) =>
       chat(messages.first.content);
+
+  @override
+  Stream<String> chatStream(
+    String prompt, {
+    String? model,
+    void Function()? onCancel,
+  }) async* {
+    yield await chat(prompt, model: model, onCancel: onCancel);
+  }
+
+  @override
+  Stream<String> chatMessagesStream(
+    List<LlmMessage> messages, {
+    String? model,
+    void Function()? onCancel,
+  }) async* {
+    yield await chatMessages(messages, model: model, onCancel: onCancel);
+  }
+
+  @override
+  Future<void> cancel() async {}
 }
 
 class _StorageFixture {
@@ -160,5 +181,5 @@ void main() {
         );
       });
     });
-  }
+}
 }

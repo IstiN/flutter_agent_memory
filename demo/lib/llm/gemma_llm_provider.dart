@@ -55,6 +55,30 @@ class GemmaLlmProvider implements LlmProvider {
   }) =>
       _runWithTimeout(() => _run(messages));
 
+  @override
+  Stream<String> chatStream(
+    String prompt, {
+    String? model,
+    void Function()? onCancel,
+  }) async* {
+    yield* _streamRun([LlmMessage(role: 'user', content: prompt)]);
+  }
+
+  @override
+  Stream<String> chatMessagesStream(
+    List<LlmMessage> messages, {
+    String? model,
+    void Function()? onCancel,
+  }) async* {
+    yield* _streamRun(messages);
+  }
+
+  @override
+  Future<void> cancel() async {
+    // Gemma sessions cannot be interrupted mid-generation in this wrapper.
+    _log('cancel requested (no-op for Gemma)');
+  }
+
   void _log(String message) {
     // ignore: avoid_print
     print('[GemmaLlmProvider] $message');
@@ -111,6 +135,54 @@ class GemmaLlmProvider implements LlmProvider {
           'length=${response.length}, '
           'preview=${response.length > 500 ? '${response.substring(0, 500)}...' : response}');
       return response;
+    } catch (e, s) {
+      _log('inference error after ${sw.elapsedMilliseconds}ms: $e\n$s');
+      rethrow;
+    } finally {
+      _log('[timing] closing session at ${sw.elapsedMilliseconds}ms');
+      await session.close();
+    }
+  }
+
+  Stream<String> _streamRun(List<LlmMessage> messages) async* {
+    final sw = Stopwatch()..start();
+    _log('_streamRun start: ${messages.length} message(s), '
+        'preset=${_preset.id}, maxTokens=${_preset.maxTokens}, '
+        'maxOutputTokens=${_preset.maxOutputTokens}');
+
+    _log('[timing] loading model...');
+    final model = await _service.loadModel(_preset);
+    _log('[timing] model loaded in ${sw.elapsedMilliseconds}ms, creating session...');
+    final session = await model.createSession(
+      temperature: _preset.temperature,
+      topK: _preset.topK,
+      topP: _preset.topP,
+      maxOutputTokens: _preset.maxOutputTokens,
+    );
+    _log('[timing] session created in ${sw.elapsedMilliseconds}ms');
+    try {
+      for (final msg in messages) {
+        final gemmaMsg = _toGemmaMessage(msg);
+        _log('addQueryChunk: role=${msg.role}, textLength=${msg.content.length}');
+        await session.addQueryChunk(gemmaMsg);
+      }
+      _log('[timing] waiting for response (streaming) at ${sw.elapsedMilliseconds}ms...');
+
+      _log('[debug] trying getResponse()...');
+      final syncResponse = await session.getResponse();
+      _log('[debug] getResponse() returned length=${syncResponse.length}, '
+          'preview="${syncResponse.length > 200 ? '${syncResponse.substring(0, 200)}...' : syncResponse}"');
+      if (syncResponse.isNotEmpty) {
+        _log('[timing] sync response received in ${sw.elapsedMilliseconds}ms');
+        yield syncResponse;
+        return;
+      }
+
+      _log('[debug] sync response empty, falling back to getResponseAsync()...');
+      await for (final token in session.getResponseAsync()) {
+        yield token;
+      }
+      _log('[timing] async stream completed in ${sw.elapsedMilliseconds}ms');
     } catch (e, s) {
       _log('inference error after ${sw.elapsedMilliseconds}ms: $e\n$s');
       rethrow;

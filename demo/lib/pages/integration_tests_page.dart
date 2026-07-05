@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_agent_memory/flutter_agent_memory_web.dart';
 
-import '../llm/webllm_provider.dart';
 import '../services/kb_service.dart';
 import '../theme/app_theme.dart';
 
@@ -103,11 +102,26 @@ class _IntegrationTestsPageState extends State<IntegrationTestsPage> {
 
   Future<void> _stopAll() async {
     final provider = _provider;
-    if (provider is WebLlmProvider) {
+    if (provider != null) {
       await provider.cancel();
     }
     _elapsedTimer?.cancel();
     setState(() => _runningAll = false);
+  }
+
+  Future<void> _stopTest(String id) async {
+    final provider = _provider;
+    if (provider != null) {
+      await provider.cancel();
+    }
+    setState(() {
+      _runningIds.remove(id);
+      final result = _results.firstWhere((r) => r.id == id);
+      if (result.status == _Status.running) {
+        result.status = _Status.failed;
+        result.message = '${result.partialOutput ?? ''}\nStopped by user.';
+      }
+    });
   }
 
   void _startElapsedTimer() {
@@ -129,62 +143,91 @@ class _IntegrationTestsPageState extends State<IntegrationTestsPage> {
     setState(() {
       result.status = _Status.running;
       result.message = null;
+      result.partialOutput = null;
       result.duration = null;
     });
 
     final stopwatch = Stopwatch()..start();
+    final buffer = StringBuffer();
+    StreamSubscription<String>? sub;
     try {
       final provider = _provider!;
-      void onCancel() {
-        if (provider is WebLlmProvider) provider.cancel().ignore();
-      }
-      final output = await test.run(provider, onCancel).timeout(
+      final stream = test.run(provider).timeout(
         test.timeout,
-        onTimeout: () {
-          onCancel();
-          throw TimeoutException(
-            '${test.name} did not complete within '
-            '${test.timeout.inSeconds}s',
-          );
+        onTimeout: (sink) {
+          sink.add('\n[TIMEOUT after ${test.timeout.inSeconds}s]');
+          sink.close();
         },
       );
-      stopwatch.stop();
-      setState(() {
-        result.status = _Status.passed;
-        result.message = output;
-        result.duration = stopwatch.elapsed;
-      });
+      sub = stream.listen(
+        (chunk) {
+          buffer.write(chunk);
+          if (mounted) {
+            setState(() {
+              result.partialOutput = buffer.toString();
+            });
+          }
+        },
+        onError: (Object e, StackTrace s) {
+          stopwatch.stop();
+          if (mounted) {
+            setState(() {
+              result.status = _Status.failed;
+              result.message = '${buffer.toString()}\n$e\n$s';
+              result.duration = stopwatch.elapsed;
+            });
+          }
+        },
+        onDone: () {
+          stopwatch.stop();
+          final output = buffer.toString();
+          if (mounted) {
+            setState(() {
+              result.status = _Status.passed;
+              result.message = output;
+              result.duration = stopwatch.elapsed;
+            });
+          }
+        },
+      );
+      await sub.asFuture();
     } catch (e, s) {
       stopwatch.stop();
-      setState(() {
-        result.status = _Status.failed;
-        result.message = '$e\n$s';
-        result.duration = stopwatch.elapsed;
-      });
+      if (mounted) {
+        setState(() {
+          result.status = _Status.failed;
+          result.message = '${buffer.toString()}\n$e\n$s';
+          result.duration = stopwatch.elapsed;
+        });
+      }
     } finally {
+      await sub?.cancel();
       _runningIds.remove(test.id);
+      if (mounted) setState(() {});
     }
   }
 
-  Future<String> _runPing(LlmProvider provider, void Function()? onCancel) async {
-    final response = await provider.chat(
+  Stream<String> _runPing(LlmProvider provider) async* {
+    yield 'Prompt: Reply with exactly one word: hello.\n\n';
+    await for (final chunk in provider.chatStream(
       'Reply with exactly one word: hello.',
-      onCancel: onCancel,
-    );
-    final text = response.trim();
+    )) {
+      yield chunk;
+    }
+    final text = _lastPartial(_results.firstWhere((r) => r.id == 'ping')).trim();
     if (text.isEmpty) throw StateError('Empty response from model');
-    return 'Response: "$text"';
+    yield '\n\nResult: Response received.';
   }
 
-  Future<String> _runJson(LlmProvider provider, void Function()? onCancel) async {
-    final response = await provider.chat(
+  Stream<String> _runJson(LlmProvider provider) async* {
+    yield 'Prompt: Return ONLY a JSON object with ok=true.\n\n';
+    await for (final chunk in provider.chatStream(
       'Return ONLY a JSON object with a single boolean field named "ok" set to true. '
       'No markdown, no explanation.',
-      onCancel: onCancel,
-    );
-    final text = response.trim();
-    // Small on-device models may append hallucinated text after the JSON; find
-    // the first balanced JSON object rather than parsing the whole response.
+    )) {
+      yield chunk;
+    }
+    final text = _lastPartial(_results.firstWhere((r) => r.id == 'json')).trim();
     final jsonMatch = RegExp(r'\{[\s\S]*?\}').firstMatch(text);
     if (jsonMatch == null) throw StateError('No JSON object found in response: $text');
     final cleaned = jsonMatch.group(0)!
@@ -193,10 +236,11 @@ class _IntegrationTestsPageState extends State<IntegrationTestsPage> {
         .trim();
     final json = jsonDecode(cleaned) as Map<String, dynamic>;
     if (json['ok'] != true) throw StateError('Expected {"ok": true}, got $json');
-    return 'Parsed JSON: $json';
+    yield '\n\nResult: Parsed JSON: $json';
   }
 
-  Future<String> _runTagGenerator(LlmProvider provider, void Function()? onCancel) async {
+  Stream<String> _runTagGenerator(LlmProvider provider) async* {
+    yield 'Generating tags for "Flutter state management with Riverpod"...\n\n';
     final agent = KBTagGeneratorAgent(provider);
     final tags = await agent.generateTags(
       'Flutter state management with Riverpod',
@@ -211,10 +255,11 @@ class _IntegrationTestsPageState extends State<IntegrationTestsPage> {
       maxTags: 5,
     );
     if (tags.isEmpty) throw StateError('No tags generated');
-    return 'Generated tags: ${tags.join(', ')}';
+    yield 'Generated tags: ${tags.join(', ')}';
   }
 
-  Future<String> _runAnalysis(LlmProvider provider, void Function()? onCancel) async {
+  Stream<String> _runAnalysis(LlmProvider provider) async* {
+    yield 'Analyzing short transcript...\n\n';
     final service = widget.kbService.rawTextProcessor;
     final result = await service.process(
       'Alice: How do I test Dart code?\nBob: Use the test package.',
@@ -222,10 +267,11 @@ class _IntegrationTestsPageState extends State<IntegrationTestsPage> {
     final questions = (result['questions'] as List).length;
     final answers = (result['answers'] as List).length;
     if (questions == 0) throw StateError('No questions extracted');
-    return 'Extracted $questions question(s), $answers answer(s)';
+    yield 'Extracted $questions question(s), $answers answer(s)';
   }
 
-  Future<String> _runSearchPipeline(LlmProvider provider, void Function()? onCancel) async {
+  Stream<String> _runSearchPipeline(LlmProvider provider) async* {
+    yield 'Adding sample note and searching...\n\n';
     final store = widget.kbService.store;
     final text = 'We decided to use Riverpod for Flutter state management.';
     final note = await store.addNote(
@@ -241,8 +287,10 @@ class _IntegrationTestsPageState extends State<IntegrationTestsPage> {
     );
     final found = search.results.any((r) => r.id == noteId);
     if (!found) throw StateError('Added record was not found by text search');
-    return 'Added note $noteId and found it in ${search.results.length} result(s)';
+    yield 'Added note $noteId and found it in ${search.results.length} result(s)';
   }
+
+  String _lastPartial(_TestResult result) => result.partialOutput ?? '';
 
   @override
   Widget build(BuildContext context) {
@@ -324,6 +372,7 @@ class _IntegrationTestsPageState extends State<IntegrationTestsPage> {
                         runningAll: _runningAll,
                         runningIds: _runningIds,
                         onRun: () => _runTestAt(index),
+                        onStop: () => _stopTest(_tests[index].id),
                       ),
                   ],
                 ),
@@ -339,7 +388,7 @@ class _TestDefinition {
   final String id;
   final String name;
   final String description;
-  final Future<String> Function(LlmProvider provider, void Function()? onCancel) run;
+  final Stream<String> Function(LlmProvider provider) run;
   final Duration timeout;
 
   _TestDefinition({
@@ -357,11 +406,13 @@ class _TestResult {
   final String id;
   _Status status;
   String? message;
+  String? partialOutput;
   Duration? duration;
 
   _TestResult(this.id)
     : status = _Status.idle,
       message = null,
+      partialOutput = null,
       duration = null;
 }
 
@@ -371,6 +422,7 @@ class _TestCard extends StatelessWidget {
   final bool runningAll;
   final Set<String> runningIds;
   final VoidCallback onRun;
+  final VoidCallback onStop;
 
   const _TestCard({
     required this.test,
@@ -378,6 +430,7 @@ class _TestCard extends StatelessWidget {
     required this.runningAll,
     required this.runningIds,
     required this.onRun,
+    required this.onStop,
   });
 
   Color get _statusColor {
@@ -409,6 +462,11 @@ class _TestCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final displayOutput = result.status == _Status.running
+        ? result.partialOutput ?? ''
+        : result.message;
+    final isRunning = result.status == _Status.running;
+
     return NeoCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -439,15 +497,32 @@ class _TestCard extends StatelessWidget {
               SizedBox(
                 width: 90,
                 child: ElevatedButton.icon(
-                  onPressed: runningAll ||
-                          result.status == _Status.running ||
-                          runningIds.contains(test.id)
+                  onPressed: runningAll || isRunning || runningIds.contains(test.id)
                       ? null
                       : onRun,
                   icon: const Icon(Icons.play_arrow, size: 16),
                   label: const Text('Run'),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                    disabledBackgroundColor: AppColors.surfaceHigh,
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    textStyle: const TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              SizedBox(
+                width: 90,
+                child: ElevatedButton.icon(
+                  onPressed: isRunning ? onStop : null,
+                  icon: const Icon(Icons.stop, size: 16),
+                  label: const Text('Stop'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.error,
                     foregroundColor: Colors.white,
                     disabledBackgroundColor: AppColors.surfaceHigh,
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
@@ -472,7 +547,7 @@ class _TestCard extends StatelessWidget {
               style: const TextStyle(color: AppColors.textMuted, fontSize: 12),
             ),
           ],
-          if (result.message != null) ...[
+          if (displayOutput != null && displayOutput.isNotEmpty) ...[
             const SizedBox(height: 10),
             Container(
               width: double.infinity,
@@ -486,7 +561,7 @@ class _TestCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    result.message!,
+                    displayOutput,
                     style: const TextStyle(
                       color: AppColors.text,
                       fontSize: 12,
@@ -500,7 +575,7 @@ class _TestCard extends StatelessWidget {
                     child: TextButton.icon(
                       onPressed: () {
                         Clipboard.setData(
-                          ClipboardData(text: result.message!),
+                          ClipboardData(text: displayOutput),
                         );
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(content: Text('Copied to clipboard')),
