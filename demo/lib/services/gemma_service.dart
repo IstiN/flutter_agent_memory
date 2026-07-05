@@ -131,19 +131,24 @@ class FlutterGemmaService implements GemmaService {
         'Model "${preset.displayName}" is not installed. Install it first.',
       );
     }
-    if (_loadedPreset?.id == preset.id && backend == null) {
-      final cached = FlutterGemmaPlugin.instance.initializedModel;
-      if (cached != null) {
-        _log('loadModel(${preset.id}) using cached model');
-        return cached;
-      }
-    }
+
     final preferredBackend = backend ?? preset.preferredBackend;
+    final plugin = FlutterGemmaPlugin.instance;
+
+    // If the requested preset differs from the one currently loaded, close the
+    // cached model singleton. FlutterGemmaWeb keeps one initializedModel across
+    // engines (LiteRT-LM vs MediaPipe). Switching fileType requires rebuilding
+    // the model; otherwise the old engine tries to reuse the wrong runtime.
+    final previousPresetId = _loadedPreset?.id;
+    if (previousPresetId != null &&
+        previousPresetId != preset.id &&
+        plugin.initializedModel != null) {
+      _log('loadModel(${preset.id}) closing cached model from $previousPresetId');
+      await plugin.initializedModel!.close();
+    }
 
     // Make sure the requested preset is the active inference model.
-    // getActiveModel() uses whatever is currently active, so without this a
-    // previously-loaded model would keep being returned.
-    final manager = FlutterGemmaPlugin.instance.modelManager;
+    final manager = plugin.modelManager;
     final active = manager.activeInferenceModel;
     if (active == null || active.name != preset.filename) {
       _log('loadModel(${preset.id}) setting active model...');
