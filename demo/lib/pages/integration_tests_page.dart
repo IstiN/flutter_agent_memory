@@ -119,9 +119,13 @@ class _IntegrationTestsPageState extends State<IntegrationTestsPage> {
     );
   }
 
+  final Set<String> _runningIds = {};
+
   Future<void> _runTestAt(int index) async {
     final test = _tests[index];
     final result = _results[index];
+    if (_runningIds.contains(test.id)) return;
+    _runningIds.add(test.id);
     setState(() {
       result.status = _Status.running;
       result.message = null;
@@ -157,6 +161,8 @@ class _IntegrationTestsPageState extends State<IntegrationTestsPage> {
         result.message = '$e\n$s';
         result.duration = stopwatch.elapsed;
       });
+    } finally {
+      _runningIds.remove(test.id);
     }
   }
 
@@ -177,7 +183,11 @@ class _IntegrationTestsPageState extends State<IntegrationTestsPage> {
       onCancel: onCancel,
     );
     final text = response.trim();
-    final cleaned = text
+    // Small on-device models may append hallucinated text after the JSON; find
+    // the first balanced JSON object rather than parsing the whole response.
+    final jsonMatch = RegExp(r'\{[\s\S]*?\}').firstMatch(text);
+    if (jsonMatch == null) throw StateError('No JSON object found in response: $text');
+    final cleaned = jsonMatch.group(0)!
         .replaceAll(RegExp(r'^```json\s*'), '')
         .replaceAll(RegExp(r'\s*```$'), '')
         .trim();
@@ -312,6 +322,7 @@ class _IntegrationTestsPageState extends State<IntegrationTestsPage> {
                         test: _tests[index],
                         result: _results[index],
                         runningAll: _runningAll,
+                        runningIds: _runningIds,
                         onRun: () => _runTestAt(index),
                       ),
                   ],
@@ -358,12 +369,14 @@ class _TestCard extends StatelessWidget {
   final _TestDefinition test;
   final _TestResult result;
   final bool runningAll;
+  final Set<String> runningIds;
   final VoidCallback onRun;
 
   const _TestCard({
     required this.test,
     required this.result,
     required this.runningAll,
+    required this.runningIds,
     required this.onRun,
   });
 
@@ -426,7 +439,9 @@ class _TestCard extends StatelessWidget {
               SizedBox(
                 width: 90,
                 child: ElevatedButton.icon(
-                  onPressed: runningAll || result.status == _Status.running
+                  onPressed: runningAll ||
+                          result.status == _Status.running ||
+                          runningIds.contains(test.id)
                       ? null
                       : onRun,
                   icon: const Icon(Icons.play_arrow, size: 16),
