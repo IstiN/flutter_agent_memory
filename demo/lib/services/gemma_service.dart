@@ -149,6 +149,10 @@ class FlutterGemmaService implements GemmaService {
         plugin.initializedModel != null) {
       _log('loadModel(${preset.id}) closing cached model from $previousPresetId');
       await plugin.initializedModel!.close();
+      // Give the underlying WASM engine time to fully tear down GPU/WebGPU
+      // context before a different runtime (LiteRT-LM ↔ MediaPipe) reuses it.
+      await Future.delayed(const Duration(milliseconds: 500));
+      _log('loadModel(${preset.id}) model closed and delay elapsed');
     }
 
     // Make sure the requested preset is the active inference model.
