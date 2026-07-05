@@ -159,18 +159,45 @@ class LiteRtLmWebInferenceModel extends InferenceModel with CloseNotifier {
         'maxNumTokens: $maxTokens})',
       );
     }
-    final sw = Stopwatch()..start();
-    final engineFuture = LiteRtLmEngine.create(
-      LiteRtLmEngineOptions(
-        model: modelArg,
-        mainExecutorSettings: {'maxNumTokens': maxTokens}.jsify() as JSObject?,
-      ),
+    _engine = await _createEngineWithRetry(modelArg);
+  }
+
+  /// Wraps [LiteRtLmEngine.create] with one retry. After another web engine
+  /// (e.g. MediaPipe) has just been closed, the GPU/WebGPU context may still be
+  /// tearing down asynchronously; LiteRT-LM's first creation attempt can then
+  /// throw an uncaught WASM error. A short delay + retry usually succeeds on
+  /// the second attempt.
+  Future<LiteRtLmEngine> _createEngineWithRetry(JSAny modelArg) async {
+    final options = LiteRtLmEngineOptions(
+      model: modelArg,
+      mainExecutorSettings: {'maxNumTokens': maxTokens}.jsify() as JSObject?,
     );
-    _engine = await engineFuture.toDart;
-    if (kDebugMode) {
-      gemmaLog(
-        '[LiteRtLmWebInferenceModel/perf] Engine.create: ${sw.elapsedMilliseconds}ms',
-      );
+    final sw = Stopwatch()..start();
+    try {
+      final engine = await LiteRtLmEngine.create(options).toDart;
+      if (kDebugMode) {
+        gemmaLog(
+          '[LiteRtLmWebInferenceModel/perf] Engine.create: '
+          '${sw.elapsedMilliseconds}ms',
+        );
+      }
+      return engine;
+    } catch (e) {
+      if (kDebugMode) {
+        gemmaLog(
+          '[LiteRtLmWebInferenceModel] Engine.create failed, '
+          'retrying after 2s delay: $e',
+        );
+      }
+      await Future.delayed(const Duration(milliseconds: 2000));
+      final engine = await LiteRtLmEngine.create(options).toDart;
+      if (kDebugMode) {
+        gemmaLog(
+          '[LiteRtLmWebInferenceModel/perf] Engine.create (retry): '
+          '${sw.elapsedMilliseconds}ms',
+        );
+      }
+      return engine;
     }
   }
 
