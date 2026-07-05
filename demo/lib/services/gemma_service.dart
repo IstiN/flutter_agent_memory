@@ -152,8 +152,8 @@ class FlutterGemmaService implements GemmaService {
       await plugin.initializedModel!.close();
       // Give the underlying WASM engine time to fully tear down GPU/WebGPU
       // context before a different runtime (LiteRT-LM ↔ MediaPipe) reuses it.
-      // Empirically 800 ms is not enough on some GPUs; 2 s is a safer margin.
-      await Future.delayed(const Duration(milliseconds: 2000));
+      // Empirically 2 s is the minimum on some GPUs; 3 s is a safer margin.
+      await Future.delayed(const Duration(milliseconds: 3000));
       _log('loadModel(${preset.id}) model closed and delay elapsed');
     }
 

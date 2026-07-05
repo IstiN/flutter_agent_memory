@@ -186,10 +186,10 @@ class WebInferenceModel extends InferenceModel with CloseNotifier {
         maxNumImages: supportImage ? (maxNumImages ?? 1) : null,
       );
 
-      final llmInference = await LlmInference.createFromOptions(
+      final llmInference = await _createInferenceWithRetry(
         fileset,
         config,
-      ).toDart;
+      );
 
       session = WebModelSession(
         modelType: modelType,
@@ -207,6 +207,29 @@ class WebInferenceModel extends InferenceModel with CloseNotifier {
       _initCompleter = null;
       completer.completeError(e, st);
       rethrow;
+    }
+  }
+
+  /// Wraps [LlmInference.createFromOptions] with one retry. After another web
+  /// engine (e.g. LiteRT-LM) has just been closed, the GPU/WebGPU context may
+  /// still be tearing down asynchronously; MediaPipe's first creation attempt
+  /// can then throw an uncaught WASM error. A short delay + retry usually
+  /// succeeds on the second attempt.
+  Future<LlmInference> _createInferenceWithRetry(
+    FilesetResolver fileset,
+    LlmInferenceOptions config,
+  ) async {
+    try {
+      return await LlmInference.createFromOptions(fileset, config).toDart;
+    } catch (e) {
+      if (kDebugMode) {
+        gemmaLog(
+          '[WebInferenceModel] LlmInference.createFromOptions failed, '
+          'retrying after 2s delay: $e',
+        );
+      }
+      await Future.delayed(const Duration(milliseconds: 2000));
+      return await LlmInference.createFromOptions(fileset, config).toDart;
     }
   }
 
