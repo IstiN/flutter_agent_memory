@@ -152,7 +152,8 @@ class FlutterGemmaService implements GemmaService {
       await plugin.initializedModel!.close();
       // Give the underlying WASM engine time to fully tear down GPU/WebGPU
       // context before a different runtime (LiteRT-LM ↔ MediaPipe) reuses it.
-      await Future.delayed(const Duration(milliseconds: 800));
+      // Empirically 800 ms is not enough on some GPUs; 2 s is a safer margin.
+      await Future.delayed(const Duration(milliseconds: 2000));
       _log('loadModel(${preset.id}) model closed and delay elapsed');
     }
 
@@ -161,7 +162,7 @@ class FlutterGemmaService implements GemmaService {
     // a different engine (.task vs .litertlm), which is the root cause of the
     // first-request-after-switch failure.
     _log('loadModel(${preset.id}) creating model directly from preset spec...');
-    final model = await plugin.createModel(
+    Future<InferenceModel> doCreate() => plugin.createModel(
       modelType: preset.modelType,
       fileType: preset.fileType,
       maxTokens: preset.maxTokens,
@@ -170,6 +171,21 @@ class FlutterGemmaService implements GemmaService {
       supportAudio: preset.supportAudio,
       maxNumImages: preset.maxNumImages,
     );
+
+    InferenceModel model;
+    try {
+      model = await doCreate();
+    } catch (e) {
+      // One retry: the previous engine's WASM/WebGPU teardown may still be in
+      // progress on slower GPUs. A short wait and retry usually succeeds.
+      _log(
+        'loadModel(${preset.id}) first create attempt failed ($e), '
+        'waiting 2s then retrying once...',
+      );
+      await Future.delayed(const Duration(milliseconds: 2000));
+      model = await doCreate();
+      _log('loadModel(${preset.id}) retry succeeded');
+    }
 
     // Keep the model manager in sync so uninstall/delete and legacy flows work.
     final manager = plugin.modelManager;
