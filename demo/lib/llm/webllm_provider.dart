@@ -67,7 +67,8 @@ class WebLlmProvider implements LlmProvider {
   Future<String> _run(List<({String role, String content})> messages) async {
     final sw = Stopwatch()..start();
     _log('_run start: ${messages.length} message(s), preset=${_preset.id}, '
-        'contextWindow=${_settings.webLlmContextWindowSize}');
+        'contextWindow=${_settings.webLlmContextWindowSize}, '
+        'maxOutputTokens=${_settings.webLlmMaxOutputTokens}');
 
     await _service.loadModel(
       _preset,
@@ -76,10 +77,12 @@ class WebLlmProvider implements LlmProvider {
     _log('model ready in ${sw.elapsedMilliseconds}ms');
 
     try {
+      final effectiveMaxTokens = _settings.webLlmMaxOutputTokens.clamp(16, 2048);
+      _log('calling chat with maxTokens=$effectiveMaxTokens');
       final response = await _service.chat(
         messages: messages,
         stream: true,
-        maxTokens: _settings.webLlmMaxOutputTokens,
+        maxTokens: effectiveMaxTokens,
       );
       _log('response received in ${sw.elapsedMilliseconds}ms, '
           'length=${response.length}, '

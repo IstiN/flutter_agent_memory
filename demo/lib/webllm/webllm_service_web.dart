@@ -105,13 +105,21 @@ class WebLlmService {
     final request = {
       'stream': stream,
       'messages': jsMessages,
-      'max_tokens': ?maxTokens,
+      'max_tokens': maxTokens,
       'stop': ['<|endoftext|>', '<|im_end|>', '</s>'].jsify(),
     }.jsify() as JSObject;
 
+    _log('chatCompletion request stream=$stream maxTokens=$maxTokens messages=${messages.length}');
+
     if (stream) {
+      final options = {
+        'maxTokens': maxTokens ?? 2048,
+        'logPrefix': '[WebLlmService]',
+      }.jsify() as JSObject;
       final asyncIterable = await engine.chatCompletion(request).toDart as JSObject;
-      final chunks = await webllmStreamToArray(asyncIterable).toDart;
+      _log('streaming response, waiting for iterator');
+      final chunks = await webllmStreamToArray(asyncIterable, options).toDart;
+      _log('iterator drained, chunks=${chunks.length}');
       final buffer = StringBuffer();
       for (final chunk in chunks.toDart) {
         final choices = chunk.getProperty<JSArray?>('choices'.toJS);

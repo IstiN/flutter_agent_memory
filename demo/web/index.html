@@ -71,11 +71,29 @@
 
     // Helper used by demo/lib/webllm/webllm_js_interop.dart to drain streaming
     // chat-completion async iterators without unsafe reflection.
-    window.webllmStreamToArray = async (asyncIterable) => {
+    window.webllmStreamToArray = async (asyncIterable, options) => {
+      const maxTokens = options?.maxTokens ?? Number.MAX_SAFE_INTEGER;
+      const logPrefix = options?.logPrefix ?? '[WebLLM]';
       const result = [];
+      let tokens = 0;
+      console.log(`${logPrefix} stream drain start, maxTokens=${maxTokens}`);
       for await (const chunk of asyncIterable) {
         result.push(chunk);
+        const choices = chunk.choices;
+        const delta = choices?.[0]?.delta;
+        const content = delta?.content ?? '';
+        tokens += content.length > 0 ? 1 : 0;
+        if (content) {
+          console.log(`${logPrefix} stream chunk #${result.length} tokens=${tokens} content="${content.substring(0, 80).replace(/\n/g, '\\n')}"`);
+        } else {
+          console.log(`${logPrefix} stream chunk #${result.length} tokens=${tokens} (no content)`);
+        }
+        if (tokens >= maxTokens) {
+          console.log(`${logPrefix} stream drain stopping at maxTokens=${maxTokens}`);
+          break;
+        }
       }
+      console.log(`${logPrefix} stream drain done, chunks=${result.length}, tokens=${tokens}`);
       return result;
     };
 

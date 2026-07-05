@@ -47,8 +47,15 @@ external JSObject? get prebuiltAppConfig;
 /// Helper installed by [demo/web/index.html] that drains a JS async iterator
 /// into a plain array. Dart's JS interop cannot iterate async iterables
 /// directly without unsafe reflection, so we use a tiny JS wrapper.
+///
+/// The optional [options] object may contain:
+///   - maxTokens: stop iterating after roughly this many content tokens.
+///   - logPrefix: prefix used for console logging.
 @JS('webllmStreamToArray')
-external JSPromise<JSArray<JSObject>> webllmStreamToArray(JSObject asyncIterable);
+external JSPromise<JSArray<JSObject>> webllmStreamToArray(
+  JSObject asyncIterable, [
+  JSObject? options,
+]);
 
 /// Returns whether a model's weights are already cached by the browser.
 @JS('webllmIsModelCached')
