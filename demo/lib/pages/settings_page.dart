@@ -8,6 +8,7 @@ import '../services/kb_service.dart';
 import '../services/provider_service.dart';
 import '../services/version_info.dart';
 import '../theme/app_theme.dart';
+import '../webllm/webllm_service.dart';
 
 class SettingsPage extends StatefulWidget {
   final KbService kbService;
@@ -23,6 +24,8 @@ class _SettingsPageState extends State<SettingsPage> {
   final _baseUrlController = TextEditingController();
   final _modelController = TextEditingController();
   late ProviderType _type;
+  late int _webLlmContextWindowSize;
+  late int _webLlmMaxOutputTokens;
   bool _saving = false;
   String? _message;
   int _recordCount = 0;
@@ -36,6 +39,8 @@ class _SettingsPageState extends State<SettingsPage> {
     _tokenController.text = settings.apiKey;
     _baseUrlController.text = settings.baseUrl;
     _modelController.text = settings.model;
+    _webLlmContextWindowSize = settings.webLlmContextWindowSize;
+    _webLlmMaxOutputTokens = settings.webLlmMaxOutputTokens;
     _loadRecordCount();
     _loadVersionInfo();
   }
@@ -77,7 +82,12 @@ class _SettingsPageState extends State<SettingsPage> {
                 const SizedBox(height: 12),
                 _ProviderGrid(
                   selected: _type,
-                  onSelected: (t) => setState(() => _type = t),
+                  onSelected: (t) => setState(() {
+                    _type = t;
+                    if (t == ProviderType.webllm && _modelController.text.isEmpty) {
+                      _modelController.text = webLlmModelPresets.first.id;
+                    }
+                  }),
                 ),
                 const SizedBox(height: 16),
                 _ProviderHint(type: _type),
@@ -118,7 +128,7 @@ class _SettingsPageState extends State<SettingsPage> {
                   obscureText: true,
                 ),
                 const SizedBox(height: 12),
-                if (_type != ProviderType.gemma) ...[
+                if (_type != ProviderType.gemma && _type != ProviderType.webllm) ...[
                   TextField(
                     controller: _baseUrlController,
                     style: const TextStyle(color: AppColors.text),
@@ -136,7 +146,9 @@ class _SettingsPageState extends State<SettingsPage> {
                     labelText: 'Model',
                     helperText: _type == ProviderType.gemma
                         ? 'Selected Gemma preset id'
-                        : 'e.g. gpt-4o-mini, llama3, mistral',
+                        : _type == ProviderType.webllm
+                            ? 'Selected WebLLM model id'
+                            : 'e.g. gpt-4o-mini, llama3, mistral',
                   ),
                 ),
                 const SizedBox(height: 10),
@@ -159,6 +171,26 @@ class _SettingsPageState extends State<SettingsPage> {
                     onUse: () {
                       setState(() => _type = ProviderType.gemma);
                       _save();
+                    },
+                  ),
+                ],
+                if (_type == ProviderType.webllm) ...[
+                  const SizedBox(height: 12),
+                  _WebLlmModelPresets(
+                    selectedId: _modelController.text,
+                    onSelected: (preset) {
+                      setState(() => _modelController.text = preset.id);
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                  _WebLlmConfig(
+                    contextWindowSize: _webLlmContextWindowSize,
+                    maxOutputTokens: _webLlmMaxOutputTokens,
+                    onContextWindowSizeChanged: (value) {
+                      setState(() => _webLlmContextWindowSize = value);
+                    },
+                    onMaxOutputTokensChanged: (value) {
+                      setState(() => _webLlmMaxOutputTokens = value);
                     },
                   ),
                 ],
@@ -257,6 +289,7 @@ class _SettingsPageState extends State<SettingsPage> {
       ProviderType.openRouter => 'OpenRouter API key',
       ProviderType.openAi => 'OpenAI API key',
       ProviderType.gemma => 'HuggingFace token (optional)',
+      ProviderType.webllm => 'Token (unused)',
       ProviderType.none => 'Token (unused)',
     };
   }
@@ -269,6 +302,8 @@ class _SettingsPageState extends State<SettingsPage> {
         apiKey: _tokenController.text.trim(),
         model: _modelController.text.trim(),
         baseUrl: _baseUrlController.text.trim(),
+        webLlmContextWindowSize: _webLlmContextWindowSize,
+        webLlmMaxOutputTokens: _webLlmMaxOutputTokens,
       );
       await _loadRecordCount();
       setState(() => _message = 'Saved. Provider rebuilt.');
@@ -414,6 +449,135 @@ class _ModelPresets extends StatelessWidget {
           labelStyle: const TextStyle(color: AppColors.textMuted, fontSize: 12),
         );
       }).toList(),
+    );
+  }
+}
+
+class _WebLlmModelPresets extends StatelessWidget {
+  final String selectedId;
+  final ValueChanged<WebLlmModelPreset> onSelected;
+
+  const _WebLlmModelPresets({
+    required this.selectedId,
+    required this.onSelected,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const Text(
+          'On-device WebLLM models',
+          style: TextStyle(color: AppColors.textMuted, fontSize: 12),
+        ),
+        const SizedBox(height: 8),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: webLlmModelPresets.map((preset) {
+            final isSelected = selectedId == preset.id;
+            return ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 200),
+              child: InputChip(
+                label: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      preset.displayName,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(fontSize: 12),
+                    ),
+                    Text(
+                      preset.size,
+                      style: const TextStyle(
+                        fontSize: 10,
+                        color: AppColors.textMuted,
+                      ),
+                    ),
+                  ],
+                ),
+                selected: isSelected,
+                onSelected: (_) => onSelected(preset),
+              ),
+            );
+          }).toList(),
+        ),
+      ],
+    );
+  }
+}
+
+class _WebLlmConfig extends StatelessWidget {
+  final int contextWindowSize;
+  final int maxOutputTokens;
+  final ValueChanged<int> onContextWindowSizeChanged;
+  final ValueChanged<int> onMaxOutputTokensChanged;
+
+  const _WebLlmConfig({
+    required this.contextWindowSize,
+    required this.maxOutputTokens,
+    required this.onContextWindowSizeChanged,
+    required this.onMaxOutputTokensChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const Text(
+          'WebLLM context',
+          style: TextStyle(color: AppColors.textMuted, fontSize: 12),
+        ),
+        const SizedBox(height: 8),
+        Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Context window: $contextWindowSize',
+                    style: const TextStyle(color: AppColors.text, fontSize: 12),
+                  ),
+                  Slider(
+                    value: contextWindowSize.toDouble(),
+                    min: 512,
+                    max: 8192,
+                    divisions: 15,
+                    label: contextWindowSize.toString(),
+                    onChanged: (value) =>
+                        onContextWindowSizeChanged(value.toInt()),
+                  ),
+                ],
+              ),
+            ),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Max output tokens: $maxOutputTokens',
+                    style: const TextStyle(color: AppColors.text, fontSize: 12),
+                  ),
+                  Slider(
+                    value: maxOutputTokens.toDouble(),
+                    min: 128,
+                    max: 4096,
+                    divisions: 15,
+                    label: maxOutputTokens.toString(),
+                    onChanged: (value) =>
+                        onMaxOutputTokensChanged(value.toInt()),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ],
     );
   }
 }
@@ -594,7 +758,8 @@ class _ProviderGrid extends StatelessWidget {
       (ProviderType.ollama, 'Ollama', Icons.computer),
       (ProviderType.openRouter, 'OpenRouter', Icons.router),
       (ProviderType.openAi, 'OpenAI', Icons.bolt),
-      (ProviderType.gemma, 'Gemma', Icons.memory),
+      (ProviderType.gemma, 'Flutter Gemma', Icons.memory),
+      (ProviderType.webllm, 'WebLLM', Icons.web),
       (ProviderType.none, 'None', Icons.block),
     ];
     return Wrap(
@@ -661,6 +826,13 @@ class _ProviderHint extends StatelessWidget {
         icon: Icons.open_in_new,
         text: 'Flutter Gemma models',
         url: 'https://fluttergemma.dev',
+      );
+    }
+    if (type == ProviderType.webllm) {
+      return _HintCard(
+        icon: Icons.open_in_new,
+        text: 'WebLLM model list',
+        url: 'https://github.com/mlc-ai/web-llm',
       );
     }
     return const SizedBox.shrink();

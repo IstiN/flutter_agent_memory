@@ -11,6 +11,7 @@ import 'services/prompt_asset_loader.dart';
 import 'services/provider_service.dart';
 import 'services/raw_text_processor_service.dart';
 import 'services/settings_service.dart';
+import 'webllm/webllm_service.dart';
 
 const _transcript = '''
 [2024-11-15T09:00:00Z] Alice: How do I manage state in Flutter?
@@ -65,7 +66,12 @@ Future<void> main() async {
 
   final settings = SettingsService(prefs);
   final gemmaService = FlutterGemmaService();
-  final providerService = ProviderService(settings, gemmaService: gemmaService);
+  final webLlmService = WebLlmService();
+  final providerService = ProviderService(
+    settings,
+    gemmaService: gemmaService,
+    webLlmService: webLlmService,
+  );
   final processor = RawTextProcessorService(providerService);
 
   _emit('MODEL', 'checking/installing gemma4-e2b-litertlm');

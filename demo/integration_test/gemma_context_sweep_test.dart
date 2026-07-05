@@ -12,6 +12,7 @@ import 'package:demo/services/prompt_asset_loader.dart';
 import 'package:demo/services/provider_service.dart';
 import 'package:demo/services/raw_text_processor_service.dart';
 import 'package:demo/services/settings_service.dart';
+import 'package:demo/webllm/webllm_service.dart';
 
 class _TestCase {
   final String name;
@@ -69,6 +70,7 @@ void main() {
           final providerService = ProviderService(
             settings,
             gemmaService: gemmaService,
+            webLlmService: WebLlmService(),
           );
 
           final preset = findGemmaPreset('gemma4-e2b-litertlm')!;

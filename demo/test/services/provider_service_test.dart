@@ -4,6 +4,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:demo/services/provider_service.dart';
 import 'package:demo/services/settings_service.dart';
 
+import 'package:demo/webllm/webllm_service.dart';
+
 import 'fake_gemma_service.dart';
 
 void main() {
@@ -11,7 +13,11 @@ void main() {
     Future<ProviderService> makeService(Map<String, Object> values, {FakeGemmaService? gemma}) async {
       SharedPreferences.setMockInitialValues(values);
       final settings = await SettingsService.load();
-      return ProviderService(settings, gemmaService: gemma ?? FakeGemmaService());
+      return ProviderService(
+        settings,
+        gemmaService: gemma ?? FakeGemmaService(),
+        webLlmService: WebLlmService(),
+      );
     }
 
     test('returns null when provider is none', () async {

@@ -4,6 +4,8 @@ import 'package:flutter_agent_memory/flutter_agent_memory_web.dart';
 import 'package:demo/services/provider_service.dart';
 import 'package:demo/services/kb_service.dart';
 
+import 'package:demo/webllm/webllm_service.dart';
+
 import '../test_helpers.dart';
 import 'fake_gemma_service.dart';
 
@@ -14,7 +16,11 @@ void main() {
       final settings = await createTestSettings();
       final service = KbService(
         settings,
-        ProviderService(settings, gemmaService: FakeGemmaService()),
+        ProviderService(
+          settings,
+          gemmaService: FakeGemmaService(),
+          webLlmService: WebLlmService(),
+        ),
         storage: storage,
       );
 

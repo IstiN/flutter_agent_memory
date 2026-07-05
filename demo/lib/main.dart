@@ -8,6 +8,7 @@ import 'services/prompt_asset_loader.dart';
 import 'services/provider_service.dart';
 import 'services/settings_service.dart';
 import 'services/version_info.dart';
+import 'webllm/webllm_service.dart';
 import 'pages/dashboard_page.dart';
 import 'theme/app_theme.dart';
 import 'widgets/mermaid_renderer.dart' show registerMermaidPlatformView;
@@ -18,7 +19,12 @@ Future<void> main() async {
   initializePromptAssetLoader();
   final settings = await SettingsService.load();
   final gemmaService = FlutterGemmaService();
-  final providerService = ProviderService(settings, gemmaService: gemmaService);
+  final webLlmService = WebLlmService();
+  final providerService = ProviderService(
+    settings,
+    gemmaService: gemmaService,
+    webLlmService: webLlmService,
+  );
   final kbService = KbService(settings, providerService);
 
   final versionInfo = await DemoVersionInfo.load();

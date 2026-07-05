@@ -50,12 +50,16 @@ class KbService extends ChangeNotifier {
     required String apiKey,
     required String model,
     required String baseUrl,
+    int? webLlmContextWindowSize,
+    int? webLlmMaxOutputTokens,
   }) async {
     await settings.save(
       provider: provider,
       apiKey: apiKey,
       model: model,
       baseUrl: baseUrl,
+      webLlmContextWindowSize: webLlmContextWindowSize,
+      webLlmMaxOutputTokens: webLlmMaxOutputTokens,
     );
     _rebuild();
     notifyListeners();

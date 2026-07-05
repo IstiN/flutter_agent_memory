@@ -64,6 +64,20 @@
       return m.Engine;
     })();
   </script>
+  <!-- WebLLM (@mlc-ai/web-llm) for running small LLMs in the browser via WebGPU -->
+  <script type="module">
+    import * as webllm from 'https://cdn.jsdelivr.net/npm/@mlc-ai/web-llm@0.2.81/+esm';
+    window.webllm = webllm;
+    // Helper used by demo/lib/webllm/webllm_js_interop.dart to drain streaming
+    // chat-completion async iterators without unsafe reflection.
+    window.webllmStreamToArray = async (asyncIterable) => {
+      const result = [];
+      for await (const chunk of asyncIterable) {
+        result.push(chunk);
+      }
+      return result;
+    };
+  </script>
   <script src="flutter_bootstrap.js" async></script>
 </body>
 </html>
