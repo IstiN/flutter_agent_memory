@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_agent_memory/flutter_agent_memory_web.dart';
 
+import '../llm/webllm_provider.dart';
 import '../services/kb_service.dart';
 import '../theme/app_theme.dart';
 
@@ -22,8 +23,10 @@ class IntegrationTestsPage extends StatefulWidget {
 class _IntegrationTestsPageState extends State<IntegrationTestsPage> {
   final List<_TestResult> _results = [];
   bool _runningAll = false;
+  Timer? _elapsedTimer;
+  String _elapsed = '';
 
-  static const _testTimeout = Duration(seconds: 120);
+  static const _testTimeout = Duration(seconds: 60);
 
   List<_TestDefinition> get _tests => [
     _TestDefinition(
@@ -86,13 +89,34 @@ class _IntegrationTestsPageState extends State<IntegrationTestsPage> {
 
   Future<void> _runAll() async {
     setState(() => _runningAll = true);
+    _startElapsedTimer();
     try {
       for (var i = 0; i < _tests.length; i++) {
+        if (!_runningAll) break;
         await _runTestAt(i);
       }
     } finally {
-      setState(() => _runningAll = false);
+      _elapsedTimer?.cancel();
+      if (mounted) setState(() => _runningAll = false);
     }
+  }
+
+  Future<void> _stopAll() async {
+    final provider = _provider;
+    if (provider is WebLlmProvider) {
+      await provider.cancel();
+    }
+    _elapsedTimer?.cancel();
+    setState(() => _runningAll = false);
+  }
+
+  void _startElapsedTimer() {
+    final stopwatch = Stopwatch()..start();
+    _elapsed = '0.0s';
+    _elapsedTimer = Timer.periodic(
+      const Duration(milliseconds: 100),
+      (_) => setState(() => _elapsed = '${(stopwatch.elapsedMilliseconds / 1000).toStringAsFixed(1)}s'),
+    );
   }
 
   Future<void> _runTestAt(int index) async {
@@ -106,9 +130,14 @@ class _IntegrationTestsPageState extends State<IntegrationTestsPage> {
 
     final stopwatch = Stopwatch()..start();
     try {
-      final output = await test.run(_provider!).timeout(
+      final provider = _provider!;
+      void onCancel() {
+        if (provider is WebLlmProvider) provider.cancel().ignore();
+      }
+      final output = await test.run(provider, onCancel).timeout(
         test.timeout,
         onTimeout: () {
+          onCancel();
           throw TimeoutException(
             '${test.name} did not complete within '
             '${test.timeout.inSeconds}s',
@@ -131,19 +160,21 @@ class _IntegrationTestsPageState extends State<IntegrationTestsPage> {
     }
   }
 
-  Future<String> _runPing(LlmProvider provider) async {
+  Future<String> _runPing(LlmProvider provider, void Function()? onCancel) async {
     final response = await provider.chat(
       'Reply with exactly one word: hello.',
+      onCancel: onCancel,
     );
     final text = response.trim();
     if (text.isEmpty) throw StateError('Empty response from model');
     return 'Response: "$text"';
   }
 
-  Future<String> _runJson(LlmProvider provider) async {
+  Future<String> _runJson(LlmProvider provider, void Function()? onCancel) async {
     final response = await provider.chat(
       'Return ONLY a JSON object with a single boolean field named "ok" set to true. '
       'No markdown, no explanation.',
+      onCancel: onCancel,
     );
     final text = response.trim();
     final cleaned = text
@@ -155,7 +186,7 @@ class _IntegrationTestsPageState extends State<IntegrationTestsPage> {
     return 'Parsed JSON: $json';
   }
 
-  Future<String> _runTagGenerator(LlmProvider provider) async {
+  Future<String> _runTagGenerator(LlmProvider provider, void Function()? onCancel) async {
     final agent = KBTagGeneratorAgent(provider);
     final tags = await agent.generateTags(
       'Flutter state management with Riverpod',
@@ -173,7 +204,7 @@ class _IntegrationTestsPageState extends State<IntegrationTestsPage> {
     return 'Generated tags: ${tags.join(', ')}';
   }
 
-  Future<String> _runAnalysis(LlmProvider provider) async {
+  Future<String> _runAnalysis(LlmProvider provider, void Function()? onCancel) async {
     final service = widget.kbService.rawTextProcessor;
     final result = await service.process(
       'Alice: How do I test Dart code?\nBob: Use the test package.',
@@ -184,7 +215,7 @@ class _IntegrationTestsPageState extends State<IntegrationTestsPage> {
     return 'Extracted $questions question(s), $answers answer(s)';
   }
 
-  Future<String> _runSearchPipeline(LlmProvider provider) async {
+  Future<String> _runSearchPipeline(LlmProvider provider, void Function()? onCancel) async {
     final store = widget.kbService.store;
     final text = 'We decided to use Riverpod for Flutter state management.';
     final note = await store.addNote(
@@ -242,9 +273,9 @@ class _IntegrationTestsPageState extends State<IntegrationTestsPage> {
               ),
               if (!notReady)
                 GlowButton(
-                  icon: Icons.play_arrow,
-                  onPressed: _runningAll ? null : _runAll,
-                  child: Text(_runningAll ? 'Running…' : 'Run all'),
+                  icon: _runningAll ? Icons.stop : Icons.play_arrow,
+                  onPressed: _runningAll ? _stopAll : _runAll,
+                  child: Text(_runningAll ? 'Stop $_elapsed' : 'Run all'),
                 ),
             ],
           ),
@@ -297,7 +328,7 @@ class _TestDefinition {
   final String id;
   final String name;
   final String description;
-  final Future<String> Function(LlmProvider provider) run;
+  final Future<String> Function(LlmProvider provider, void Function()? onCancel) run;
   final Duration timeout;
 
   _TestDefinition({

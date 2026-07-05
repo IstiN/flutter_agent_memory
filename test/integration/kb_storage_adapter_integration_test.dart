@@ -13,7 +13,7 @@ class _KeywordProvider implements LlmProvider {
   String get defaultModel => 'fake';
 
   @override
-  Future<String> chat(String prompt, {String? model}) async {
+  Future<String> chat(String prompt, {String? model, void Function()? onCancel}) async {
     final lower = prompt.toLowerCase();
     if (lower.contains('state') || lower.contains('riverpod')) {
       return '{"tags": ["riverpod", "state-management", "flutter"]}';
@@ -27,7 +27,11 @@ class _KeywordProvider implements LlmProvider {
   }
 
   @override
-  Future<String> chatMessages(List<LlmMessage> messages, {String? model}) =>
+  Future<String> chatMessages(
+    List<LlmMessage> messages, {
+    String? model,
+    void Function()? onCancel,
+  }) =>
       chat(messages.first.content);
 }
 

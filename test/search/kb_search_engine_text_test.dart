@@ -10,7 +10,7 @@ class _FakeTagProvider implements LlmProvider {
   String get defaultModel => 'fake';
 
   @override
-  Future<String> chat(String prompt, {String? model}) async {
+  Future<String> chat(String prompt, {String? model, void Function()? onCancel}) async {
     return '{"tags": ["unit-tests", "dart"]}';
   }
 
@@ -18,6 +18,7 @@ class _FakeTagProvider implements LlmProvider {
   Future<String> chatMessages(
     List<LlmMessage> messages, {
     String? model,
+    void Function()? onCancel,
   }) async => chat(messages.first.content);
 }
 
@@ -102,12 +103,13 @@ class _AlwaysUnknownTagsProvider implements LlmProvider {
   String get defaultModel => 'fake';
 
   @override
-  Future<String> chat(String prompt, {String? model}) async =>
+  Future<String> chat(String prompt, {String? model, void Function()? onCancel}) async =>
       '{"tags": ["kubernetes"]}';
 
   @override
   Future<String> chatMessages(
     List<LlmMessage> messages, {
     String? model,
+    void Function()? onCancel,
   }) async => chat(messages.first.content);
 }

@@ -596,12 +596,13 @@ class _NoOpProvider implements LlmProvider {
   String get defaultModel => '';
 
   @override
-  Future<String> chat(String prompt, {String? model}) async =>
+  Future<String> chat(String prompt, {String? model, void Function()? onCancel}) async =>
       throw UnsupportedError('Regeneration does not use LLM calls');
 
   @override
   Future<String> chatMessages(
     List<LlmMessage> messages, {
     String? model,
+    void Function()? onCancel,
   }) async => throw UnsupportedError('Regeneration does not use LLM calls');
 }

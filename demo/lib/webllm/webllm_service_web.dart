@@ -106,6 +106,7 @@ class WebLlmService {
       'stream': stream,
       'messages': jsMessages,
       'max_tokens': ?maxTokens,
+      'stop': ['<|endoftext|>', '<|im_end|>', '</s>'].jsify(),
     }.jsify() as JSObject;
 
     if (stream) {

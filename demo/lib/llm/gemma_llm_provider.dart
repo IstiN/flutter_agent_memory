@@ -41,14 +41,18 @@ class GemmaLlmProvider implements LlmProvider {
   }
 
   @override
-  Future<String> chat(String prompt, {String? model}) => _runWithTimeout(
+  Future<String> chat(String prompt, {String? model, void Function()? onCancel}) => _runWithTimeout(
     () => _run([
       LlmMessage(role: 'user', content: prompt),
     ]),
   );
 
   @override
-  Future<String> chatMessages(List<LlmMessage> messages, {String? model}) =>
+  Future<String> chatMessages(
+    List<LlmMessage> messages, {
+    String? model,
+    void Function()? onCancel,
+  }) =>
       _runWithTimeout(() => _run(messages));
 
   void _log(String message) {

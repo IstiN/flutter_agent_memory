@@ -1,7 +1,10 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_agent_memory/flutter_agent_memory_web.dart';
 
+import '../llm/webllm_provider.dart';
 import '../services/kb_service.dart';
 import '../theme/app_theme.dart';
 
@@ -23,6 +26,8 @@ class _SimpleChatPageState extends State<SimpleChatPage> {
   final _scrollController = ScrollController();
   final List<_ChatMessage> _messages = [];
   bool _running = false;
+  Timer? _responseTimer;
+  String _elapsed = '';
 
   LlmProvider? get _provider => widget.kbService.providerService.provider;
 
@@ -39,19 +44,48 @@ class _SimpleChatPageState extends State<SimpleChatPage> {
     setState(() {
       _messages.add(_ChatMessage(role: 'user', text: text));
       _running = true;
+      _elapsed = '0.0s';
     });
     _controller.clear();
     _scrollToBottom();
 
+    final stopwatch = Stopwatch()..start();
+    _responseTimer = Timer.periodic(
+      const Duration(milliseconds: 100),
+      (_) => setState(() => _elapsed = '${(stopwatch.elapsedMilliseconds / 1000).toStringAsFixed(1)}s'),
+    );
+
+    void onCancel() {
+      // Best-effort interrupt for WebLLM; ignore errors.
+      if (provider is WebLlmProvider) {
+        provider.cancel().ignore();
+      }
+    }
+
     try {
-      final response = await provider.chat(text);
+      final response = await provider.chat(
+        text,
+        onCancel: onCancel,
+      );
       setState(() => _messages.add(_ChatMessage(role: 'assistant', text: response.trim())));
     } catch (e, s) {
       setState(() => _messages.add(_ChatMessage(role: 'system', text: 'Error: $e\n$s')));
     } finally {
+      _responseTimer?.cancel();
+      stopwatch.stop();
       setState(() => _running = false);
       _scrollToBottom();
     }
+  }
+
+  Future<void> _stop() async {
+    final provider = _provider;
+    if (provider is WebLlmProvider) {
+      await provider.cancel();
+    }
+    _responseTimer?.cancel();
+    setState(() => _running = false);
+    _addMessage(role: 'system', text: 'Generation stopped by user.');
   }
 
   void _addMessage({required String role, required String text}) {
@@ -198,9 +232,9 @@ class _SimpleChatPageState extends State<SimpleChatPage> {
                           ),
                           const SizedBox(width: 8),
                           GlowButton(
-                            icon: _running ? Icons.hourglass_top : Icons.send,
-                            onPressed: _running ? null : _send,
-                            child: Text(_running ? 'Running' : 'Send'),
+                            icon: _running ? Icons.stop : Icons.send,
+                            onPressed: _running ? _stop : _send,
+                            child: Text(_running ? 'Stop $_elapsed' : 'Send'),
                           ),
                         ],
                       ),

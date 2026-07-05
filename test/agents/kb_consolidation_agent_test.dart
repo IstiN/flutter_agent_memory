@@ -9,7 +9,7 @@ class _FakeProvider implements LlmProvider {
   String get defaultModel => 'fake';
 
   @override
-  Future<String> chat(String prompt, {String? model}) async {
+  Future<String> chat(String prompt, {String? model, void Function()? onCancel}) async {
     return '''
 SUMMARY=# Summary
 
@@ -22,6 +22,7 @@ SKILL | ID=sk_1 | TITLE=Handle async errors | INSTRUCTION=Use try/catch or Resul
   Future<String> chatMessages(
     List<LlmMessage> messages, {
     String? model,
+    void Function()? onCancel,
   }) async => chat(messages.last.content);
 }
 

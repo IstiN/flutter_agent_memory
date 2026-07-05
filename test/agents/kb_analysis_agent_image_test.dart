@@ -11,13 +11,14 @@ class _VisionFakeProvider implements LlmProvider {
   String get defaultModel => 'vision-model';
 
   @override
-  Future<String> chat(String prompt, {String? model}) async =>
+  Future<String> chat(String prompt, {String? model, void Function()? onCancel}) async =>
       '{"questions":[],"answers":[],"notes":[]}';
 
   @override
   Future<String> chatMessages(
     List<LlmMessage> messages, {
     String? model,
+    void Function()? onCancel,
   }) async {
     capturedMessages = messages;
     return '{"questions":[],"answers":[],"notes":[]}';

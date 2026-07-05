@@ -22,12 +22,14 @@ class WebLlmProvider implements LlmProvider {
   Future<String> _runWithTimeout(
     Future<String> Function() fn, {
     Duration? timeout,
+    void Function()? onCancel,
   }) async {
     final effective = timeout ?? _defaultTimeout;
     try {
       return await fn().timeout(effective);
     } on TimeoutException {
       _log('inference timed out after ${effective.inSeconds}s');
+      onCancel?.call();
       throw TimeoutException(
         'WebLLM inference did not complete within ${effective.inSeconds}s. '
         'First run compiles WebGPU shaders; try again after keeping the page open.',
@@ -36,15 +38,26 @@ class WebLlmProvider implements LlmProvider {
   }
 
   @override
-  Future<String> chat(String prompt, {String? model}) => _runWithTimeout(
+  Future<String> chat(String prompt, {String? model, void Function()? onCancel}) => _runWithTimeout(
     () => _run([
       (role: 'user', content: prompt),
     ]),
+    onCancel: onCancel,
   );
 
   @override
-  Future<String> chatMessages(List<LlmMessage> messages, {String? model}) =>
-      _runWithTimeout(() => _run(messages.map(_toWebLlmMessage).toList()));
+  Future<String> chatMessages(
+    List<LlmMessage> messages, {
+    String? model,
+    void Function()? onCancel,
+  }) =>
+      _runWithTimeout(() => _run(messages.map(_toWebLlmMessage).toList()), onCancel: onCancel);
+
+  /// Interrupt an ongoing generation. Safe to call even when nothing is running.
+  Future<void> cancel() async {
+    _log('cancel requested');
+    await _service.interrupt();
+  }
 
   void _log(String message) {
     // ignore: avoid_print

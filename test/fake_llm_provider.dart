@@ -11,7 +11,7 @@ class FakeLlmProvider implements LlmProvider {
   String get defaultModel => 'fake-model';
 
   @override
-  Future<String> chat(String prompt, {String? model}) async {
+  Future<String> chat(String prompt, {String? model, void Function()? onCancel}) async {
     return _match(prompt);
   }
 
@@ -19,6 +19,7 @@ class FakeLlmProvider implements LlmProvider {
   Future<String> chatMessages(
     List<LlmMessage> messages, {
     String? model,
+    void Function()? onCancel,
   }) async {
     return _match(messages.map((m) => m.content).join('\n'));
   }
