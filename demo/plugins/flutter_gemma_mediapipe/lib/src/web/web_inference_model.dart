@@ -363,21 +363,48 @@ class WebModelSession extends InferenceModelSession {
       return ''.toJS; // Empty string fallback
     }
 
-    // If only text parts, join them
+    // If only text parts, return a plain string for most models. Gemma 4 .task
+    // models on the web require the multimodal array format even for text-only
+    // prompts, otherwise generateResponse() returns an empty string.
     if (_promptParts.every((part) => part is TextPromptPart)) {
       final fullText = _promptParts
           .cast<TextPromptPart>()
           .map((part) => part.text)
           .join('');
+
+      final needsControlTokens = fileType == ModelFileType.task &&
+          (modelType == ModelType.gemma4 ||
+              modelType == ModelType.gemmaIt ||
+              modelType == ModelType.general);
+
+      if (!needsControlTokens) {
+        if (kDebugMode) {
+          gemmaLog(
+            '📝 _createPromptArray: All text parts, returning string of length ${fullText.length}',
+          );
+          gemmaLog(
+            '📝 _createPromptArray: Text preview: ${fullText.substring(0, math.min(100, fullText.length))}...',
+          );
+        }
+        return fullText.toJS;
+      }
+
       if (kDebugMode) {
         gemmaLog(
-          '📝 _createPromptArray: All text parts, returning string of length ${fullText.length}',
-        );
-        gemmaLog(
-          '📝 _createPromptArray: Text preview: ${fullText.substring(0, math.min(100, fullText.length))}...',
+          '🎯 _createPromptArray: All text parts but Gemma .task requires control tokens',
         );
       }
-      return fullText.toJS;
+      final jsArray = <JSAny>[
+        '<ctrl99>user\n'.toJS,
+        fullText.toJS,
+        '<ctrl100>\n<ctrl99>model\n'.toJS,
+      ];
+      if (kDebugMode) {
+        gemmaLog(
+          '✅ _createPromptArray: Created JS array with ${jsArray.length} elements (control tokens)',
+        );
+      }
+      return jsArray.toJS;
     }
 
     // Multimodal: create array of parts following MediaPipe documentation format
