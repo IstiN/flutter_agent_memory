@@ -9,7 +9,8 @@ import 'gemma_model_presets.dart';
 
 // Model-switching fix: always close the previously initialized model before
 // loading a different engine, so MediaPipe and LiteRT-LM backends do not
-// try to reuse each other's singleton.
+// try to reuse each other's singleton. A short delay after close lets the
+// WASM/WebGPU context fully tear down.
 
 /// Abstract interface for Flutter Gemma model management.
 ///
