@@ -12,6 +12,7 @@ import 'record_detail_dialog.dart';
 import 'records_page.dart';
 import 'search_page.dart';
 import 'settings_page.dart';
+import 'simple_chat_page.dart';
 import 'tags_page.dart';
 
 /// Desktop-style dashboard with a left sidebar, top search bar, and a
@@ -39,6 +40,7 @@ class _DashboardPageState extends State<DashboardPage> {
     _NavItem(icon: Icons.library_books_outlined, selectedIcon: Icons.library_books, label: 'Records'),
     _NavItem(icon: Icons.local_offer_outlined, selectedIcon: Icons.local_offer, label: 'Tags'),
     _NavItem(icon: Icons.people_outline, selectedIcon: Icons.people, label: 'People'),
+    _NavItem(icon: Icons.chat_bubble_outline, selectedIcon: Icons.chat_bubble, label: 'Chat'),
     _NavItem(icon: Icons.flaky_outlined, selectedIcon: Icons.flaky, label: 'Tests'),
     _NavItem(icon: Icons.settings_outlined, selectedIcon: Icons.settings, label: 'Settings'),
   ];
@@ -176,8 +178,9 @@ class _DashboardPageState extends State<DashboardPage> {
       2 => RecordsPage(kbService: widget.kbService),
       3 => TagsPage(kbService: widget.kbService),
       4 => PeoplePage(kbService: widget.kbService),
-      5 => IntegrationTestsPage(kbService: widget.kbService),
-      6 => SettingsPage(kbService: widget.kbService),
+      5 => SimpleChatPage(kbService: widget.kbService),
+      6 => IntegrationTestsPage(kbService: widget.kbService),
+      7 => SettingsPage(kbService: widget.kbService),
       _ => _buildDashboardBody(),
     };
   }
