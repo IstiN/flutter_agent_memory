@@ -152,11 +152,26 @@ class FlutterGemmaService implements GemmaService {
       await plugin.initializedModel!.close();
       // Give the underlying WASM engine time to fully tear down GPU/WebGPU
       // context before a different runtime (LiteRT-LM ↔ MediaPipe) reuses it.
-      await Future.delayed(const Duration(milliseconds: 500));
+      await Future.delayed(const Duration(milliseconds: 800));
       _log('loadModel(${preset.id}) model closed and delay elapsed');
     }
 
-    // Make sure the requested preset is the active inference model.
+    // Always rebuild the model directly from the preset spec. This avoids
+    // FlutterGemmaWeb's active-model manager reusing a cached model built for
+    // a different engine (.task vs .litertlm), which is the root cause of the
+    // first-request-after-switch failure.
+    _log('loadModel(${preset.id}) creating model directly from preset spec...');
+    final model = await plugin.createModel(
+      modelType: preset.modelType,
+      fileType: preset.fileType,
+      maxTokens: preset.maxTokens,
+      preferredBackend: preferredBackend,
+      supportImage: preset.supportImage,
+      supportAudio: preset.supportAudio,
+      maxNumImages: preset.maxNumImages,
+    );
+
+    // Keep the model manager in sync so uninstall/delete and legacy flows work.
     final manager = plugin.modelManager;
     final active = manager.activeInferenceModel;
     if (active == null || active.name != preset.filename) {
@@ -171,12 +186,6 @@ class FlutterGemmaService implements GemmaService {
       );
     }
 
-    _log('loadModel(${preset.id}) calling getActiveModel '
-        'with backend=$preferredBackend...');
-    final model = await FlutterGemma.getActiveModel(
-      maxTokens: preset.maxTokens,
-      preferredBackend: preferredBackend,
-    );
     _loadedPreset = preset;
     _log('loadModel(${preset.id}) done');
     return model;
