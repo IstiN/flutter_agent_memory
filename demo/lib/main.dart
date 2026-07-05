@@ -7,6 +7,7 @@ import 'services/kb_service.dart';
 import 'services/prompt_asset_loader.dart';
 import 'services/provider_service.dart';
 import 'services/settings_service.dart';
+import 'services/version_info.dart';
 import 'pages/dashboard_page.dart';
 import 'theme/app_theme.dart';
 import 'widgets/mermaid_renderer.dart' show registerMermaidPlatformView;
@@ -19,6 +20,12 @@ Future<void> main() async {
   final gemmaService = FlutterGemmaService();
   final providerService = ProviderService(settings, gemmaService: gemmaService);
   final kbService = KbService(settings, providerService);
+
+  final versionInfo = await DemoVersionInfo.load();
+  if (kDebugMode || kIsWeb) {
+    // ignore: avoid_print
+    print('[DemoVersion] ${versionInfo.summary}');
+  }
 
   runApp(DemoApp(kbService: kbService));
 }

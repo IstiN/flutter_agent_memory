@@ -6,6 +6,7 @@ import '../services/gemma_model_presets.dart';
 import '../services/gemma_service.dart';
 import '../services/kb_service.dart';
 import '../services/provider_service.dart';
+import '../services/version_info.dart';
 import '../theme/app_theme.dart';
 
 class SettingsPage extends StatefulWidget {
@@ -25,6 +26,7 @@ class _SettingsPageState extends State<SettingsPage> {
   bool _saving = false;
   String? _message;
   int _recordCount = 0;
+  DemoVersionInfo? _versionInfo;
 
   @override
   void initState() {
@@ -35,6 +37,12 @@ class _SettingsPageState extends State<SettingsPage> {
     _baseUrlController.text = settings.baseUrl;
     _modelController.text = settings.model;
     _loadRecordCount();
+    _loadVersionInfo();
+  }
+
+  Future<void> _loadVersionInfo() async {
+    final info = await DemoVersionInfo.load();
+    if (mounted) setState(() => _versionInfo = info);
   }
 
   Future<void> _loadRecordCount() async {
@@ -233,6 +241,8 @@ class _SettingsPageState extends State<SettingsPage> {
                   value: '$_recordCount',
                   icon: Icons.library_books_outlined,
                 ),
+                const Divider(color: AppColors.border),
+                _VersionFooter(info: _versionInfo),
               ],
             ),
           ),
@@ -732,6 +742,27 @@ class _StatusRow extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _VersionFooter extends StatelessWidget {
+  final DemoVersionInfo? info;
+
+  const _VersionFooter({this.info});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 8),
+      child: Text(
+        info?.format() ?? 'Loading version info...',
+        style: const TextStyle(
+          color: AppColors.textMuted,
+          fontSize: 11,
+          height: 1.4,
+        ),
       ),
     );
   }
