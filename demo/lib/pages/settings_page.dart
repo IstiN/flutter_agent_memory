@@ -2,12 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:url_launcher/link.dart';
 
+
+
 import '../services/gemma_model_presets.dart';
 import '../services/gemma_service.dart';
 import '../services/kb_service.dart';
 import '../services/provider_service.dart';
 import '../services/version_info.dart';
 import '../theme/app_theme.dart';
+
 import '../webllm/webllm_service.dart';
 
 class SettingsPage extends StatefulWidget {
@@ -177,9 +180,14 @@ class _SettingsPageState extends State<SettingsPage> {
                 if (_type == ProviderType.webllm) ...[
                   const SizedBox(height: 12),
                   _WebLlmModelPresets(
+                    service: widget.kbService.providerService.webLlmService,
                     selectedId: _modelController.text,
                     onSelected: (preset) {
                       setState(() => _modelController.text = preset.id);
+                    },
+                    onUse: () {
+                      setState(() => _type = ProviderType.webllm);
+                      _save();
                     },
                   ),
                   const SizedBox(height: 12),
@@ -453,14 +461,94 @@ class _ModelPresets extends StatelessWidget {
   }
 }
 
-class _WebLlmModelPresets extends StatelessWidget {
+class _WebLlmModelPresets extends StatefulWidget {
+  final WebLlmService service;
   final String selectedId;
   final ValueChanged<WebLlmModelPreset> onSelected;
+  final VoidCallback? onUse;
 
   const _WebLlmModelPresets({
+    required this.service,
     required this.selectedId,
     required this.onSelected,
+    this.onUse,
   });
+
+  @override
+  State<_WebLlmModelPresets> createState() => _WebLlmModelPresetsState();
+}
+
+class _WebLlmModelPresetsState extends State<_WebLlmModelPresets> {
+  final Map<String, bool> _cached = {};
+  final Map<String, double> _progress = {};
+  String? _loadingId;
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _refreshCachedStatus();
+  }
+
+  Future<void> _refreshCachedStatus() async {
+    for (final preset in webLlmModelPresets) {
+      final cached = await widget.service.isModelCached(preset.id);
+      if (mounted) setState(() => _cached[preset.id] = cached);
+    }
+  }
+
+  Future<void> _load(WebLlmModelPreset preset) async {
+    setState(() {
+      _loadingId = preset.id;
+      _progress[preset.id] = 0;
+      _error = null;
+    });
+
+    final progressSub = widget.service.progress.listen(
+      (report) {
+        // Progress events arrive as JS objects; avoid direct interop access in
+        // shared widget code so VM tests compile without dart:js_interop.
+        if (mounted) {
+          setState(() => _progress[preset.id] = _progress[preset.id]! + 5);
+        }
+      },
+      onError: (e) {
+        if (mounted) setState(() => _error = 'Load failed: $e');
+      },
+    );
+
+    try {
+      await widget.service.loadModel(
+        preset,
+        contextWindowSize: preset.defaultContextWindow,
+      );
+      if (mounted) {
+        setState(() => _cached[preset.id] = true);
+        widget.onSelected(preset);
+        widget.onUse?.call();
+      }
+    } catch (e) {
+      if (mounted) setState(() => _error = 'Load failed: $e');
+    } finally {
+      await progressSub.cancel();
+      if (mounted) setState(() => _loadingId = null);
+    }
+  }
+
+  Future<void> _delete(WebLlmModelPreset preset) async {
+    setState(() {
+      _loadingId = preset.id;
+      _error = null;
+    });
+    try {
+      await widget.service.deleteModel(preset.id);
+      if (mounted) setState(() => _cached[preset.id] = false);
+    } catch (e) {
+      if (mounted) setState(() => _error = 'Delete failed: $e');
+    } finally {
+      if (mounted) setState(() => _loadingId = null);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -476,35 +564,70 @@ class _WebLlmModelPresets extends StatelessWidget {
           spacing: 8,
           runSpacing: 8,
           children: webLlmModelPresets.map((preset) {
-            final isSelected = selectedId == preset.id;
+            final isSelected = widget.selectedId == preset.id;
+            final cached = _cached[preset.id] == true;
+            final loading = _loadingId == preset.id;
+            final progress = _progress[preset.id] ?? 0;
             return ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 200),
-              child: InputChip(
-                label: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      preset.displayName,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(fontSize: 12),
-                    ),
-                    Text(
-                      preset.size,
-                      style: const TextStyle(
-                        fontSize: 10,
-                        color: AppColors.textMuted,
+              child: Tooltip(
+                message: '${preset.displayName}\n${preset.size}',
+                child: InputChip(
+                  label: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        preset.displayName,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(fontSize: 12),
                       ),
-                    ),
-                  ],
+                      Text(
+                        preset.size,
+                        style: const TextStyle(
+                          fontSize: 10,
+                          color: AppColors.textMuted,
+                        ),
+                      ),
+                      if (loading)
+                        LinearProgressIndicator(
+                          value: progress > 0 ? progress / 100 : null,
+                          backgroundColor: AppColors.surfaceLow,
+                          color: AppColors.primary,
+                        ),
+                    ],
+                  ),
+                  selected: isSelected,
+                  onSelected: cached
+                      ? (_) {
+                          widget.onSelected(preset);
+                          widget.onUse?.call();
+                        }
+                      : (_) => widget.onSelected(preset),
+                  deleteIcon: loading
+                      ? const SizedBox.shrink()
+                      : cached
+                          ? const Icon(Icons.delete, size: 16)
+                          : const Icon(Icons.download, size: 16),
+                  onDeleted: loading
+                      ? null
+                      : cached
+                          ? () => _delete(preset)
+                          : () => _load(preset),
                 ),
-                selected: isSelected,
-                onSelected: (_) => onSelected(preset),
               ),
             );
           }).toList(),
         ),
+        if (_error != null)
+          Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: Text(
+              _error!,
+              style: const TextStyle(color: AppColors.error, fontSize: 12),
+            ),
+          ),
       ],
     );
   }

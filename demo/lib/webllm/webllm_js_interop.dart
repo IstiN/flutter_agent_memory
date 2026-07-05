@@ -50,11 +50,21 @@ external JSObject? get prebuiltAppConfig;
 @JS('webllmStreamToArray')
 external JSPromise<JSArray<JSObject>> webllmStreamToArray(JSObject asyncIterable);
 
+/// Returns whether a model's weights are already cached by the browser.
+@JS('webllmIsModelCached')
+external JSPromise<JSBoolean> webllmIsModelCached(JSString modelId);
+
+/// Returns the current download progress for a model (0–1) or null if not found.
+@JS('webllmModelProgress')
+external JSPromise<JSNumber?> webllmModelProgress(JSString modelId);
+
+/// Deletes a model from the browser's CacheStorage.
+@JS('webllmDeleteModel')
+external JSPromise<JSAny> webllmDeleteModel(JSString modelId);
+
 /// A progress report from `setInitProgressCallback`.
 extension type WebLlmProgressReport._(JSObject _) implements JSObject {
-  external factory WebLlmProgressReport(JSObject _);
-
-  external JSNumber get progress;
-  external JSString get text;
+  external JSNumber? get progress;
+  external JSString? get text;
   external JSNumber? get timeElapsed;
 }

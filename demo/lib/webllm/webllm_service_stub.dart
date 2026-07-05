@@ -26,6 +26,13 @@ class WebLlmModelPreset {
 class WebLlmService {
   Stream<Never> get progress => const Stream<Never>.empty();
 
+  Future<bool> isModelCached(String modelId) async => false;
+
+  Future<double?> modelDownloadProgress(String modelId) async => null;
+
+  Future<void> deleteModel(String modelId) async =>
+      throw UnsupportedError('WebLLM is only supported on the web.');
+
   Future<void> loadModel(
     WebLlmModelPreset preset, {
     int? contextWindowSize,

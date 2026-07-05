@@ -57,7 +57,7 @@ class WebLlmService {
     final engine = _engine = WebLlmEngine(config);
     engine.setInitProgressCallback(
       ((JSObject report) {
-        _progressController.add(WebLlmProgressReport(report));
+        _progressController.add(report as WebLlmProgressReport);
       }).toJS,
     );
     return engine;
@@ -137,6 +137,38 @@ class WebLlmService {
     if (_engine != null) {
       await _engine!.interruptGenerate().toDart;
     }
+  }
+
+  Future<bool> isModelCached(String modelId) async {
+    try {
+      final cached = await webllmIsModelCached(modelId.toJS).toDart as JSBoolean?;
+      return cached?.toDart ?? false;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /// WebLLM caches weights in the browser; this exposes cache visibility via a
+  /// tiny JS helper that reports CacheStorage entries matching the model id.
+  Future<double?> modelDownloadProgress(String modelId) async {
+    try {
+      final progress = await webllmModelProgress(modelId.toJS).toDart;
+      return progress?.toDartDouble;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// Deletes the model from WebLLM's cache by invalidating CacheStorage
+  /// entries whose URL contains the model id.
+  Future<void> deleteModel(String modelId) async {
+    _log('deleting cached model $modelId');
+    await webllmDeleteModel(modelId.toJS).toDart;
+    if (_loadedModelId == modelId) {
+      _loadedModelId = null;
+      _engine = null;
+    }
+    _log('deleted cached model $modelId');
   }
 
   Future<void> dispose() async {

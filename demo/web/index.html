@@ -68,6 +68,7 @@
   <script type="module">
     import * as webllm from 'https://cdn.jsdelivr.net/npm/@mlc-ai/web-llm@0.2.81/+esm';
     window.webllm = webllm;
+
     // Helper used by demo/lib/webllm/webllm_js_interop.dart to drain streaming
     // chat-completion async iterators without unsafe reflection.
     window.webllmStreamToArray = async (asyncIterable) => {
@@ -76,6 +77,62 @@
         result.push(chunk);
       }
       return result;
+    };
+
+    // Helpers to inspect and manage WebLLM's browser cache.
+    window.webllmIsModelCached = async (modelId) => {
+      try {
+        const cacheNames = await caches.keys();
+        for (const name of cacheNames) {
+          const cache = await caches.open(name);
+          const keys = await cache.keys();
+          if (keys.some((req) => req.url.includes(modelId))) {
+            return true;
+          }
+        }
+        return false;
+      } catch {
+        return false;
+      }
+    };
+
+    window.webllmModelProgress = async (modelId) => {
+      try {
+        const cacheNames = await caches.keys();
+        for (const name of cacheNames) {
+          const cache = await caches.open(name);
+          const keys = await cache.keys();
+          const matched = keys.filter((req) => req.url.includes(modelId));
+          if (matched.length > 0) {
+            let downloaded = 0;
+            let total = 0;
+            for (const req of matched) {
+              const resp = await cache.match(req);
+              if (resp) {
+                const blob = await resp.blob();
+                downloaded += blob.size;
+              }
+            }
+            return 1; // presence means fully cached; partial tracking unreliable
+          }
+        }
+        return null;
+      } catch {
+        return null;
+      }
+    };
+
+    window.webllmDeleteModel = async (modelId) => {
+      const cacheNames = await caches.keys();
+      for (const name of cacheNames) {
+        const cache = await caches.open(name);
+        const keys = await cache.keys();
+        for (const req of keys) {
+          if (req.url.includes(modelId)) {
+            await cache.delete(req);
+          }
+        }
+      }
     };
   </script>
   <script src="flutter_bootstrap.js" async></script>
