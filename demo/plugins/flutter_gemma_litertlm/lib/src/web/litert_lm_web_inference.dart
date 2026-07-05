@@ -458,7 +458,7 @@ class LiteRtLmWebInferenceModel extends InferenceModel with CloseNotifier {
       _openSessions.clear();
     } finally {
       try {
-        _engine?.delete();
+        await _engine?.delete().toDart;
       } catch (e) {
         if (kDebugMode) {
           gemmaLog('[LiteRtLmWebInferenceModel] engine.delete() failed: $e');

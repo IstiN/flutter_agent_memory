@@ -76,6 +76,7 @@ class WebInferenceModel extends InferenceModel with CloseNotifier {
   Completer<InferenceModelSession>? _initCompleter;
   @override
   InferenceModelSession? session;
+  LlmInference? _llmInference;
 
   WebInferenceModel({
     required this.modelType,
@@ -190,6 +191,7 @@ class WebInferenceModel extends InferenceModel with CloseNotifier {
         fileset,
         config,
       );
+      _llmInference = llmInference;
 
       session = WebModelSession(
         modelType: modelType,
@@ -240,6 +242,21 @@ class WebInferenceModel extends InferenceModel with CloseNotifier {
     await session?.close();
     session = null;
     _initCompleter = null;
+    // Explicitly close the underlying MediaPipe LlmInference object and await
+    // its teardown. The JS close() may be asynchronous and release the WebGPU
+    // device; without awaiting it, the next engine (LiteRT-LM) can fail to
+    // acquire the GPU.
+    try {
+      await _llmInference?.close().toDart;
+      if (kDebugMode) {
+        gemmaLog('[WebInferenceModel] LlmInference closed');
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        gemmaLog('[WebInferenceModel] Warning: error closing LlmInference: $e');
+      }
+    }
+    _llmInference = null;
     onClose();
     fireCloseListeners();
   }

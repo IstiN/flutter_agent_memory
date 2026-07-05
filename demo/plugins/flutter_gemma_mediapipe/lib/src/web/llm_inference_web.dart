@@ -30,7 +30,7 @@ extension type LlmInference._(JSObject _) implements JSObject {
   external void cancelProcessing();
 
   // Cleanup method to free WASM resources (critical for memory management)
-  external void close();
+  external JSPromise<JSAny?> close();
 }
 
 @JS()

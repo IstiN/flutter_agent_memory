@@ -39,7 +39,7 @@ extension type LiteRtLmEngine._(JSObject _) implements JSObject {
     LiteRtLmConversationOptions opts,
   );
 
-  external void delete();
+  external JSPromise<JSAny?> delete();
 }
 
 extension type LiteRtLmConversation._(JSObject _) implements JSObject {
