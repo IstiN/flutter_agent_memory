@@ -228,7 +228,7 @@ class WebInferenceModel extends InferenceModel with CloseNotifier {
           'retrying after 2s delay: $e',
         );
       }
-      await Future.delayed(const Duration(milliseconds: 2000));
+      await Future.delayed(const Duration(milliseconds: 3000));
       return await LlmInference.createFromOptions(fileset, config).toDart;
     }
   }

@@ -189,7 +189,7 @@ class LiteRtLmWebInferenceModel extends InferenceModel with CloseNotifier {
           'retrying after 2s delay: $e',
         );
       }
-      await Future.delayed(const Duration(milliseconds: 2000));
+      await Future.delayed(const Duration(milliseconds: 3000));
       final engine = await LiteRtLmEngine.create(options).toDart;
       if (kDebugMode) {
         gemmaLog(

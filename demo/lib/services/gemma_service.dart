@@ -152,8 +152,9 @@ class FlutterGemmaService implements GemmaService {
       await plugin.initializedModel!.close();
       // Give the underlying WASM engine time to fully tear down GPU/WebGPU
       // context before a different runtime (LiteRT-LM ↔ MediaPipe) reuses it.
-      // Empirically 2 s is the minimum on some GPUs; 3 s is a safer margin.
-      await Future.delayed(const Duration(milliseconds: 3000));
+      // Empirically 3 s is the minimum after LiteRT-LM has initialized WebGPU;
+      // 5 s gives a safer margin on slower GPUs.
+      await Future.delayed(const Duration(milliseconds: 5000));
       _log('loadModel(${preset.id}) model closed and delay elapsed');
     }
 
@@ -180,9 +181,9 @@ class FlutterGemmaService implements GemmaService {
       // progress on slower GPUs. A short wait and retry usually succeeds.
       _log(
         'loadModel(${preset.id}) first create attempt failed ($e), '
-        'waiting 2s then retrying once...',
+        'waiting 3s then retrying once...',
       );
-      await Future.delayed(const Duration(milliseconds: 2000));
+      await Future.delayed(const Duration(milliseconds: 3000));
       model = await doCreate();
       _log('loadModel(${preset.id}) retry succeeded');
     }
