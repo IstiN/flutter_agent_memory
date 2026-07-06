@@ -164,13 +164,21 @@ class WebLlmService {
     final asyncIterable = await engine.chatCompletion(request).toDart as JSObject;
     _log('streaming response, registering callbacks');
 
-    final options = {
-      'maxTokens': maxTokens ?? 2048,
-      'logPrefix': '[WebLlmService]',
-      'onChunk': (JSString content) => onChunk(content.toDart),
-      'onError': (JSString error) => _log('stream error: ${error.toDart}'),
-      'onDone': () => _log('stream done'),
-    }.jsify() as JSObject;
+    final options = JSObject();
+    options.setProperty('maxTokens'.toJS, (maxTokens ?? 2048).toJS);
+    options.setProperty('logPrefix'.toJS, '[WebLlmService]'.toJS);
+    options.setProperty(
+      'onChunk'.toJS,
+      ((JSString content) => onChunk(content.toDart)).toJS,
+    );
+    options.setProperty(
+      'onError'.toJS,
+      ((JSString error) => _log('stream error: ${error.toDart}')).toJS,
+    );
+    options.setProperty(
+      'onDone'.toJS,
+      (() => _log('stream done')).toJS,
+    );
 
     final cancelFn = webllmStreamWithCallbacks(asyncIterable, options);
     return () {
