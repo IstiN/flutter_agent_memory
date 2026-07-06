@@ -23,6 +23,7 @@ dependencies:
   package_info_plus: ^8.0.0
   shared_preferences: ^2.2.3
   url_launcher: ^6.3.0
+  web: ^1.1.1
 
 dependency_overrides:
   flutter_gemma_litertlm:

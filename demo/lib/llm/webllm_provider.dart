@@ -109,6 +109,10 @@ class WebLlmProvider implements LlmProvider {
         messages: messages,
         maxTokens: effectiveMaxTokens,
         onChunk: controller.add,
+        onDone: () {
+          _log('service reported stream done, closing controller');
+          if (!controller.isClosed) controller.close();
+        },
       );
       await for (final chunk in controller.stream) {
         yield chunk;

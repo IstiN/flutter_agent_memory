@@ -5,52 +5,6 @@ import 'package:flutter/foundation.dart';
 
 import 'webllm_js_interop.dart';
 
-/// Converts a JS AsyncIterable (returned by WebLLM's streaming
-/// `chatCompletion`) into a Dart [Stream] by reading it with a
-/// [ReadableStreamDefaultReader].
-Stream<JSObject> _asyncIterableToStream(JSObject asyncIterable) {
-  final controller = StreamController<JSObject>();
-
-  // Get the reader: asyncIterable.getReader()
-  final reader = asyncIterable.callMethod<JSObject>(
-    'getReader'.toJS,
-    <JSAny?>[].toJS,
-  );
-
-  Future<void> readNext() async {
-    try {
-      while (!controller.isClosed) {
-        final result = await reader
-            .callMethod<JSPromise<JSObject>>('read'.toJS, <JSAny?>[].toJS)
-            .toDart;
-        final done = result.getProperty<JSBoolean?>('done'.toJS)?.toDart ?? false;
-        if (done) {
-          controller.close();
-          return;
-        }
-        final value = result.getProperty<JSObject?>('value'.toJS);
-        if (value != null) {
-          controller.add(value);
-        }
-      }
-    } catch (e, st) {
-      controller.addError(e, st);
-    }
-  }
-
-  controller.onCancel = () async {
-    try {
-      await reader
-          .callMethod<JSPromise<JSAny?>>('cancel'.toJS, <JSAny?>[].toJS)
-          .toDart;
-    } catch (_) {}
-    await controller.close();
-  };
-
-  readNext();
-  return controller.stream;
-}
-
 /// Preset describing a WebLLM model available through `@mlc-ai/web-llm`.
 class WebLlmModelPreset {
   final String id;
@@ -197,9 +151,13 @@ class WebLlmService {
   }
 
   /// Streams a chat completion. Returns a cancel function that stops generation.
+  ///
+  /// The [onDone] callback is invoked when the JS-side iterator finishes
+  /// normally; callers can use it to close a wrapping [StreamController].
   Future<void Function()> chatStream({
     required List<({String role, String content})> messages,
     required void Function(String chunk) onChunk,
+    void Function()? onDone,
     int? maxTokens,
   }) async {
     final engine = _engine;
@@ -221,58 +179,36 @@ class WebLlmService {
 
     _log('chatCompletion request stream=true maxTokens=$maxTokens messages=${messages.length}');
     final asyncIterable = await engine.chatCompletion(request).toDart as JSObject;
+    _log('asyncIterable acquired, running JS-side stream helper');
 
-    // WebLLM returns a standard JS ReadableStream for streaming chat completions.
-    // Read it chunk-by-chunk instead of trying to call Symbol.asyncIterator
-    // through dart2js, which produced "a[b] is not a function" in release builds.
-    final stream = _asyncIterableToStream(asyncIterable).map(
-      (value) => _extractChunkContent(value),
-    );
-
-    var tokens = 0;
-    var done = false;
-
-    void cancel() {
-      if (done) return;
-      done = true;
-      _log('stream cancelled by caller');
-    }
-
-    Future<void> run() async {
-      try {
-        await for (final content in stream) {
-          if (done) break;
-          if (content != null && content.isNotEmpty) {
-            tokens += 1;
-            _log('chunk tokens=$tokens content="${content.substring(0, content.length > 80 ? 80 : content.length).replaceAll('\n', '\\n')}"');
-            onChunk(content);
-          }
+    final options = {
+      'maxTokens': maxTokens ?? 999999,
+      'logPrefix': '[WebLlmService]',
+      'onChunk': (JSString content) {
+        final text = content.toDart;
+        if (text.isNotEmpty) {
+          _log('chunk: "${text.length > 80 ? text.substring(0, 80) : text}"');
+          onChunk(text);
         }
-      } catch (e) {
-        _log('stream error: $e');
-      } finally {
-        done = true;
-        _log('stream done, tokens=$tokens');
-      }
-    }
+      }.toJS,
+      'onDone': () {
+        _log('JS stream done');
+        onDone?.call();
+      }.toJS,
+      'onError': (JSString error) {
+        final msg = error.toDart;
+        _log('JS stream error: $msg');
+        onDone?.call();
+      }.toJS,
+    }.jsify() as JSObject;
 
-    run();
-    return cancel;
-  }
+    final cancel = webllmStreamWithCallbacks(asyncIterable, options);
+    _log('JS stream helper started, cancel function acquired');
 
-  String? _extractChunkContent(JSObject value) {
-    try {
-      final choices = value.getProperty<JSArray?>('choices'.toJS);
-      if (choices == null) return null;
-      final first = choices.toDart.firstOrNull as JSObject?;
-      if (first == null) return null;
-      final delta = first.getProperty<JSObject?>('delta'.toJS);
-      if (delta == null) return null;
-      final content = delta.getProperty<JSString?>('content'.toJS);
-      return content?.toDart;
-    } catch (_) {
-      return null;
-    }
+    return () {
+      _log('cancel requested');
+      cancel.callAsFunction(null);
+    };
   }
 
   Future<void> interrupt() async {
