@@ -212,22 +212,37 @@ class _SimpleChatPageState extends State<SimpleChatPage> {
                       child: Row(
                         children: [
                           Expanded(
-                            child: TextField(
-                              controller: _controller,
-                              enabled: !_running,
-                              minLines: 1,
-                              maxLines: 6,
-                              style: const TextStyle(color: AppColors.text),
-                              decoration: const InputDecoration(
-                                hintText: 'Type a message...',
-                                hintStyle: TextStyle(color: AppColors.textMuted),
-                                border: InputBorder.none,
-                                contentPadding: EdgeInsets.symmetric(
-                                  horizontal: 12,
-                                  vertical: 12,
+                            child: Container(
+                              constraints: const BoxConstraints(minHeight: 48),
+                              alignment: Alignment.centerLeft,
+                              child: Focus(
+                                onKeyEvent: (node, event) {
+                                  if (event is KeyDownEvent &&
+                                      event.logicalKey == LogicalKeyboardKey.enter &&
+                                      !HardwareKeyboard.instance.isShiftPressed) {
+                                    _send();
+                                    return KeyEventResult.handled;
+                                  }
+                                  return KeyEventResult.ignored;
+                                },
+                                child: TextField(
+                                  controller: _controller,
+                                  enabled: !_running,
+                                  minLines: 1,
+                                  maxLines: 6,
+                                  style: const TextStyle(color: AppColors.text),
+                                  decoration: const InputDecoration(
+                                    hintText: 'Type a message...',
+                                    hintStyle: TextStyle(color: AppColors.textMuted),
+                                    border: InputBorder.none,
+                                    contentPadding: EdgeInsets.symmetric(
+                                      horizontal: 12,
+                                      vertical: 12,
+                                    ),
+                                  ),
+                                  onSubmitted: (_) => _send(),
                                 ),
                               ),
-                              onSubmitted: (_) => _send(),
                             ),
                           ),
                           const SizedBox(width: 8),

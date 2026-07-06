@@ -8,18 +8,18 @@ Rules:
 - Do NOT output generic tags like "question", "issue", or "help" by themselves.
 - Do NOT invent tags that are not in the query or the existing list.
 - Maximum ${maxTags} TAG= lines.
-- If nothing matches, output nothing.
+- If the query is empty, contains only whitespace, or has no meaningful keywords, output nothing.
 
-Example:
+Existing tags:
+${existingTags}
+
+Query: "${query}"
+
+Example (for format only):
 Existing tags: dart, flutter, riverpod, state-management, provider
 Query: "Flutter state management with Riverpod"
 Output:
 TAG=flutter
 TAG=riverpod
 TAG=state-management
-
-Existing tags:
-${existingTags}
-
-Query: "${query}"
 ]]></prompt>
