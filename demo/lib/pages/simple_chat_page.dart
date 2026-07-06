@@ -63,8 +63,14 @@ class _SimpleChatPageState extends State<SimpleChatPage> {
     }
 
     try {
-      final response = await provider.chat(
-        text,
+      final history = _messages
+          .where((m) => m.role == 'user' || m.role == 'assistant')
+          .map(
+            (m) => LlmMessage(role: m.role, content: m.text),
+          )
+          .toList();
+      final response = await provider.chatMessages(
+        [...history, LlmMessage(role: 'user', content: text)],
         onCancel: onCancel,
       );
       setState(() => _messages.add(_ChatMessage(role: 'assistant', text: response.trim())));
@@ -213,7 +219,7 @@ class _SimpleChatPageState extends State<SimpleChatPage> {
                         children: [
                           Expanded(
                             child: Container(
-                              constraints: const BoxConstraints(minHeight: 48),
+                              constraints: const BoxConstraints(minHeight: 48, maxHeight: 48),
                               alignment: Alignment.centerLeft,
                               child: Focus(
                                 onKeyEvent: (node, event) {
@@ -229,7 +235,7 @@ class _SimpleChatPageState extends State<SimpleChatPage> {
                                   controller: _controller,
                                   enabled: !_running,
                                   minLines: 1,
-                                  maxLines: 6,
+                                  maxLines: 1,
                                   style: const TextStyle(color: AppColors.text),
                                   decoration: const InputDecoration(
                                     hintText: 'Type a message...',
@@ -246,10 +252,13 @@ class _SimpleChatPageState extends State<SimpleChatPage> {
                             ),
                           ),
                           const SizedBox(width: 8),
-                          GlowButton(
-                            icon: _running ? Icons.stop : Icons.send,
-                            onPressed: _running ? _stop : _send,
-                            child: Text(_running ? 'Stop $_elapsed' : 'Send'),
+                          SizedBox(
+                            height: 48,
+                            child: GlowButton(
+                              icon: _running ? Icons.stop : Icons.send,
+                              onPressed: _running ? _stop : _send,
+                              child: Text(_running ? 'Stop $_elapsed' : 'Send'),
+                            ),
                           ),
                         ],
                       ),
