@@ -1,7 +1,4 @@
 {
-  "ignore": [
-    "lib/src/agents/prompts/json_backups/**"
-  ],
   "minTokens": 50,
   "minLines": 5,
   "reporters": ["json"]

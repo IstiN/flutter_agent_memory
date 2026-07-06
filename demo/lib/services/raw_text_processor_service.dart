@@ -1,4 +1,4 @@
-import 'dart:math' show max;
+import 'dart:math' show max, min;
 
 import 'package:flutter_agent_memory/flutter_agent_memory_web.dart';
 
@@ -49,8 +49,8 @@ class RawTextProcessorService {
 
     // Line-oriented analysis format is more token-efficient and more robust
     // than JSON for all providers, especially on-device models with small
-    // output budgets. It uses BEGIN Q/A/N ... END blocks and text refs.
-    final analysisTemplate = 'kb_analysis_lines.xml';
+    // output budgets.
+    final analysisTemplate = 'kb_analysis.xml';
     final agent = KBAnalysisAgent(limits.provider);
     final maxChunkChars = limits.inputChunkTokens * _charsPerToken;
 
@@ -137,7 +137,8 @@ class RawTextProcessorService {
 
     final baseConfig = _providerService.baseConfig;
     _log('_resolveLimits: provider=${baseConfig.providerName}, '
-        'model=${baseConfig.model}, maxTokens=${baseConfig.maxTokens}');
+        'model=${baseConfig.model}, maxTokens=${baseConfig.maxTokens}, '
+        'contextWindow=${baseConfig.contextWindow}');
 
     if (baseConfig.providerName == 'openrouter') {
       final info = await OpenRouterModelService.fetchModelInfo(baseConfig.model);
@@ -156,18 +157,18 @@ class RawTextProcessorService {
       // Estimate the fixed overhead of the analysis system prompt so we never
       // try to feed the model more input than fits in its context window.
       final systemOverhead = await _estimateAnalysisPromptTokens();
-      // Reserve some tokens for the model's response as well.
-      const outputBuffer = 2048;
+      // Reserve tokens for the model's response as well.
+      final outputBuffer = baseConfig.maxTokens;
       inputChunkTokens = max(
-        1000,
-        baseConfig.maxTokens - systemOverhead - outputBuffer,
+        256,
+        baseConfig.contextWindow - systemOverhead - outputBuffer,
       );
       // Gemma on-device needs small chunks and a modest output buffer to keep
-      // JSON generation stable on long transcripts.
+      // line-format generation stable on long transcripts.
       if (baseConfig.providerName == 'gemma') {
-        inputChunkTokens = 512;
+        inputChunkTokens = min(inputChunkTokens, 512);
       }
-      _log('context-based chunk: maxTokens=${baseConfig.maxTokens}, '
+      _log('context-based chunk: contextWindow=${baseConfig.contextWindow}, '
           'systemOverhead=$systemOverhead, outputBuffer=$outputBuffer, '
           'inputChunkTokens=$inputChunkTokens');
     }
@@ -183,7 +184,7 @@ class RawTextProcessorService {
   /// analysis call.
   Future<int> _estimateAnalysisPromptTokens() async {
     try {
-      const template = 'kb_analysis_lines.xml';
+      const template = 'kb_analysis.xml';
       final emptyPrompt = await PromptLoader.load(template, {
         'inputText': '',
         'sourceName': 'raw-text',

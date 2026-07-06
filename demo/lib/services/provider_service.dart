@@ -73,11 +73,17 @@ class ProviderService {
     if (type == ProviderType.gemma) {
       final preset = findGemmaPreset(settings.model);
       if (preset != null) {
-        return config.copyWith(maxTokens: preset.maxTokens);
+        return config.copyWith(
+          maxTokens: preset.maxOutputTokens,
+          contextWindow: preset.maxTokens,
+        );
       }
     }
     if (type == ProviderType.webllm) {
-      return config.copyWith(maxTokens: settings.webLlmContextWindowSize);
+      return config.copyWith(
+        maxTokens: settings.webLlmMaxOutputTokens,
+        contextWindow: settings.webLlmContextWindowSize,
+      );
     }
     return config;
   }

@@ -1,29 +1,59 @@
-<prompt><![CDATA[You are a knowledge extractor. Analyze the transcript and return one record per line.
+<prompt>
+<instructions>
+You are a memory management expert.
 
-Record format:
-Question: TYPE=Q | ID=q_1 | AUTHOR=... | DATE=... | AREA=... | TOPICS=... | TAGS=... | ANSWERED_BY=... | LINKS=... | START=... | END=...
-Answer:   TYPE=A | ID=a_1 | AUTHOR=... | DATE=... | AREA=... | TOPICS=... | TAGS=... | ANSWERS_QUESTION=... | QUALITY=... | LINKS=... | START=... | END=...
-Note:     TYPE=N | ID=n_1 | AUTHOR=... | DATE=... | AREA=... | TOPICS=... | TAGS=... | MEMORY_TYPE=... | LINKS=... | START=... | END=...
+<output_format>
+TYPE=Q | ID=q_1 | AUTHOR=... | DATE=... | AREA=... | TOPICS=... | TAGS=... | ANSWERED_BY=... | LINKS=... | START=... | END=...
+TYPE=A | ID=a_1 | AUTHOR=... | DATE=... | AREA=... | TOPICS=... | TAGS=... | ANSWERS_QUESTION=... | QUALITY=... | LINKS=... | START=... | END=...
+TYPE=N | ID=n_1 | AUTHOR=... | DATE=... | AREA=... | TOPICS=... | TAGS=... | MEMORY_TYPE=... | LINKS=... | START=... | END=...
+</output_format>
 
-Rules:
-- One record per line. Fields are KEY=value pairs separated by " | ".
-- Do NOT use " | " inside any value.
-- IDs: q_1..., a_1..., n_1... The system remaps them later.
-- TOPICS and TAGS use ';' to separate items. LINKS uses ';' for URLs.
-- DATE: ISO 8601 if present, otherwise unknown.
-- START/END: 3-8 word anchors from the transcript, or full/full if the whole input is one item.
-- Each next item's START must appear after the previous item's END.
-- Empty fields stay empty but keep the separator.
-- QUALITY: 0.0-1.0.
+<type_guidelines>
+Classify each item as exactly one of Q, A, or N based ONLY on the input text.
+- TYPE=Q (question): asks for information or help. Clues: '?', question words (who/what/where/when/why/how/which/is/are/do/does/can/could/should/would/will/did), or requests like "tell me", "explain", "how to".
+- TYPE=A (answer): directly answers a Q that appears in the same input. If there is no matching Q, use N.
+- TYPE=N (note): everything else — fact, decision, task, idea, context, observation, self-introduction. Short intros like "my name is ..." or "I work at ..." are always N with MEMORY_TYPE=fact.
+- When in doubt between Q and N, choose N unless the text is clearly asking for information.
+</type_guidelines>
 
-Area: pick one broad domain (ai, platform, development, infrastructure, data, security, business, or a language/technology name).
-Topics: 1-3 specific themes; include technology name when relevant.
-Tags: concrete tools, techniques, keywords.
+<content_guidelines>
+Derive AREA, TOPICS, and TAGS ONLY from the actual words and concepts in the input. Never copy values from these examples. Never reuse generic placeholders unless they literally appear in the input.
+- AREA: one broad domain from the input's subject matter.
+- TOPICS: 1-3 specific themes using real words and concepts from the input.
+- TAGS: concrete tools, technologies, frameworks, services, keywords, or names from the input, lowercase with hyphens for spaces.
+</content_guidelines>
 
-Extract ALL questions, answers, and standalone notes. Keep the original language. Include all URLs.
-${extraInstructions}
+<rules>
+- Output ONLY TYPE=Q/A/N records, one per line. No other text, prefixes, markdown, or explanations.
+- Each record is FIELD=value pairs separated by " | " (space-pipe-space). Do NOT use " | " inside values.
+- Exactly one START=... and one END=... per record. Use START=full END=full for very short or single-item input.
+- IDs: q_1, q_2... for questions; a_1, a_2... for answers; n_1, n_2... for notes.
+- TOPICS and TAGS are semicolon-separated. Provide at least one of each when content is meaningful.
+- LINKS is a semicolon-separated list of URLs, or empty.
+- DATE is ISO 8601 when a full date is present, otherwise unknown.
+- START/END are 2-5 word anchors that exactly match a substring in the input. Each next START must appear after the previous END.
+- ANSWERED_BY and ANSWERS_QUESTION are empty when there is no link.
+- QUALITY is a number from 0.0 to 1.0.
+- MEMORY_TYPE for notes is one of: fact, decision, task, idea, context. Default to fact.
+- AREA must never be empty for meaningful content.
+</rules>
+</instructions>
 
-Source: ${sourceName}
-${imageHint}
+<example>
+Input:
+[2024-11-15T09:00:00Z] Alice: How do I manage state?
+[2024-11-15T09:01:00Z] Bob: Use Riverpod.
+
+TYPE=Q | ID=q_1 | AUTHOR=Alice | DATE=2024-11-15T09:00:00Z | AREA=... | TOPICS=... | TAGS=... | ANSWERED_BY=a_1 | LINKS= | START=... | END=...
+TYPE=A | ID=a_1 | AUTHOR=Bob | DATE=2024-11-15T09:01:00Z | AREA=... | TOPICS=... | TAGS=... | ANSWERS_QUESTION=q_1 | QUALITY=... | LINKS= | START=... | END=...
+</example>
+
+<example>
+Input: my name is Vova
+TYPE=N | ID=n_1 | AUTHOR= | DATE=unknown | AREA=... | TOPICS=... | TAGS=... | MEMORY_TYPE=fact | LINKS= | START=full | END=full
+</example>
+
+<input_data>
 ${inputText}
-]]></prompt>
+</input_data>
+</prompt>

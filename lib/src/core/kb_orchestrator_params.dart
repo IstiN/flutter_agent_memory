@@ -13,8 +13,7 @@ class KBOrchestratorParams {
 
   /// Prompt template used by the analysis agent.
   ///
-  /// Defaults to [kb_analysis.xml]. Use [kb_analysis_compact.xml] for
-  /// on-device models with small context windows.
+  /// Defaults to [kb_analysis.xml].
   final String analysisTemplate;
   final bool cleanOutput;
 

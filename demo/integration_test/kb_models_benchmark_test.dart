@@ -173,7 +173,7 @@ void main() {
                 inputText: benchmarkCase.transcript,
                 outputPath: outputDir.path,
                 processingMode: KBProcessingMode.processOnly,
-                analysisTemplate: 'kb_analysis_compact.xml',
+                analysisTemplate: 'kb_analysis.xml',
                 analysisExtraInstructions:
                     'Extract all clear questions and answers. '
                     'Set the author field to the speaker name shown in the transcript. '
