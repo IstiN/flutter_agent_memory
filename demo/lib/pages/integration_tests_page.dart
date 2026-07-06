@@ -149,59 +149,45 @@ class _IntegrationTestsPageState extends State<IntegrationTestsPage> {
 
     final stopwatch = Stopwatch()..start();
     final buffer = StringBuffer();
-    StreamSubscription<String>? sub;
+    var timedOut = false;
     try {
       final provider = _provider!;
       final stream = test.run(provider).timeout(
         test.timeout,
         onTimeout: (sink) {
+          timedOut = true;
           sink.add('\n[TIMEOUT after ${test.timeout.inSeconds}s]');
           sink.close();
         },
       );
-      sub = stream.listen(
-        (chunk) {
-          buffer.write(chunk);
-          if (mounted) {
-            setState(() {
-              result.partialOutput = buffer.toString();
-            });
-          }
-        },
-        onError: (Object e, StackTrace s) {
-          stopwatch.stop();
-          if (mounted) {
-            setState(() {
-              result.status = _Status.failed;
-              result.message = '${buffer.toString()}\n$e\n$s';
-              result.duration = stopwatch.elapsed;
-            });
-          }
-        },
-        onDone: () {
-          stopwatch.stop();
-          final output = buffer.toString();
-          if (mounted) {
-            setState(() {
-              result.status = _Status.passed;
-              result.message = output;
-              result.duration = stopwatch.elapsed;
-            });
-          }
-        },
-      );
-      await sub.asFuture();
+      await for (final chunk in stream) {
+        buffer.write(chunk);
+        if (mounted) {
+          setState(() {
+            result.partialOutput = buffer.toString();
+          });
+        }
+      }
+      stopwatch.stop();
+      final output = buffer.toString();
+      if (timedOut) {
+        throw TimeoutException(
+          'Test did not complete within ${test.timeout.inSeconds}s',
+        );
+      }
+      final error = _validateTestOutput(test, output);
+      if (error != null) throw StateError(error);
+      result.status = _Status.passed;
+      result.message = output;
+      result.duration = stopwatch.elapsed;
+      if (mounted) setState(() {});
     } catch (e, s) {
       stopwatch.stop();
-      if (mounted) {
-        setState(() {
-          result.status = _Status.failed;
-          result.message = '${buffer.toString()}\n$e\n$s';
-          result.duration = stopwatch.elapsed;
-        });
-      }
+      result.status = _Status.failed;
+      result.message = '${buffer.toString()}\n$e\n$s';
+      result.duration = stopwatch.elapsed;
+      if (mounted) setState(() {});
     } finally {
-      await sub?.cancel();
       _runningIds.remove(test.id);
       if (mounted) setState(() {});
     }
@@ -215,7 +201,7 @@ class _IntegrationTestsPageState extends State<IntegrationTestsPage> {
       yield chunk;
     }
     final text = _lastPartial(_results.firstWhere((r) => r.id == 'ping')).trim();
-    if (text.isEmpty) throw StateError('Empty response from model');
+    if (text.isEmpty) return;
     yield '\n\nResult: Response received.';
   }
 
@@ -229,13 +215,13 @@ class _IntegrationTestsPageState extends State<IntegrationTestsPage> {
     }
     final text = _lastPartial(_results.firstWhere((r) => r.id == 'json')).trim();
     final jsonMatch = RegExp(r'\{[\s\S]*?\}').firstMatch(text);
-    if (jsonMatch == null) throw StateError('No JSON object found in response: $text');
+    if (jsonMatch == null) return;
     final cleaned = jsonMatch.group(0)!
         .replaceAll(RegExp(r'^```json\s*'), '')
         .replaceAll(RegExp(r'\s*```$'), '')
         .trim();
     final json = jsonDecode(cleaned) as Map<String, dynamic>;
-    if (json['ok'] != true) throw StateError('Expected {"ok": true}, got $json');
+    if (json['ok'] != true) return;
     yield '\n\nResult: Parsed JSON: $json';
   }
 
@@ -291,6 +277,38 @@ class _IntegrationTestsPageState extends State<IntegrationTestsPage> {
   }
 
   String _lastPartial(_TestResult result) => result.partialOutput ?? '';
+
+  String? _validateTestOutput(_TestDefinition test, String output) {
+    switch (test.id) {
+      case 'ping':
+        final responseText = output
+            .replaceFirst(RegExp(r'^Prompt:.*?\n\n', dotAll: true), '')
+            .replaceFirst(RegExp(r'\n\nResult:.*$', dotAll: true), '')
+            .trim();
+        if (responseText.isEmpty) return 'Empty response from model';
+        return null;
+      case 'json':
+        final jsonMatch = RegExp(r'\{[\s\S]*?\}').firstMatch(output);
+        if (jsonMatch == null) {
+          return 'No JSON object found in response: $output';
+        }
+        final cleaned = jsonMatch.group(0)!
+            .replaceAll(RegExp(r'^```json\s*'), '')
+            .replaceAll(RegExp(r'\s*```$'), '')
+            .trim();
+        try {
+          final json = jsonDecode(cleaned) as Map<String, dynamic>;
+          if (json['ok'] != true) {
+            return 'Expected {"ok": true}, got $json';
+          }
+        } catch (e) {
+          return 'JSON parse error: $e\nOutput: $output';
+        }
+        return null;
+      default:
+        return null;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
