@@ -13,6 +13,8 @@ class DemoVersionInfo {
   final String flutterGemmaMediapipeVersion;
   final String flutterAgentMemoryVersion;
 
+  final String webLlmVersion;
+
   const DemoVersionInfo({
     required this.appVersion,
     required this.appBuildNumber,
@@ -20,12 +22,14 @@ class DemoVersionInfo {
     required this.flutterGemmaLitertlmVersion,
     required this.flutterGemmaMediapipeVersion,
     required this.flutterAgentMemoryVersion,
+    required this.webLlmVersion,
   });
 
   static const _flutterGemmaVersion = '1.2.0';
   static const _flutterGemmaLitertlmVersion = '1.0.2';
   static const _flutterGemmaMediapipeVersion = '1.0.3';
-  static const _flutterAgentMemoryVersion = '0.0.1';
+  static const _flutterAgentMemoryVersion = '0.0.2';
+  static const _webLlmVersion = '0.2.81';
 
   static Future<DemoVersionInfo> load() async {
     final info = await PackageInfo.fromPlatform();
@@ -36,6 +40,7 @@ class DemoVersionInfo {
       flutterGemmaLitertlmVersion: _flutterGemmaLitertlmVersion,
       flutterGemmaMediapipeVersion: _flutterGemmaMediapipeVersion,
       flutterAgentMemoryVersion: _flutterAgentMemoryVersion,
+      webLlmVersion: _webLlmVersion,
     );
   }
 
@@ -43,6 +48,7 @@ class DemoVersionInfo {
   String get summary {
     return 'demo $appVersion+$appBuildNumber | '
         'fam $_flutterAgentMemoryVersion | '
+        'webllm $_webLlmVersion | '
         'gemma $_flutterGemmaVersion | '
         'litertlm $_flutterGemmaLitertlmVersion | '
         'mediapipe $_flutterGemmaMediapipeVersion';
@@ -52,6 +58,7 @@ class DemoVersionInfo {
   String format() {
     return 'Flutter Agent Memory Demo v$appVersion+$appBuildNumber\n'
         'flutter_agent_memory: $_flutterAgentMemoryVersion\n'
+        'webllm: $_webLlmVersion\n'
         'flutter_gemma: $_flutterGemmaVersion\n'
         'flutter_gemma_litertlm: $_flutterGemmaLitertlmVersion\n'
         'flutter_gemma_mediapipe: $_flutterGemmaMediapipeVersion';

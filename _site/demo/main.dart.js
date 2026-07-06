@@ -8542,7 +8542,7 @@ n.Y3()
 s=3
 return A.i(A.Qb(),$async$a8H)
 case 3:m=b
-A.aX("[DemoVersion] "+("demo "+m.a+"+"+m.b+" | fam 0.0.1 | gemma 1.2.0 | litertlm 1.0.2 | mediapipe 1.0.3"))
+A.aX("[DemoVersion] "+("demo "+m.a+"+"+m.b+" | fam 0.0.2 | webllm 0.2.81 | gemma 1.2.0 | litertlm 1.0.2 | mediapipe 1.0.3"))
 if($.a5==null)A.aTd()
 p=$.a5
 p.toString
@@ -53140,7 +53140,7 @@ H(a){var s=this,r=null,q=A.h6(s.e,B.P,r,18),p=A.b_(s.c,r,r,r,B.bI,r,r),o=s.f
 return new A.bt(B.fD,A.cB(A.b([q,B.bP,p,B.jF,A.b_(s.d,r,r,r,A.dJ(r,r,o==null?B.a3:o,r,r,r,r,r,r,r,r,r,r,r,B.aB,r,r,!0,r,r,r,r,r,r,r,r),r,r)],t.p),B.B,B.l,B.y,0),r)}}
 A.a6f.prototype={
 H(a){var s=null,r=this.c
-r=r==null?s:"Flutter Agent Memory Demo v"+r.a+"+"+r.b+"\nflutter_agent_memory: 0.0.1\nflutter_gemma: 1.2.0\nflutter_gemma_litertlm: 1.0.2\nflutter_gemma_mediapipe: 1.0.3"
+r=r==null?s:"Flutter Agent Memory Demo v"+r.a+"+"+r.b+"\nflutter_agent_memory: 0.0.2\nwebllm: 0.2.81\nflutter_gemma: 1.2.0\nflutter_gemma_litertlm: 1.0.2\nflutter_gemma_mediapipe: 1.0.3"
 return new A.bt(B.ih,A.b_(r==null?"Loading version info...":r,s,s,s,B.ZH,s,s),s)}}
 A.Hc.prototype={
 ac(){return new A.M4(new A.fy(B.bW,$.aB()),A.GD(0),A.b([],t.MM))}}
