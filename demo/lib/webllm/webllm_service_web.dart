@@ -33,6 +33,7 @@ class WebLlmModelPreset {
 class WebLlmService {
   WebLlmEngine? _engine;
   String? _loadedModelId;
+  bool _disposed = false;
 
   final _progressController = StreamController<WebLlmProgressReport>.broadcast();
   Stream<WebLlmProgressReport> get progress => _progressController.stream;
@@ -57,7 +58,7 @@ class WebLlmService {
     final engine = _engine = WebLlmEngine(config);
     engine.setInitProgressCallback(
       ((JSObject report) {
-        _progressController.add(report as WebLlmProgressReport);
+        if (!_disposed) _progressController.add(report as WebLlmProgressReport);
       }).toJS,
     );
     return engine;
@@ -162,28 +163,67 @@ class WebLlmService {
 
     _log('chatCompletion request stream=true maxTokens=$maxTokens messages=${messages.length}');
     final asyncIterable = await engine.chatCompletion(request).toDart as JSObject;
-    _log('streaming response, registering callbacks');
 
-    final options = JSObject();
-    options.setProperty('maxTokens'.toJS, (maxTokens ?? 2048).toJS);
-    options.setProperty('logPrefix'.toJS, '[WebLlmService]'.toJS);
-    options.setProperty(
-      'onChunk'.toJS,
-      ((JSString content) => onChunk(content.toDart)).toJS,
-    );
-    options.setProperty(
-      'onError'.toJS,
-      ((JSString error) => _log('stream error: ${error.toDart}')).toJS,
-    );
-    options.setProperty(
-      'onDone'.toJS,
-      (() => _log('stream done')).toJS,
+    // Get the async iterator directly from the iterable returned by WebLLM.
+    final iterator = asyncIterable.callMethod<JSObject>(
+      'Symbol.asyncIterator'.toJS,
+      <JSAny?>[].toJS,
     );
 
-    final cancelFn = webllmStreamWithCallbacks(asyncIterable, options);
-    return () {
-      cancelFn.callAsFunction(null);
-    };
+    var tokens = 0;
+    var done = false;
+
+    void cancel() {
+      if (done) return;
+      done = true;
+      _log('stream cancelled by caller');
+      try {
+        iterator.callMethod<JSAny?>('return'.toJS, <JSAny?>[].toJS);
+      } catch (_) {}
+    }
+
+    Future<void> run() async {
+      try {
+        while (!done) {
+          final result = await iterator
+              .callMethod<JSPromise<JSObject>>('next'.toJS, <JSAny?>[].toJS)
+              .toDart;
+          if (done) break;
+          final iterDone = result.getProperty<JSBoolean?>('done'.toJS)?.toDart ?? false;
+          if (iterDone) break;
+          final value = result.getProperty<JSObject>('value'.toJS);
+          final content = _extractChunkContent(value);
+          if (content != null && content.isNotEmpty) {
+            tokens += 1;
+            _log('chunk tokens=$tokens content="${content.substring(0, content.length > 80 ? 80 : content.length).replaceAll('\n', '\\n')}"');
+            onChunk(content);
+          }
+        }
+      } catch (e) {
+        _log('stream error: $e');
+      } finally {
+        done = true;
+        _log('stream done, tokens=$tokens');
+      }
+    }
+
+    run();
+    return cancel;
+  }
+
+  String? _extractChunkContent(JSObject value) {
+    try {
+      final choices = value.getProperty<JSArray?>('choices'.toJS);
+      if (choices == null) return null;
+      final first = choices.toDart.firstOrNull as JSObject?;
+      if (first == null) return null;
+      final delta = first.getProperty<JSObject?>('delta'.toJS);
+      if (delta == null) return null;
+      final content = delta.getProperty<JSString?>('content'.toJS);
+      return content?.toDart;
+    } catch (_) {
+      return null;
+    }
   }
 
   Future<void> interrupt() async {
@@ -225,6 +265,7 @@ class WebLlmService {
   }
 
   Future<void> dispose() async {
+    _disposed = true;
     await _progressController.close();
     // WebLLM has no explicit dispose API; drop the reference so the engine
     // can be garbage collected.
