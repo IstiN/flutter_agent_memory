@@ -128,9 +128,21 @@ class WebLlmService {
       'temperature': preset.temperature,
       'top_p': preset.topP,
     }.jsify();
-    await engine.reload(modelId.toJS, chatConfig).toDart;
-    _loadedModelId = modelId;
-    _log('model $modelId loaded');
+    try {
+      await engine.reload(modelId.toJS, chatConfig).toDart;
+      _loadedModelId = modelId;
+      _log('model $modelId loaded');
+    } catch (e) {
+      // If reload is aborted (e.g. user pressed Stop while weights were
+      // downloading), reset the loaded-model state so the next run retries
+      // the full load instead of assuming the model is ready. Also drop the
+      // engine instance because an aborted MLCEngine can be left in a bad
+      // state where it reports "ready" but cannot run inference.
+      _loadedModelId = null;
+      _engine = null;
+      _log('model $modelId reload failed, reset engine state: $e');
+      rethrow;
+    }
   }
 
   /// Run a chat completion. [messages] must alternate user/assistant roles.
