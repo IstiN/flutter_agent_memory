@@ -14,11 +14,16 @@
     This is a placeholder for base href that will be replaced by the value of
     the `--base-href` argument provided to `flutter build`.
   -->
-  <base href="/flutter_agent_memory/demo/">
+  <base href="/flutter_agent_memory/">
 
   <meta charset="UTF-8">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
   <meta name="description" content="Interactive agent memory demo.">
+
+  <!-- Disable aggressive caching so updates deploy immediately. -->
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
 
   <!-- iOS meta tags & icons -->
   <meta name="mobile-web-app-capable" content="yes">
@@ -58,6 +63,118 @@
       window.Engine = m.Engine;
       return m.Engine;
     })();
+  </script>
+  <!-- WebLLM (@mlc-ai/web-llm) for running small LLMs in the browser via WebGPU -->
+  <script type="module">
+    import * as webllm from 'https://cdn.jsdelivr.net/npm/@mlc-ai/web-llm@0.2.81/+esm';
+    window.webllm = webllm;
+
+    // Streaming helper used by demo/lib/webllm/webllm_js_interop.dart.
+    // Calls onChunk(content) for every streamed delta and onDone() when the
+    // iterator finishes. Returns a cancel function that breaks the loop early.
+    window.webllmStreamWithCallbacks = (asyncIterable, options) => {
+      const maxTokens = options?.maxTokens ?? Number.MAX_SAFE_INTEGER;
+      const logPrefix = options?.logPrefix ?? '[WebLLM]';
+      let tokens = 0;
+      let done = false;
+      let iterator = null;
+      console.log(`${logPrefix} stream start, maxTokens=${maxTokens}`);
+
+      const cancel = () => {
+        if (done) return;
+        done = true;
+        console.log(`${logPrefix} stream cancelled by caller`);
+        if (iterator && typeof iterator.return === 'function') {
+          iterator.return().catch(() => {});
+        }
+      };
+
+      const run = async () => {
+        try {
+          iterator = asyncIterable[Symbol.asyncIterator]();
+          while (!done) {
+            const { value, done: iterDone } = await iterator.next();
+            if (iterDone || done) break;
+            const content = value?.choices?.[0]?.delta?.content ?? '';
+            if (content) {
+              tokens += 1;
+              console.log(`${logPrefix} chunk tokens=${tokens} content="${content.substring(0, 80).replace(/\n/g, '\\n')}"`);
+              options?.onChunk?.(content);
+            }
+            if (tokens >= maxTokens) {
+              console.log(`${logPrefix} stream stopped at maxTokens=${maxTokens}`);
+              break;
+            }
+          }
+        } catch (e) {
+          console.error(`${logPrefix} stream error:`, e);
+          options?.onError?.(String(e));
+        } finally {
+          done = true;
+          console.log(`${logPrefix} stream done, tokens=${tokens}`);
+          options?.onDone?.();
+        }
+      };
+
+      run();
+      return cancel;
+    };
+
+    // Helpers to inspect and manage WebLLM's browser cache.
+    window.webllmIsModelCached = async (modelId) => {
+      try {
+        const cacheNames = await caches.keys();
+        for (const name of cacheNames) {
+          const cache = await caches.open(name);
+          const keys = await cache.keys();
+          if (keys.some((req) => req.url.includes(modelId))) {
+            return true;
+          }
+        }
+        return false;
+      } catch {
+        return false;
+      }
+    };
+
+    window.webllmModelProgress = async (modelId) => {
+      try {
+        const cacheNames = await caches.keys();
+        for (const name of cacheNames) {
+          const cache = await caches.open(name);
+          const keys = await cache.keys();
+          const matched = keys.filter((req) => req.url.includes(modelId));
+          if (matched.length > 0) {
+            let downloaded = 0;
+            let total = 0;
+            for (const req of matched) {
+              const resp = await cache.match(req);
+              if (resp) {
+                const blob = await resp.blob();
+                downloaded += blob.size;
+              }
+            }
+            return 1; // presence means fully cached; partial tracking unreliable
+          }
+        }
+        return null;
+      } catch {
+        return null;
+      }
+    };
+
+    window.webllmDeleteModel = async (modelId) => {
+      const cacheNames = await caches.keys();
+      for (const name of cacheNames) {
+        const cache = await caches.open(name);
+        const keys = await cache.keys();
+        for (const req of keys) {
+          if (req.url.includes(modelId)) {
+            await cache.delete(req);
+          }
+        }
+      }
+    };
   </script>
   <script src="flutter_bootstrap.js" async></script>
 </body>

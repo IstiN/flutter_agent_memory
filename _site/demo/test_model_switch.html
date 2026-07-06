@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base href="/">
+  <meta charset="UTF-8">
+  <title>Model Switch Test</title>
+  <script type="module">
+    import { FilesetResolver, LlmInference } from 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-genai@0.10.27';
+    window.FilesetResolver = FilesetResolver;
+    window.LlmInference = LlmInference;
+  </script>
+  <script src="cache_api.js"></script>
+  <script src="opfs_helper.js"></script>
+  <script type="module">
+    window.litertLmReady = (async () => {
+      const m = await import('https://cdn.jsdelivr.net/npm/@litert-lm/core@0.12.1/+esm');
+      window.Engine = m.Engine;
+      return m.Engine;
+    })();
+  </script>
+  <script src="flutter_bootstrap.js" async></script>
+</head>
+<body>
+  <div id="log" style="white-space: pre-wrap; font-family: monospace; font-size: 12px;"></div>
+  <script>
+    function log(msg) {
+      document.getElementById('log').textContent += msg + '\n';
+      console.log(msg);
+    }
+    window.addEventListener('load', async () => {
+      log('Page loaded, waiting for flutter...');
+      await new Promise(r => setTimeout(r, 6000));
+      log('Attempting engine switch test from JS...');
+      try {
+        const fileset = await FilesetResolver.forGenAiTasks('https://cdn.jsdelivr.net/npm/@mediapipe/tasks-genai@0.10.27/wasm');
+        log('MediaPipe fileset ready');
+        // Create a minimal task model to warm up GPU
+        // (would need actual .task URL; skip creation, just check coexistence)
+        await window.litertLmReady;
+        log('LiteRT-LM ready');
+        log('Both engines loaded in same page without immediate error');
+      } catch (e) {
+        log('Error: ' + e.message);
+      }
+    });
+  </script>
+</body>
+</html>
