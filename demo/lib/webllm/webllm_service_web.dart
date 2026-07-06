@@ -5,6 +5,52 @@ import 'package:flutter/foundation.dart';
 
 import 'webllm_js_interop.dart';
 
+/// Converts a JS AsyncIterable (returned by WebLLM's streaming
+/// `chatCompletion`) into a Dart [Stream] by reading it with a
+/// [ReadableStreamDefaultReader].
+Stream<JSObject> _asyncIterableToStream(JSObject asyncIterable) {
+  final controller = StreamController<JSObject>();
+
+  // Get the reader: asyncIterable.getReader()
+  final reader = asyncIterable.callMethod<JSObject>(
+    'getReader'.toJS,
+    <JSAny?>[].toJS,
+  );
+
+  Future<void> readNext() async {
+    try {
+      while (!controller.isClosed) {
+        final result = await reader
+            .callMethod<JSPromise<JSObject>>('read'.toJS, <JSAny?>[].toJS)
+            .toDart;
+        final done = result.getProperty<JSBoolean?>('done'.toJS)?.toDart ?? false;
+        if (done) {
+          controller.close();
+          return;
+        }
+        final value = result.getProperty<JSObject?>('value'.toJS);
+        if (value != null) {
+          controller.add(value);
+        }
+      }
+    } catch (e, st) {
+      controller.addError(e, st);
+    }
+  }
+
+  controller.onCancel = () async {
+    try {
+      await reader
+          .callMethod<JSPromise<JSAny?>>('cancel'.toJS, <JSAny?>[].toJS)
+          .toDart;
+    } catch (_) {}
+    await controller.close();
+  };
+
+  readNext();
+  return controller.stream;
+}
+
 /// Preset describing a WebLLM model available through `@mlc-ai/web-llm`.
 class WebLlmModelPreset {
   final String id;
@@ -164,10 +210,11 @@ class WebLlmService {
     _log('chatCompletion request stream=true maxTokens=$maxTokens messages=${messages.length}');
     final asyncIterable = await engine.chatCompletion(request).toDart as JSObject;
 
-    // Get the async iterator directly from the iterable returned by WebLLM.
-    final iterator = asyncIterable.callMethod<JSObject>(
-      'Symbol.asyncIterator'.toJS,
-      <JSAny?>[].toJS,
+    // WebLLM returns a standard JS ReadableStream for streaming chat completions.
+    // Read it chunk-by-chunk instead of trying to call Symbol.asyncIterator
+    // through dart2js, which produced "a[b] is not a function" in release builds.
+    final stream = _asyncIterableToStream(asyncIterable).map(
+      (value) => _extractChunkContent(value),
     );
 
     var tokens = 0;
@@ -177,22 +224,12 @@ class WebLlmService {
       if (done) return;
       done = true;
       _log('stream cancelled by caller');
-      try {
-        iterator.callMethod<JSAny?>('return'.toJS, <JSAny?>[].toJS);
-      } catch (_) {}
     }
 
     Future<void> run() async {
       try {
-        while (!done) {
-          final result = await iterator
-              .callMethod<JSPromise<JSObject>>('next'.toJS, <JSAny?>[].toJS)
-              .toDart;
+        await for (final content in stream) {
           if (done) break;
-          final iterDone = result.getProperty<JSBoolean?>('done'.toJS)?.toDart ?? false;
-          if (iterDone) break;
-          final value = result.getProperty<JSObject>('value'.toJS);
-          final content = _extractChunkContent(value);
           if (content != null && content.isNotEmpty) {
             tokens += 1;
             _log('chunk tokens=$tokens content="${content.substring(0, content.length > 80 ? 80 : content.length).replaceAll('\n', '\\n')}"');
