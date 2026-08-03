@@ -13,4 +13,5 @@ export 'src/cli/skill_help.dart';
 export 'src/utils/date_utils.dart';
 export 'src/utils/frontmatter.dart';
 export 'src/utils/input_loader.dart';
+export 'src/utils/memory_utils.dart';
 export 'src/utils/slugify.dart';

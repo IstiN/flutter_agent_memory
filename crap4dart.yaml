@@ -1,0 +1,47 @@
+# crap4dart configuration for flutter_agent_memory.
+# Pure Dart package; Flutter-specific gates are disabled.
+#
+# This is the *ratchet baseline* for a legacy codebase. Thresholds are relaxed
+# to make the gate green today; they will be tightened incrementally in follow-up
+# commits until the project reaches the yellow/green zone.
+sources: [lib, bin, test]
+
+crap:
+  enabled: true
+  threshold: 160.0
+
+coverage:
+  lcov_path: coverage/lcov.info
+  run_tests: false
+  required: true
+  branch_coverage: true
+
+gates:
+  loc:
+    enabled: true
+    max_lines: 1000
+    exclude:
+      - '**.g.dart'
+      - '**.freezed.dart'
+      - '**.mocks.dart'
+  test_coverage:
+    enabled: true
+    min_percent: 60.0
+    per_file: false
+  golden:
+    enabled: false
+  hardcoded_strings:
+    enabled: false
+  accessibility:
+    enabled: false
+  complexity:
+    enabled: true
+    max_complexity: 40
+  method_size:
+    enabled: true
+    max_lines: 400
+    max_params: 20
+  public_docs:
+    enabled: false
+    exclude:
+      - 'test/**'

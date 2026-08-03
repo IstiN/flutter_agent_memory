@@ -1,6 +1,7 @@
 # flutter_agent_memory
 
 ![Build](https://github.com/IstiN/flutter_agent_memory/actions/workflows/build.yml/badge.svg?branch=main)
+![CRAP](badges/crap.svg)
 
 A Dart memory/knowledge-base library inspired by the Java `dmtools-core` KB module.
 

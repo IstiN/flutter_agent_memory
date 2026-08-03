@@ -31,7 +31,22 @@ jobs:
 
       - name: Run tests
         # Integration tests hit real/external LLM endpoints and are too slow/non-deterministic for CI gates.
-        run: dart test --exclude-tags integration
+        run: dart test --exclude-tags integration --coverage=coverage
+
+      - name: Format coverage
+        run: |
+          dart pub global activate coverage
+          dart pub global run coverage:format_coverage \
+            --lcov --in coverage --out coverage/lcov.info --report-on lib
+
+      - name: Install crap4dart
+        run: dart pub global activate -sgit https://github.com/IstiN/crap4dart.git
+
+      - name: Quality gates
+        run: crap4dart check --all
+
+      - name: CRAP analysis
+        run: crap4dart analyze
 
   test-installer:
     name: Test installer script

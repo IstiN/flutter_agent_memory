@@ -10,9 +10,12 @@ import '../models/note.dart';
 import '../models/question.dart';
 import '../models/relation.dart';
 import '../utils/date_utils.dart';
+import '../utils/memory_utils.dart';
 import '../utils/slugify.dart';
 import 'file_kb_storage_factory.dart'
     if (dart.library.html) 'file_kb_storage_factory_stub.dart';
+
+export '../utils/memory_utils.dart';
 import 'kb_file_parser.dart';
 import 'kb_graph_builder.dart';
 import 'kb_markdown_renderer.dart';
@@ -29,23 +32,40 @@ class KBMemoryStore {
   final KbStorage storage;
   final LlmProvider? provider;
   final String source;
+
+  /// If true, capture methods skip notes/answers/questions whose normalized
+  /// text already exists in storage. Defaults to true.
+  final bool deduplicateOnCapture;
+
+  /// Optional configuration for automatic memory-level promotion.
+  final MemoryPromotionPolicy promotionPolicy;
+
   final KBFileParser _parser;
   final KbMarkdownRenderer _renderer;
 
-  KBMemoryStore(this.storage, {this.provider, this.source = 'agent'})
-    : _parser = KBFileParser(),
-      _renderer = const KbMarkdownRenderer();
+  KBMemoryStore(
+    this.storage, {
+    this.provider,
+    this.source = 'agent',
+    this.deduplicateOnCapture = true,
+    this.promotionPolicy = const MemoryPromotionPolicy(),
+  }) : _parser = KBFileParser(),
+       _renderer = const KbMarkdownRenderer();
 
   /// Creates a store backed by the file-system Markdown directory layout.
   factory KBMemoryStore.file(
     dynamic kbDir, {
     LlmProvider? provider,
     String source = 'agent',
+    bool deduplicateOnCapture = true,
+    MemoryPromotionPolicy promotionPolicy = const MemoryPromotionPolicy(),
   }) {
     return KBMemoryStore(
       createFileKbStorage(kbDir),
       provider: provider,
       source: source,
+      deduplicateOnCapture: deduplicateOnCapture,
+      promotionPolicy: promotionPolicy,
     );
   }
 
@@ -81,6 +101,10 @@ class KBMemoryStore {
       links: const [],
       importance: importance,
     );
+
+    if (deduplicateOnCapture && await _hasDuplicateQuestionText(question.text)) {
+      return _toRecord(question: question);
+    }
 
     await _writeQuestion(question);
     return _toRecord(question: question);
@@ -120,6 +144,10 @@ class KBMemoryStore {
       links: const [],
       importance: importance,
     );
+
+    if (deduplicateOnCapture && await _hasDuplicateAnswerText(answer.text)) {
+      return _toRecord(answer: answer);
+    }
 
     await _writeAnswer(answer);
     return _toRecord(answer: answer);
@@ -167,6 +195,10 @@ class KBMemoryStore {
       level: MemoryLevel.normalize(level),
       relations: relations ?? const [],
     );
+
+    if (deduplicateOnCapture && await _hasDuplicateNote(note)) {
+      return _toRecord(note: note);
+    }
 
     await _writeNote(note);
     return _toRecord(note: note);
@@ -376,6 +408,48 @@ class KBMemoryStore {
       return records.sublist(0, limit);
     }
     return records;
+  }
+
+  /// Returns true if a note with the same content fingerprint already exists.
+  Future<bool> _hasDuplicateNote(Note candidate) async {
+    final fingerprint = memoryFingerprint(candidate);
+    for (final id in await storage.listEntityIds('note')) {
+      final content = await storage.readEntity('note', id);
+      if (content == null) continue;
+      try {
+        final note = _parser.parseNote(content);
+        if (memoryFingerprint(note) == fingerprint) return true;
+      } catch (_) {}
+    }
+    return false;
+  }
+
+  /// Returns true if a question with the same normalized text already exists.
+  Future<bool> _hasDuplicateQuestionText(String text) async {
+    final normalized = normalizeMemoryText(text);
+    for (final id in await storage.listEntityIds('question')) {
+      final content = await storage.readEntity('question', id);
+      if (content == null) continue;
+      try {
+        final q = _parser.parseQuestion(content);
+        if (normalizeMemoryText(q.text) == normalized) return true;
+      } catch (_) {}
+    }
+    return false;
+  }
+
+  /// Returns true if an answer with the same normalized text already exists.
+  Future<bool> _hasDuplicateAnswerText(String text) async {
+    final normalized = normalizeMemoryText(text);
+    for (final id in await storage.listEntityIds('answer')) {
+      final content = await storage.readEntity('answer', id);
+      if (content == null) continue;
+      try {
+        final a = _parser.parseAnswer(content);
+        if (normalizeMemoryText(a.text) == normalized) return true;
+      } catch (_) {}
+    }
+    return false;
   }
 
   Future<({String id, String text, String now, _Enriched enriched})>
@@ -601,11 +675,35 @@ class KBMemoryStore {
     await KBGraphBuilder(storage).build();
   }
 
+  /// Reads the current [MEMORY.md] file and returns its revision hash along
+  /// with the content.
+  Future<MemoryRevision> readMemoryRevision() async {
+    final content = (await storage.readFile('MEMORY.md')) ?? '';
+    return MemoryRevision(content: content, hash: revisionHash(content));
+  }
+
+  /// Writes [content] to [MEMORY.md] only if the current revision matches
+  /// [expectedHash]. Returns true when the write succeeded, false if the file
+  /// was modified concurrently.
+  Future<bool> writeMemoryRevision(
+    String content,
+    String expectedHash,
+  ) async {
+    final current = (await storage.readFile('MEMORY.md')) ?? '';
+    if (revisionHash(current) != expectedHash) return false;
+    await storage.writeFile('MEMORY.md', content);
+    return true;
+  }
+
   /// Consolidates the top [limit] memory records into a high-level summary and
   /// reusable skill cards using an LLM.
+  ///
+  /// If [expectedRevisionHash] is provided, the write is conditional on the
+  /// existing MEMORY.md still matching that hash.
   Future<ConsolidationResult> consolidate({
     String extraInstructions = '',
     int limit = 100,
+    String? expectedRevisionHash,
   }) async {
     if (provider == null) {
       throw StateError('An LLM provider is required for consolidation.');
@@ -621,7 +719,10 @@ class KBMemoryStore {
       extraInstructions: extraInstructions,
     );
 
-    await _writeConsolidation(result);
+    await _writeConsolidation(
+      result,
+      expectedRevisionHash: expectedRevisionHash,
+    );
     return result;
   }
 
@@ -629,8 +730,21 @@ class KBMemoryStore {
     return (await storage.readFile('MEMORY.md'))?.trim();
   }
 
-  Future<void> _writeConsolidation(ConsolidationResult result) async {
-    await storage.writeFile('MEMORY.md', result.summary);
+  Future<void> _writeConsolidation(
+    ConsolidationResult result, {
+    String? expectedRevisionHash,
+  }) async {
+    final content = result.summary;
+    if (expectedRevisionHash != null) {
+      final ok = await writeMemoryRevision(content, expectedRevisionHash);
+      if (!ok) {
+        throw ConcurrentRevisionException(
+          'MEMORY.md was modified during consolidation.',
+        );
+      }
+    } else {
+      await storage.writeFile('MEMORY.md', content);
+    }
 
     if (result.skills.isEmpty) {
       await _clearSkills();
@@ -695,6 +809,129 @@ class KBMemoryStore {
   }
 
   String _pad(int value) => value.toString().padLeft(4, '0');
+
+  /// Promotes or expires notes according to [promotionPolicy] and returns the
+  /// number of records changed.
+  ///
+  /// Should be called periodically (e.g. from a background job) rather than
+  /// on every write.
+  Future<int> maintainMemoryLevels() async {
+    var changed = 0;
+    final now = DateTime.parse(currentUtcTimestamp());
+
+    final notes = await list(type: 'note', limit: null);
+    for (final record in notes) {
+      final note = record.note;
+      if (note == null) continue;
+      final date = _parseRecordDate(record.date);
+      if (date == null) continue;
+
+      final age = now.difference(date);
+      if (note.level == MemoryLevel.raw) {
+        if (age > promotionPolicy.rawExpiryAfter) {
+          await deleteRecord(note.id);
+          changed++;
+          continue;
+        }
+        if (age > promotionPolicy.rawToConsolidatedAfter) {
+          await _writeNote(note.copyWith(level: MemoryLevel.consolidated));
+          changed++;
+          continue;
+        }
+      }
+      if (note.level == MemoryLevel.consolidated &&
+          age > promotionPolicy.consolidatedToConceptAfter) {
+        await _writeNote(note.copyWith(level: MemoryLevel.concept));
+        changed++;
+      }
+    }
+    return changed;
+  }
+
+  DateTime? _parseRecordDate(String date) {
+    if (date.isEmpty) return null;
+    try {
+      return DateTime.parse(date);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// Copies a note into another [targetStore] with a provenance marker.
+  ///
+  /// The copied note receives a `(said in <sourceScope>)` suffix so the
+  /// receiving scope can evaluate the source of the fact. Returns the created
+  /// record, or null if the note could not be copied (e.g. duplicate).
+  Future<MemoryRecord?> copyNoteToScope(
+    String noteId,
+    KBMemoryStore targetStore, {
+    required String sourceScope,
+  }) async {
+    final record = await findById(noteId);
+    if (record == null || record.note == null) return null;
+
+    final source = sourceScope.replaceAll(RegExp(r'[\r\n()]+'), ' ').trim();
+    final provenance = source.isNotEmpty ? source : 'a shared scope';
+    final note = record.note!;
+
+    final existing = await targetStore.list(type: 'note', limit: null);
+    final normalized = normalizeMemoryText(note.text);
+    final alreadyExists = existing.any((r) {
+      final n = r.note;
+      return n != null && normalizeMemoryText(n.text) == normalized;
+    });
+    if (alreadyExists) return null;
+
+    final text = note.text.endsWith('.') || note.text.endsWith('!') || note.text.endsWith('?')
+        ? '${note.text} (said in $provenance)'
+        : '${note.text}. (said in $provenance)';
+
+    return targetStore.addNote(
+      text: text,
+      author: note.author,
+      area: note.area,
+      topics: List.of(note.topics),
+      tags: List.of(note.tags),
+      importance: note.importance,
+      memoryType: note.memoryType,
+      level: MemoryLevel.raw,
+    );
+  }
+}
+
+/// Exception thrown when an optimistic concurrency check fails.
+class ConcurrentRevisionException implements Exception {
+  final String message;
+  ConcurrentRevisionException(this.message);
+
+  @override
+  String toString() => 'ConcurrentRevisionException: $message';
+}
+
+/// A content snapshot plus its SHA-256 revision hash.
+class MemoryRevision {
+  final String content;
+  final String hash;
+
+  const MemoryRevision({required this.content, required this.hash});
+}
+
+/// Policy controlling automatic promotion and expiry of memory levels.
+///
+/// Raw records that survive for [rawToConsolidatedAfter] without contradiction
+/// are promoted to consolidated. Consolidated records older than
+/// [consolidatedToConceptAfter] are promoted to concept. Raw records that are
+/// not confirmed within [rawExpiryAfter] can be removed.
+class MemoryPromotionPolicy {
+  final Duration rawToConsolidatedAfter;
+  final Duration consolidatedToConceptAfter;
+  final Duration rawExpiryAfter;
+
+  const MemoryPromotionPolicy({
+    this.rawToConsolidatedAfter = const Duration(days: 14),
+    this.consolidatedToConceptAfter = const Duration(days: 90),
+    this.rawExpiryAfter = const Duration(days: 30),
+  });
 }
 
 class _Enriched {
