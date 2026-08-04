@@ -101,6 +101,29 @@ void main() {
       expect(decoded['d2'], '2023-10-07T00:00:00Z');
       expect(decoded['d3'], isNotEmpty);
     });
+
+    test('repairs broken array objects', () {
+      const broken = '{"answers": [{"id": "a_1", "text": "first"\n{"id": "a_2", "text": "second"}]}';
+      final result = sanitizeJson(broken);
+      final decoded = jsonDecode(result) as Map<String, dynamic>;
+      final answers = decoded['answers'] as List<dynamic>;
+      expect(answers.length, 2);
+      expect(answers[1]['id'], 'a_2');
+    });
+
+    test('extracts json from plain markdown fence', () {
+      const response = '''```
+{"ok": true}
+```''';
+      expect(sanitizeAndDecodeJson(response), {'ok': true});
+    });
+
+    test('strips control characters', () {
+      const broken = '{"text": "hello\x00world"}';
+      final result = sanitizeJson(broken);
+      final decoded = jsonDecode(result) as Map<String, dynamic>;
+      expect(decoded['text'], 'helloworld');
+    });
   });
 
   group('recoverPartialAnalysisJson', () {

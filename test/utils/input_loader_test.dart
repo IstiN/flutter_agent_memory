@@ -54,4 +54,26 @@ void main() {
     expect(awaited.where((i) => i.type == InputType.text).length, 2);
     expect(awaited.where((i) => i.type == InputType.image).length, 1);
   });
+
+  test('detects mime types for supported image extensions', () async {
+    final extensions = {
+      'test.png': 'image/png',
+      'test.jpg': 'image/jpeg',
+      'test.jpeg': 'image/jpeg',
+      'test.gif': 'image/gif',
+      'test.webp': 'image/webp',
+      'test.bmp': 'image/bmp',
+    };
+
+    for (final entry in extensions.entries) {
+      final file = File('${tmpDir.path}/${entry.key}')
+        ..writeAsBytesSync(Uint8List.fromList([0x89, 0x50]));
+      final inputs = await loader.load(file.path);
+      expect(
+        inputs.first.imageDataUrl,
+        startsWith('data:${entry.value};base64,'),
+        reason: 'failed for ${entry.key}',
+      );
+    }
+  });
 }

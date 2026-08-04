@@ -10,95 +10,39 @@ import '../utils/date_utils.dart';
 import '../utils/frontmatter.dart';
 import '../utils/slugify.dart';
 import 'kb_markdown_renderer.dart';
+import 'structure_builder/area_merger.dart';
 
 /// Writes the Obsidian-compatible Markdown knowledge-base structure.
 class KBStructureBuilder {
   final _renderer = const KbMarkdownRenderer();
+  static String _staticPath(Directory dir) => dir.path;
+  final _areaMerger = const AreaMerger(path: _staticPath);
   void buildAreaStructure(
     AnalysisResult analysis,
     Directory outputDir,
     String sourceName,
   ) {
-    final areaContributors = <String, Set<String>>{};
-    final areaTopics = <String, Set<String>>{};
-    final areasFromCurrentAnalysis = <String>{};
+    final merge = _areaMerger.merge(
+      analysis,
+      outputDir,
+      sourceName,
+    );
 
-    void collectFromEntity(String? area, List<String>? topics, String? author) {
-      if (area == null || area.isEmpty) return;
-      areasFromCurrentAnalysis.add(area);
-      areaContributors.putIfAbsent(area, () => <String>{});
-      if (author != null && author.isNotEmpty)
-        areaContributors[area]!.add(author);
-      if (topics != null && topics.isNotEmpty) {
-        areaTopics.putIfAbsent(area, () => <String>{})..addAll(topics);
-      }
-    }
-
-    for (final q in analysis.questions) {
-      collectFromEntity(q.area, q.topics, q.author);
-    }
-    for (final a in analysis.answers) {
-      collectFromEntity(a.area, a.topics, a.author);
-    }
-    for (final n in analysis.notes) {
-      collectFromEntity(n.area, n.topics, n.author);
-    }
-
-    final areasDir = Directory('${_path(outputDir)}/areas');
-    if (areasDir.existsSync()) {
-      for (final areaDir in areasDir.listSync().whereType<Directory>()) {
-        final areaId = areaDir.uri.pathSegments.reversed.firstWhere(
-          (s) => s.isNotEmpty,
-          orElse: () => '',
-        );
-        final areaFile = File('${areaDir.path}/$areaId.md');
-        if (!areaFile.existsSync()) continue;
-        try {
-          final content = areaFile.readAsStringSync();
-          final title = parseFrontmatter(content).getString('title');
-          if (title == null || title.isEmpty) continue;
-
-          final contributors = parseFrontmatter(
-            content,
-          ).getStringList('contributors');
-          if (contributors.isNotEmpty) {
-            areaContributors.putIfAbsent(title, () => <String>{})
-              ..addAll(contributors);
-          }
-
-          final topicsSection = RegExp(
-            r'##\s+Topics\s+(.+?)(?=##|<!--|\Z)',
-            dotAll: true,
-          ).firstMatch(content);
-          if (topicsSection != null) {
-            final linkRegex = RegExp(r'\[\[([^|\]]+)\|([^\]]+)\]\]');
-            for (final m in linkRegex.allMatches(topicsSection.group(1)!)) {
-              areaTopics.putIfAbsent(title, () => <String>{})
-                ..add(m.group(2)!.trim());
-            }
-          }
-        } catch (_) {}
-      }
-    }
-
-    areasDir.createSync(recursive: true);
-    for (final area in areaContributors.keys) {
+    merge.areaDir.createSync(recursive: true);
+    for (final area in merge.areaContributors.keys) {
       final areaId = slugify(area);
-      final areaDir = Directory('${areasDir.path}/$areaId')
+      final areaDir = Directory('${merge.areaDir.path}/$areaId')
         ..createSync(recursive: true);
       final areaFile = File('${areaDir.path}/$areaId.md');
       final areaDescFile = File('${areaDir.path}/$areaId-desc.md');
-      final sourceToAdd = areasFromCurrentAnalysis.contains(area)
-          ? sourceName
-          : null;
       _createAreaFileWithTopics(
         areaFile,
         areaDescFile,
         area,
         areaId,
-        sourceToAdd,
-        areaContributors[area]!.toList(),
-        areaTopics[area]?.toList() ?? [],
+        merge.sourceToAdd(area),
+        merge.areaContributors[area]!.toList(),
+        merge.areaTopics[area]?.toList() ?? [],
       );
     }
   }
@@ -664,6 +608,22 @@ class KBStructureBuilder {
     _TopicData data,
     AnalysisResult analysis,
   ) {
+    final fm = _buildTopicFrontmatter(topicFile, id, title, source, data);
+    final buffer = _startTopicFileBuffer(fm, title, id, data);
+    final sections = _computeTopicSections(data, analysis);
+
+    _writeTopicSections(buffer, sections);
+    topicFile.writeAsStringSync(buffer.toString());
+    _ensureTopicDescription(topicDescFile);
+  }
+
+  Frontmatter _buildTopicFrontmatter(
+    File topicFile,
+    String id,
+    String title,
+    String? source,
+    _TopicData data,
+  ) {
     final existing = _loadExistingSourcesAndCreated(topicFile);
     final sources = existing.sources;
     if (source != null && !sources.contains(source)) sources.add(source);
@@ -679,7 +639,15 @@ class KBStructureBuilder {
     if (data.tags.isNotEmpty) {
       fm['tags'] = data.tags.toList()..sort();
     }
+    return fm;
+  }
 
+  StringBuffer _startTopicFileBuffer(
+    Frontmatter fm,
+    String title,
+    String id,
+    _TopicData data,
+  ) {
     final buffer = _startEntityFileBuffer(fm, title, id)
       ..writeln('## Key Contributors')
       ..writeln();
@@ -687,13 +655,55 @@ class KBStructureBuilder {
       buffer.writeln('- [[${normalizePersonName(c)}|$c]]');
     }
     buffer.writeln();
+    return buffer;
+  }
 
+  _TopicSections _computeTopicSections(
+    _TopicData data,
+    AnalysisResult analysis,
+  ) {
     final qToA = Map<String, String>.from(data.qToA);
     final qToN = <String, Set<String>>{};
     final questionsInTopic = Set<String>.from(data.questions);
     final answersInTopic = Set<String>.from(data.answers);
     final notesInTopic = Set<String>.from(data.notes);
 
+    _mergeQuestionAnswers(qToA, questionsInTopic, analysis);
+    _mergeNoteAnswers(qToN, notesInTopic, questionsInTopic, analysis);
+
+    final answersToExclude = _answersLinkedToQuestions(
+      answersInTopic,
+      questionsInTopic,
+      data,
+      analysis,
+    );
+    final notesToExclude = _notesLinkedToQuestions(
+      notesInTopic,
+      questionsInTopic,
+      analysis,
+    );
+
+    final standaloneAnswers = answersInTopic.difference(answersToExclude);
+    final standaloneNotes = notesInTopic.difference(notesToExclude);
+    final allQuestionsWithContent = Set<String>.from(qToA.keys)
+      ..addAll(qToN.keys);
+    final questionsWithoutAnswers = questionsInTopic.difference(
+      allQuestionsWithContent,
+    );
+
+    return _TopicSections(
+      standaloneNotes: standaloneNotes,
+      questionsWithContent: allQuestionsWithContent,
+      questionsWithoutAnswers: questionsWithoutAnswers,
+      standaloneAnswers: standaloneAnswers,
+    );
+  }
+
+  void _mergeQuestionAnswers(
+    Map<String, String> qToA,
+    Set<String> questionsInTopic,
+    AnalysisResult analysis,
+  ) {
     for (final q in analysis.questions) {
       if (questionsInTopic.contains(q.id) &&
           q.answeredBy != null &&
@@ -701,6 +711,14 @@ class KBStructureBuilder {
         qToA[q.id] = q.answeredBy!;
       }
     }
+  }
+
+  void _mergeNoteAnswers(
+    Map<String, Set<String>> qToN,
+    Set<String> notesInTopic,
+    Set<String> questionsInTopic,
+    AnalysisResult analysis,
+  ) {
     for (final n in analysis.notes) {
       if (notesInTopic.contains(n.id) && n.answersQuestions.isNotEmpty) {
         for (final qId in n.answersQuestions) {
@@ -710,23 +728,36 @@ class KBStructureBuilder {
         }
       }
     }
+  }
 
+  Set<String> _answersLinkedToQuestions(
+    Set<String> answersInTopic,
+    Set<String> questionsInTopic,
+    _TopicData data,
+    AnalysisResult analysis,
+  ) {
     final answersToExclude = <String>{};
     for (final answerId in answersInTopic) {
-      final answer = analysis.answers
-          .where((a) => a.id == answerId)
-          .firstOrNull;
+      final answer = analysis.answers.where((a) => a.id == answerId).firstOrNull;
       if (answer != null &&
           answer.answersQuestion != null &&
           questionsInTopic.contains(answer.answersQuestion)) {
         answersToExclude.add(answerId);
       } else if (data.linkedAnswers.contains(answerId)) {
         final qId = data.aToQ[answerId];
-        if (qId != null && questionsInTopic.contains(qId))
+        if (qId != null && questionsInTopic.contains(qId)) {
           answersToExclude.add(answerId);
+        }
       }
     }
+    return answersToExclude;
+  }
 
+  Set<String> _notesLinkedToQuestions(
+    Set<String> notesInTopic,
+    Set<String> questionsInTopic,
+    AnalysisResult analysis,
+  ) {
     final notesToExclude = <String>{};
     for (final noteId in notesInTopic) {
       final note = analysis.notes.where((n) => n.id == noteId).firstOrNull;
@@ -739,43 +770,36 @@ class KBStructureBuilder {
         }
       }
     }
+    return notesToExclude;
+  }
 
-    final standaloneAnswers = answersInTopic.difference(answersToExclude);
-    final standaloneNotes = notesInTopic.difference(notesToExclude);
-    final allQuestionsWithContent = Set<String>.from(qToA.keys)
-      ..addAll(qToN.keys);
-    final questionsWithoutAnswers = questionsInTopic.difference(
-      allQuestionsWithContent,
+  void _writeTopicSections(StringBuffer buffer, _TopicSections sections) {
+    _writeIdSection(buffer, '## Notes', sections.standaloneNotes);
+    _writeIdSection(
+      buffer,
+      '## Questions with Answers',
+      sections.questionsWithContent,
     );
+    _writeIdSection(
+      buffer,
+      '## Unanswered Questions',
+      sections.questionsWithoutAnswers,
+    );
+    _writeIdSection(buffer, '## Additional Answers', sections.standaloneAnswers);
+  }
 
-    if (standaloneNotes.isNotEmpty) {
-      buffer.writeln('## Notes');
-      buffer.writeln();
-      for (final nId in standaloneNotes) buffer.writeln('![[$nId]]\n');
-    }
-    if (allQuestionsWithContent.isNotEmpty) {
-      buffer.writeln('## Questions with Answers');
-      buffer.writeln();
-      for (final qId in allQuestionsWithContent) buffer.writeln('![[$qId]]\n');
-    }
-    if (questionsWithoutAnswers.isNotEmpty) {
-      buffer.writeln('## Unanswered Questions');
-      buffer.writeln();
-      for (final qId in questionsWithoutAnswers) buffer.writeln('![[$qId]]\n');
-    }
-    if (standaloneAnswers.isNotEmpty) {
-      buffer.writeln('## Additional Answers');
-      buffer.writeln();
-      for (final aId in standaloneAnswers) buffer.writeln('![[$aId]]\n');
-    }
+  void _writeIdSection(StringBuffer buffer, String heading, Set<String> ids) {
+    if (ids.isEmpty) return;
+    buffer.writeln(heading);
+    buffer.writeln();
+    for (final id in ids) buffer.writeln('![[$id]]\n');
+  }
 
-    topicFile.writeAsStringSync(buffer.toString());
-
-    if (!topicDescFile.existsSync()) {
-      topicDescFile.writeAsStringSync(
-        '<!-- AI_CONTENT_START -->\n\nTopic description will be generated by AI based on related questions, answers, and notes.\n\n<!-- AI_CONTENT_END -->\n',
-      );
-    }
+  void _ensureTopicDescription(File topicDescFile) {
+    if (topicDescFile.existsSync()) return;
+    topicDescFile.writeAsStringSync(
+      '<!-- AI_CONTENT_START -->\n\nTopic description will be generated by AI based on related questions, answers, and notes.\n\n<!-- AI_CONTENT_END -->\n',
+    );
   }
 
   String _formatSourceTag(String source) =>
@@ -823,7 +847,7 @@ class KBStructureBuilder {
     return (sources: sources, created: created);
   }
 
-  String _path(Directory dir) => dir.path;
+  String _path(Directory dir) => _staticPath(dir);
 }
 
 class _TopicData {
@@ -835,4 +859,18 @@ class _TopicData {
   final Map<String, String> qToA = <String, String>{};
   final Map<String, String> aToQ = <String, String>{};
   final Set<String> linkedAnswers = <String>{};
+}
+
+class _TopicSections {
+  final Set<String> standaloneNotes;
+  final Set<String> questionsWithContent;
+  final Set<String> questionsWithoutAnswers;
+  final Set<String> standaloneAnswers;
+
+  const _TopicSections({
+    required this.standaloneNotes,
+    required this.questionsWithContent,
+    required this.questionsWithoutAnswers,
+    required this.standaloneAnswers,
+  });
 }

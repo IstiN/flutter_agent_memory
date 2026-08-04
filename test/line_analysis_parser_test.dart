@@ -42,6 +42,23 @@ TYPE=X | ID=x_1 | AUTHOR=Unknown
     });
   });
 
+  group('link parsing', () {
+    test('accepts common url schemes in LINKS field', () {
+      const response =
+          'TYPE=N | ID=n_1 | AUTHOR=A | DATE=2024-01-01T00:00:00Z | AREA=dev | TOPICS=t | TAGS=t | LINKS=http://example.com;https://example.com;ftp://example.com;file:///tmp/a.txt;custom://foo.bar';
+      final result = parseLineAnalysisFormat(response);
+      expect(result.notes.first.links, hasLength(5));
+      expect(result.notes.first.links.first.url, 'http://example.com');
+    });
+
+    test('rejects plain text in LINKS field', () {
+      const response =
+          'TYPE=N | ID=n_1 | AUTHOR=A | DATE=2024-01-01T00:00:00Z | AREA=dev | TOPICS=t | TAGS=t | LINKS=just text;example.com';
+      final result = parseLineAnalysisFormat(response);
+      expect(result.notes.first.links, isEmpty);
+    });
+  });
+
   group('recoverPartialLineAnalysis', () {
     test('recovers record lines surrounded by garbage', () {
       const response = '''
