@@ -48,6 +48,24 @@ void main() {
       final rev2 = await store.readMemoryRevision();
       expect(rev2.hash, isNot(rev1.hash));
     });
+
+    test('writeMemoryRevision rejects stale expected hash', () async {
+      final store = KBMemoryStore(InMemoryKbStorage(), source: 'agent');
+      await store.storage.writeFile('MEMORY.md', 'first');
+      final rev = await store.readMemoryRevision();
+      await store.storage.writeFile('MEMORY.md', 'second');
+      final ok = await store.writeMemoryRevision('third', rev.hash);
+      expect(ok, isFalse);
+    });
+
+    test('writeMemoryRevision accepts matching expected hash', () async {
+      final store = KBMemoryStore(InMemoryKbStorage(), source: 'agent');
+      await store.storage.writeFile('MEMORY.md', 'first');
+      final rev = await store.readMemoryRevision();
+      final ok = await store.writeMemoryRevision('second', rev.hash);
+      expect(ok, isTrue);
+      expect(await store.storage.readFile('MEMORY.md'), 'second');
+    });
   });
 
   group('memory level maintenance', () {
@@ -68,6 +86,54 @@ void main() {
       final changed = await store.maintainMemoryLevels();
       expect(changed, 1);
       expect((await store.list(type: 'note')).first.note!.level, MemoryLevel.consolidated);
+
+      tmpDir.deleteSync(recursive: true);
+    });
+
+    test('expires raw notes older than expiry threshold', () async {
+      final tmpDir = Directory.systemTemp.createTempSync('memory_features_');
+      final store = KBMemoryStore.file(
+        tmpDir,
+        source: 'agent',
+        promotionPolicy: const MemoryPromotionPolicy(
+          rawToConsolidatedAfter: Duration(days: 365),
+          rawExpiryAfter: Duration(seconds: 0),
+          consolidatedToConceptAfter: Duration(days: 365),
+        ),
+      );
+
+      await store.addNote(text: 'Stale fact.', area: 'general', tags: ['x']);
+      final changed = await store.maintainMemoryLevels();
+      expect(changed, 1);
+      expect(await store.list(type: 'note'), isEmpty);
+
+      tmpDir.deleteSync(recursive: true);
+    });
+
+    test('promotes consolidated notes to concept', () async {
+      final tmpDir = Directory.systemTemp.createTempSync('memory_features_');
+      final store = KBMemoryStore.file(
+        tmpDir,
+        source: 'agent',
+        promotionPolicy: const MemoryPromotionPolicy(
+          rawToConsolidatedAfter: Duration(days: 365),
+          rawExpiryAfter: Duration(days: 365),
+          consolidatedToConceptAfter: Duration(seconds: 0),
+        ),
+      );
+
+      await store.addNote(
+        text: 'Stable fact.',
+        area: 'general',
+        tags: ['x'],
+        level: MemoryLevel.consolidated,
+      );
+      final changed = await store.maintainMemoryLevels();
+      expect(changed, 1);
+      expect(
+        (await store.list(type: 'note')).first.note!.level,
+        MemoryLevel.concept,
+      );
 
       tmpDir.deleteSync(recursive: true);
     });

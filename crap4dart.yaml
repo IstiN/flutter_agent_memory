@@ -8,7 +8,7 @@ sources: [lib, bin, test]
 
 crap:
   enabled: true
-  threshold: 160.0
+  threshold: 60.0
 
 coverage:
   lcov_path: coverage/lcov.info
@@ -19,7 +19,7 @@ coverage:
 gates:
   loc:
     enabled: true
-    max_lines: 1000
+    max_lines: 900
     exclude:
       - '**.g.dart'
       - '**.freezed.dart'

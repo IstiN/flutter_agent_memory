@@ -20,6 +20,17 @@ import 'kb_file_parser.dart';
 import 'kb_graph_builder.dart';
 import 'kb_markdown_renderer.dart';
 import 'kb_storage.dart';
+import 'memory/memory_consolidation_writer.dart';
+import 'memory/memory_dedup_service.dart';
+import 'memory/memory_level_service.dart';
+import 'memory/memory_provenance_service.dart';
+import 'memory/memory_revision_service.dart';
+
+export 'memory/memory_consolidation_writer.dart';
+export 'memory/memory_dedup_service.dart';
+export 'memory/memory_level_service.dart';
+export 'memory/memory_provenance_service.dart';
+export 'memory/memory_revision_service.dart';
 
 /// Agent memory store backed by a pluggable [KbStorage] backend.
 ///
@@ -42,6 +53,10 @@ class KBMemoryStore {
 
   final KBFileParser _parser;
   final KbMarkdownRenderer _renderer;
+  late final MemoryDedupService _dedup;
+  late final MemoryRevisionService _revision;
+  late final MemoryLevelService _levels;
+  late final MemoryConsolidationWriter _consolidationWriter;
 
   KBMemoryStore(
     this.storage, {
@@ -50,7 +65,21 @@ class KBMemoryStore {
     this.deduplicateOnCapture = true,
     this.promotionPolicy = const MemoryPromotionPolicy(),
   }) : _parser = KBFileParser(),
-       _renderer = const KbMarkdownRenderer();
+       _renderer = const KbMarkdownRenderer() {
+    _dedup = MemoryDedupService(storage, _parser);
+    _revision = MemoryRevisionService(storage);
+    _consolidationWriter = MemoryConsolidationWriter(storage, _revision);
+    _levels = MemoryLevelService(
+      storage: storage,
+      policy: promotionPolicy,
+      deleteRecord: deleteRecord,
+      writeNote: _writeNote,
+      listNotes: () async {
+        final records = await list(type: 'note', limit: null);
+        return records.map((r) => r.note).whereType<Note>().toList();
+      },
+    );
+  }
 
   /// Creates a store backed by the file-system Markdown directory layout.
   factory KBMemoryStore.file(
@@ -102,7 +131,7 @@ class KBMemoryStore {
       importance: importance,
     );
 
-    if (deduplicateOnCapture && await _hasDuplicateQuestionText(question.text)) {
+    if (deduplicateOnCapture && await _dedup.hasDuplicateQuestion(question.text)) {
       return _toRecord(question: question);
     }
 
@@ -145,7 +174,7 @@ class KBMemoryStore {
       importance: importance,
     );
 
-    if (deduplicateOnCapture && await _hasDuplicateAnswerText(answer.text)) {
+    if (deduplicateOnCapture && await _dedup.hasDuplicateAnswer(answer.text)) {
       return _toRecord(answer: answer);
     }
 
@@ -196,7 +225,7 @@ class KBMemoryStore {
       relations: relations ?? const [],
     );
 
-    if (deduplicateOnCapture && await _hasDuplicateNote(note)) {
+    if (deduplicateOnCapture && await _dedup.hasDuplicateNote(note)) {
       return _toRecord(note: note);
     }
 
@@ -226,89 +255,135 @@ class KBMemoryStore {
     final record = await findById(id);
     if (record == null) throw ArgumentError('Record not found: $id');
 
-    switch (record.entityType) {
-      case 'question':
-        final q = record.question!;
-        final updatedTags = tags ?? q.tags;
-        final mergedTags = _renderer.buildEntityTags(
-          updatedTags,
-          source,
-          '#question',
-        );
-        final updatedText = KBSecretRedactionAgent.redact(text ?? q.text);
-        final enriched = await _enrich(
-          updatedText,
-          area: q.area,
-          topics: q.topics,
-          tags: mergedTags,
-        );
-        final updated = q.copyWith(
-          text: updatedText,
-          tags: enriched.tags,
-          topics: enriched.topics,
-          area: enriched.area,
-          importance: importance ?? q.importance,
-        );
-        await _writeQuestion(updated);
-        return _toRecord(question: updated);
-      case 'answer':
-        final a = record.answer!;
-        final updatedTags = tags ?? a.tags;
-        final mergedTags = _renderer.buildEntityTags(
-          updatedTags,
-          source,
-          '#answer',
-        );
-        final updatedText = KBSecretRedactionAgent.redact(text ?? a.text);
-        final enriched = await _enrich(
-          updatedText,
-          area: a.area,
-          topics: a.topics,
-          tags: mergedTags,
-        );
-        final updated = a.copyWith(
-          text: updatedText,
-          tags: enriched.tags,
-          topics: enriched.topics,
-          area: enriched.area,
-          importance: importance ?? a.importance,
-        );
-        await _writeAnswer(updated);
-        return _toRecord(answer: updated);
-      case 'note':
-        final n = record.note!;
-        final updatedTags = tags ?? n.tags;
-        final mergedTags = _renderer.buildEntityTags(
-          updatedTags,
-          source,
-          '#note',
-        );
-        final updatedText = KBSecretRedactionAgent.redact(text ?? n.text);
-        final enriched = await _enrich(
-          updatedText,
-          area: n.area,
-          topics: n.topics,
-          tags: mergedTags,
-        );
-        final updated = n.copyWith(
-          text: updatedText,
-          tags: enriched.tags,
-          topics: enriched.topics,
-          area: enriched.area,
-          importance: importance ?? n.importance,
-          memoryType: memoryType != null
-              ? MemoryType.normalize(memoryType)
-              : n.memoryType,
-          validFrom: validFrom ?? n.validFrom,
-          validUntil: validUntil ?? n.validUntil,
-          level: level != null ? MemoryLevel.normalize(level) : n.level,
-          relations: relations ?? n.relations,
-        );
-        await _writeNote(updated);
-        return _toRecord(note: updated);
-      default:
-        throw UnsupportedError('Unsupported entity type: ${record.entityType}');
-    }
+    return switch (record.entityType) {
+      'question' => _updateQuestion(record.question!, text: text, tags: tags, importance: importance),
+      'answer' => _updateAnswer(record.answer!, text: text, tags: tags, importance: importance),
+      'note' => _updateNote(
+          record.note!,
+          text: text,
+          tags: tags,
+          importance: importance,
+          memoryType: memoryType,
+          validFrom: validFrom,
+          validUntil: validUntil,
+          level: level,
+          relations: relations,
+        ),
+      _ => throw UnsupportedError('Unsupported entity type: ${record.entityType}'),
+    };
+  }
+
+  Future<MemoryRecord> _updateQuestion(
+    Question q, {
+    String? text,
+    List<String>? tags,
+    double? importance,
+  }) async {
+    final updated = await _updateEntity(
+      text ?? q.text,
+      q.area,
+      q.topics,
+      tags ?? q.tags,
+      '#question',
+      importance ?? q.importance,
+    );
+    final next = q.copyWith(
+      text: updated.text,
+      tags: updated.tags,
+      topics: updated.topics,
+      area: updated.area,
+      importance: updated.importance,
+    );
+    await _writeQuestion(next);
+    return _toRecord(question: next);
+  }
+
+  Future<MemoryRecord> _updateAnswer(
+    Answer a, {
+    String? text,
+    List<String>? tags,
+    double? importance,
+  }) async {
+    final updated = await _updateEntity(
+      text ?? a.text,
+      a.area,
+      a.topics,
+      tags ?? a.tags,
+      '#answer',
+      importance ?? a.importance,
+    );
+    final next = a.copyWith(
+      text: updated.text,
+      tags: updated.tags,
+      topics: updated.topics,
+      area: updated.area,
+      importance: updated.importance,
+    );
+    await _writeAnswer(next);
+    return _toRecord(answer: next);
+  }
+
+  Future<MemoryRecord> _updateNote(
+    Note n, {
+    String? text,
+    List<String>? tags,
+    double? importance,
+    String? memoryType,
+    String? validFrom,
+    String? validUntil,
+    int? level,
+    List<Relation>? relations,
+  }) async {
+    final updated = await _updateEntity(
+      text ?? n.text,
+      n.area,
+      n.topics,
+      tags ?? n.tags,
+      '#note',
+      importance ?? n.importance,
+    );
+    final next = n.copyWith(
+      text: updated.text,
+      tags: updated.tags,
+      topics: updated.topics,
+      area: updated.area,
+      importance: updated.importance,
+      memoryType: memoryType != null
+          ? MemoryType.normalize(memoryType)
+          : n.memoryType,
+      validFrom: validFrom ?? n.validFrom,
+      validUntil: validUntil ?? n.validUntil,
+      level: level != null ? MemoryLevel.normalize(level) : n.level,
+      relations: relations ?? n.relations,
+    );
+    await _writeNote(next);
+    return _toRecord(note: next);
+  }
+
+  Future<({String text, List<String> tags, List<String> topics, String area, double importance})>
+  _updateEntity(
+    String originalText,
+    String area,
+    List<String> topics,
+    List<String> tags,
+    String entityTag,
+    double importance,
+  ) async {
+    final updatedText = KBSecretRedactionAgent.redact(originalText);
+    final mergedTags = _renderer.buildEntityTags(tags, source, entityTag);
+    final enriched = await _enrich(
+      updatedText,
+      area: area.isNotEmpty ? area : null,
+      topics: topics,
+      tags: mergedTags,
+    );
+    return (
+      text: updatedText,
+      tags: enriched.tags,
+      topics: enriched.topics,
+      area: enriched.area,
+      importance: importance,
+    );
   }
 
   /// Records that a record was accessed, incrementing its counter.
@@ -410,48 +485,6 @@ class KBMemoryStore {
     return records;
   }
 
-  /// Returns true if a note with the same content fingerprint already exists.
-  Future<bool> _hasDuplicateNote(Note candidate) async {
-    final fingerprint = memoryFingerprint(candidate);
-    for (final id in await storage.listEntityIds('note')) {
-      final content = await storage.readEntity('note', id);
-      if (content == null) continue;
-      try {
-        final note = _parser.parseNote(content);
-        if (memoryFingerprint(note) == fingerprint) return true;
-      } catch (_) {}
-    }
-    return false;
-  }
-
-  /// Returns true if a question with the same normalized text already exists.
-  Future<bool> _hasDuplicateQuestionText(String text) async {
-    final normalized = normalizeMemoryText(text);
-    for (final id in await storage.listEntityIds('question')) {
-      final content = await storage.readEntity('question', id);
-      if (content == null) continue;
-      try {
-        final q = _parser.parseQuestion(content);
-        if (normalizeMemoryText(q.text) == normalized) return true;
-      } catch (_) {}
-    }
-    return false;
-  }
-
-  /// Returns true if an answer with the same normalized text already exists.
-  Future<bool> _hasDuplicateAnswerText(String text) async {
-    final normalized = normalizeMemoryText(text);
-    for (final id in await storage.listEntityIds('answer')) {
-      final content = await storage.readEntity('answer', id);
-      if (content == null) continue;
-      try {
-        final a = _parser.parseAnswer(content);
-        if (normalizeMemoryText(a.text) == normalized) return true;
-      } catch (_) {}
-    }
-    return false;
-  }
-
   Future<({String id, String text, String now, _Enriched enriched})>
   _prepareAdd(
     String text, {
@@ -479,17 +512,17 @@ class KBMemoryStore {
     List<String>? topics,
     List<String>? tags,
   }) async {
-    var resolvedArea = area != null && area.isNotEmpty ? area : 'general';
-    var resolvedTopics = topics != null && topics.isNotEmpty
-        ? topics
-        : <String>[];
-    var resolvedTags = tags != null && tags.isNotEmpty ? tags : <String>[];
+    var resolvedArea = _nonEmpty(area) ?? 'general';
+    var resolvedTopics = topics ?? const <String>[];
+    var resolvedTags = tags ?? const <String>[];
 
     if (provider != null &&
         (resolvedArea == 'general' || resolvedTags.isEmpty)) {
-      final generator = KBTagGeneratorAgent(provider!);
-      final generated = await generator.generateTags(text, maxTags: 5);
-      if (resolvedTags.isEmpty) resolvedTags = generated;
+      final generated = await KBTagGeneratorAgent(provider!).generateTags(
+        text,
+        maxTags: 5,
+      );
+      resolvedTags = resolvedTags.isEmpty ? generated : resolvedTags;
       if (resolvedTopics.isEmpty && generated.isNotEmpty) {
         resolvedTopics = [slugify(generated.first)];
       }
@@ -503,6 +536,11 @@ class KBMemoryStore {
       topics: resolvedTopics,
       tags: resolvedTags,
     );
+  }
+
+  String? _nonEmpty(String? value) {
+    if (value == null || value.isEmpty) return null;
+    return value;
   }
 
   String _guessArea(List<String> tags) {
@@ -677,10 +715,7 @@ class KBMemoryStore {
 
   /// Reads the current [MEMORY.md] file and returns its revision hash along
   /// with the content.
-  Future<MemoryRevision> readMemoryRevision() async {
-    final content = (await storage.readFile('MEMORY.md')) ?? '';
-    return MemoryRevision(content: content, hash: revisionHash(content));
-  }
+  Future<MemoryRevision> readMemoryRevision() => _revision.read();
 
   /// Writes [content] to [MEMORY.md] only if the current revision matches
   /// [expectedHash]. Returns true when the write succeeded, false if the file
@@ -688,12 +723,8 @@ class KBMemoryStore {
   Future<bool> writeMemoryRevision(
     String content,
     String expectedHash,
-  ) async {
-    final current = (await storage.readFile('MEMORY.md')) ?? '';
-    if (revisionHash(current) != expectedHash) return false;
-    await storage.writeFile('MEMORY.md', content);
-    return true;
-  }
+  ) =>
+      _revision.write(content, expectedHash);
 
   /// Consolidates the top [limit] memory records into a high-level summary and
   /// reusable skill cards using an LLM.
@@ -719,7 +750,7 @@ class KBMemoryStore {
       extraInstructions: extraInstructions,
     );
 
-    await _writeConsolidation(
+    await _consolidationWriter.write(
       result,
       expectedRevisionHash: expectedRevisionHash,
     );
@@ -730,81 +761,36 @@ class KBMemoryStore {
     return (await storage.readFile('MEMORY.md'))?.trim();
   }
 
-  Future<void> _writeConsolidation(
-    ConsolidationResult result, {
-    String? expectedRevisionHash,
-  }) async {
-    final content = result.summary;
-    if (expectedRevisionHash != null) {
-      final ok = await writeMemoryRevision(content, expectedRevisionHash);
-      if (!ok) {
-        throw ConcurrentRevisionException(
-          'MEMORY.md was modified during consolidation.',
-        );
-      }
-    } else {
-      await storage.writeFile('MEMORY.md', content);
-    }
-
-    if (result.skills.isEmpty) {
-      await _clearSkills();
-      return;
-    }
-
-    await _clearSkills();
-    for (var i = 0; i < result.skills.length; i++) {
-      final skill = result.skills[i];
-      final id = 'sk_${(i + 1).toString().padLeft(4, '0')}';
-      final buffer = StringBuffer()
-        ..writeln('---')
-        ..writeln('id: $id')
-        ..writeln('title: ${skill.title}')
-        ..writeln('tags: ${skill.tags.join(', ')}')
-        ..writeln('---')
-        ..writeln()
-        ..writeln(skill.instruction);
-      await storage.writeFile('skills/$id.md', buffer.toString());
-    }
-  }
-
-  Future<void> _clearSkills() async {
-    // Best-effort removal: storage backends may not support listing arbitrary
-    // files, so we simply overwrite known skill slots with empty content for
-    // backends that do. For file storage the old files remain; this is left as
-    // a known limitation for non-file backends.
-    for (var i = 1; i <= 9999; i++) {
-      final id = 'sk_${i.toString().padLeft(4, '0')}';
-      final path = 'skills/$id.md';
-      if (await storage.readFile(path) == null) break;
-      await storage.writeFile(path, '');
-    }
-  }
-
   bool _isRecordActiveAt(MemoryRecord record, DateTime asOf) {
-    // If the note explicitly declares validity boundaries, use them.
-    if (record.note != null) {
-      final note = record.note!;
-      if (note.validFrom != null && note.validFrom!.isNotEmpty) {
-        try {
-          final from = DateTime.parse(note.validFrom!);
-          if (asOf.isBefore(from)) return false;
-        } catch (_) {}
-      }
-      if (note.validUntil != null && note.validUntil!.isNotEmpty) {
-        try {
-          final until = DateTime.parse(note.validUntil!);
-          if (asOf.isAfter(until)) return false;
-        } catch (_) {}
-      }
-      return true;
+    final note = record.note;
+    if (note != null) {
+      return _isNoteActiveAt(note, asOf) && _isDateAtOrBefore(record.date, asOf);
     }
+    return _isDateAtOrBefore(record.date, asOf);
+  }
 
-    if (record.date.isEmpty) return true;
+  bool _isNoteActiveAt(Note note, DateTime asOf) {
+    final from = _parseDate(note.validFrom);
+    if (from != null && asOf.isBefore(from)) return false;
+
+    final until = _parseDate(note.validUntil);
+    if (until != null && asOf.isAfter(until)) return false;
+
+    return true;
+  }
+
+  bool _isDateAtOrBefore(String? date, DateTime asOf) {
+    final dt = _parseDate(date);
+    if (dt == null) return true;
+    return !dt.isAfter(asOf);
+  }
+
+  DateTime? _parseDate(String? date) {
+    if (date == null || date.isEmpty) return null;
     try {
-      final dt = DateTime.parse(record.date);
-      return !dt.isAfter(asOf);
+      return DateTime.parse(date);
     } catch (_) {
-      return true;
+      return null;
     }
   }
 
@@ -815,47 +801,7 @@ class KBMemoryStore {
   ///
   /// Should be called periodically (e.g. from a background job) rather than
   /// on every write.
-  Future<int> maintainMemoryLevels() async {
-    var changed = 0;
-    final now = DateTime.parse(currentUtcTimestamp());
-
-    final notes = await list(type: 'note', limit: null);
-    for (final record in notes) {
-      final note = record.note;
-      if (note == null) continue;
-      final date = _parseRecordDate(record.date);
-      if (date == null) continue;
-
-      final age = now.difference(date);
-      if (note.level == MemoryLevel.raw) {
-        if (age > promotionPolicy.rawExpiryAfter) {
-          await deleteRecord(note.id);
-          changed++;
-          continue;
-        }
-        if (age > promotionPolicy.rawToConsolidatedAfter) {
-          await _writeNote(note.copyWith(level: MemoryLevel.consolidated));
-          changed++;
-          continue;
-        }
-      }
-      if (note.level == MemoryLevel.consolidated &&
-          age > promotionPolicy.consolidatedToConceptAfter) {
-        await _writeNote(note.copyWith(level: MemoryLevel.concept));
-        changed++;
-      }
-    }
-    return changed;
-  }
-
-  DateTime? _parseRecordDate(String date) {
-    if (date.isEmpty) return null;
-    try {
-      return DateTime.parse(date);
-    } catch (_) {
-      return null;
-    }
-  }
+  Future<int> maintainMemoryLevels() => _levels.maintain();
 
   /// Copies a note into another [targetStore] with a provenance marker.
   ///
@@ -870,24 +816,22 @@ class KBMemoryStore {
     final record = await findById(noteId);
     if (record == null || record.note == null) return null;
 
-    final source = sourceScope.replaceAll(RegExp(r'[\r\n()]+'), ' ').trim();
-    final provenance = source.isNotEmpty ? source : 'a shared scope';
     final note = record.note!;
-
-    final existing = await targetStore.list(type: 'note', limit: null);
-    final normalized = normalizeMemoryText(note.text);
-    final alreadyExists = existing.any((r) {
-      final n = r.note;
-      return n != null && normalizeMemoryText(n.text) == normalized;
-    });
-    if (alreadyExists) return null;
-
-    final text = note.text.endsWith('.') || note.text.endsWith('!') || note.text.endsWith('?')
-        ? '${note.text} (said in $provenance)'
-        : '${note.text}. (said in $provenance)';
+    final copy = await MemoryProvenanceService.prepareCopy(
+      note,
+      sourceScope,
+      (normalized) async {
+        final existing = await targetStore.list(type: 'note', limit: null);
+        return existing.any((r) {
+          final n = r.note;
+          return n != null && normalizeMemoryText(n.text) == normalized;
+        });
+      },
+    );
+    if (copy == null) return null;
 
     return targetStore.addNote(
-      text: text,
+      text: copy.text,
       author: note.author,
       area: note.area,
       topics: List.of(note.topics),
@@ -897,41 +841,6 @@ class KBMemoryStore {
       level: MemoryLevel.raw,
     );
   }
-}
-
-/// Exception thrown when an optimistic concurrency check fails.
-class ConcurrentRevisionException implements Exception {
-  final String message;
-  ConcurrentRevisionException(this.message);
-
-  @override
-  String toString() => 'ConcurrentRevisionException: $message';
-}
-
-/// A content snapshot plus its SHA-256 revision hash.
-class MemoryRevision {
-  final String content;
-  final String hash;
-
-  const MemoryRevision({required this.content, required this.hash});
-}
-
-/// Policy controlling automatic promotion and expiry of memory levels.
-///
-/// Raw records that survive for [rawToConsolidatedAfter] without contradiction
-/// are promoted to consolidated. Consolidated records older than
-/// [consolidatedToConceptAfter] are promoted to concept. Raw records that are
-/// not confirmed within [rawExpiryAfter] can be removed.
-class MemoryPromotionPolicy {
-  final Duration rawToConsolidatedAfter;
-  final Duration consolidatedToConceptAfter;
-  final Duration rawExpiryAfter;
-
-  const MemoryPromotionPolicy({
-    this.rawToConsolidatedAfter = const Duration(days: 14),
-    this.consolidatedToConceptAfter = const Duration(days: 90),
-    this.rawExpiryAfter = const Duration(days: 30),
-  });
 }
 
 class _Enriched {
