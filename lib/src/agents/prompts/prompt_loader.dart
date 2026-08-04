@@ -31,7 +31,7 @@ class PromptLoader {
   ///
   /// The callback receives the XML file name (e.g. `kb_analysis.xml`) and
   /// should return its raw content.
-  static void setLoader(Future<String> Function(String name) loader) {
+  static void setLoader(Future<String> Function(String name)? loader) {
     _loader = loader;
     _cache.clear();
   }

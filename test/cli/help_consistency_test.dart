@@ -112,5 +112,51 @@ void main() {
         }
       },
     );
+
+    test('handles commands with no options and nested subcommands', () {
+      final nestedParser = ArgParser()
+        ..addCommand(
+          'empty',
+          ArgParser(),
+        )
+        ..addCommand(
+          'nested',
+          ArgParser()..addCommand('deep', ArgParser()),
+        );
+      final rootParser = ArgParser()
+        ..addCommand('empty', ArgParser())
+        ..addCommand('nested', nestedParser);
+      final commands = [
+        CliCommand(
+          name: 'empty',
+          description: 'No options.',
+          buildParser: ArgParser.new,
+        ),
+        CliCommand(
+          name: 'nested',
+          description: 'Nested command.',
+          buildParser: () => nestedParser,
+          subcommands: [
+            CliCommand(
+              name: 'deep',
+              description: 'Deep subcommand.',
+              buildParser: ArgParser.new,
+            ),
+          ],
+        ),
+      ];
+
+      final buffer = StringBuffer();
+      printAgentMemoryUsage(
+        parser: rootParser,
+        commands: commands,
+        sink: buffer,
+      );
+      final output = buffer.toString();
+
+      expect(output, contains('empty'));
+      expect(output, contains('nested'));
+      expect(output, contains('deep'));
+    });
   });
 }

@@ -22,7 +22,15 @@ String buildSkillHelp({String format = 'markdown'}) {
 
 String _buildMarkdown(List<CliCommand> commands, ArgParser rootParser) {
   final buffer = StringBuffer();
+  _writeIntro(buffer);
+  _writeProviderConfig(buffer);
+  _writeCommandTable(buffer, commands);
+  _writeCommandDetails(buffer, commands, rootParser);
+  _writeExamples(buffer);
+  return buffer.toString();
+}
 
+void _writeIntro(StringBuffer buffer) {
   buffer.writeln('# agent_memory skill');
   buffer.writeln();
   buffer.writeln('`agent_memory` is a Dart memory / knowledge-base framework.');
@@ -54,6 +62,9 @@ String _buildMarkdown(List<CliCommand> commands, ArgParser rootParser) {
     '6. **Remember** agent facts via `memory add`, query them via `memory ask`, and manage them via `memory list/update/delete/rank`.',
   );
   buffer.writeln();
+}
+
+void _writeProviderConfig(StringBuffer buffer) {
   buffer.writeln('## Provider configuration');
   buffer.writeln();
   buffer.writeln(
@@ -75,6 +86,9 @@ String _buildMarkdown(List<CliCommand> commands, ArgParser rootParser) {
   buffer.writeln('OLLAMA_MODEL=ministral-3:14b');
   buffer.writeln('```');
   buffer.writeln();
+}
+
+void _writeCommandTable(StringBuffer buffer, List<CliCommand> commands) {
   buffer.writeln('## Commands');
   buffer.writeln();
   buffer.writeln('| Command | Description |');
@@ -85,57 +99,67 @@ String _buildMarkdown(List<CliCommand> commands, ArgParser rootParser) {
   buffer.writeln();
   buffer.writeln('## Command details');
   buffer.writeln();
+}
 
+void _writeCommandDetails(
+  StringBuffer buffer,
+  List<CliCommand> commands,
+  ArgParser rootParser,
+) {
   for (final command in commands) {
-    buffer.writeln('### `${command.name}`');
-    buffer.writeln();
-    buffer.writeln(command.description);
-    buffer.writeln();
-
-    final subparser = rootParser.commands[command.name]!;
-    final options = subparser.options.values;
-
-    if (options.isNotEmpty) {
-      buffer.writeln('**Parameters:**');
-      buffer.writeln();
-      for (final option in options) {
-        final abbr = option.abbr != null ? '-${option.abbr}, ' : '';
-        final name = '--${option.name}';
-        final defaults = option.defaultsTo != null
-            ? ' (defaults to `${option.defaultsTo}`)'
-            : '';
-        final mandatory = option.mandatory ? ' **(mandatory)**' : '';
-        buffer.writeln(
-          '- `$abbr$name`$mandatory$defaults: ${option.help ?? ''}',
-        );
-      }
-      buffer.writeln();
-    }
-
-    if (command.subcommands.isNotEmpty) {
-      buffer.writeln('**Subcommands:**');
-      buffer.writeln();
-      for (final sub in command.subcommands) {
-        buffer.writeln('- `${sub.name}` — ${sub.description}');
-        final subSubparser = subparser.commands[sub.name];
-        if (subSubparser != null && subSubparser.options.isNotEmpty) {
-          for (final option in subSubparser.options.values) {
-            final abbr = option.abbr != null ? '-${option.abbr}, ' : '';
-            final name = '--${option.name}';
-            final defaults = option.defaultsTo != null
-                ? ' (defaults to `${option.defaultsTo}`)'
-                : '';
-            final mandatory = option.mandatory ? ' **(mandatory)**' : '';
-            buffer.writeln(
-              '  - `$abbr$name`$mandatory$defaults: ${option.help ?? ''}',
-            );
-          }
-        }
-      }
-      buffer.writeln();
-    }
+    _writeSingleCommand(buffer, command, rootParser.commands[command.name]!);
   }
+}
 
+void _writeSingleCommand(
+  StringBuffer buffer,
+  CliCommand command,
+  ArgParser subparser,
+) {
+  buffer.writeln('### `${command.name}`');
+  buffer.writeln();
+  buffer.writeln(command.description);
+  buffer.writeln();
+
+  _writeOptions(buffer, subparser.options.values, indent: '');
+
+  if (command.subcommands.isNotEmpty) {
+    buffer.writeln('**Subcommands:**');
+    buffer.writeln();
+    for (final sub in command.subcommands) {
+      buffer.writeln('- `${sub.name}` — ${sub.description}');
+      final subSubparser = subparser.commands[sub.name];
+      if (subSubparser != null) {
+        _writeOptions(buffer, subSubparser.options.values, indent: '  ');
+      }
+    }
+    buffer.writeln();
+  }
+}
+
+void _writeOptions(
+  StringBuffer buffer,
+  Iterable<Option> options, {
+  required String indent,
+}) {
+  if (options.isEmpty) return;
+  buffer.writeln('${indent}**Parameters:**');
+  buffer.writeln();
+  for (final option in options) {
+    final abbr = option.abbr != null ? '-${option.abbr}, ' : '';
+    final name = '--${option.name}';
+    final defaults = option.defaultsTo != null
+        ? ' (defaults to `${option.defaultsTo}`)'
+        : '';
+    final mandatory = option.mandatory ? ' **(mandatory)**' : '';
+    buffer.writeln(
+      '$indent- `$abbr$name`$mandatory$defaults: ${option.help ?? ''}',
+    );
+  }
+  buffer.writeln();
+}
+
+void _writeExamples(StringBuffer buffer) {
   buffer.writeln('## Examples');
   buffer.writeln();
   buffer.writeln('```bash');
@@ -155,8 +179,6 @@ String _buildMarkdown(List<CliCommand> commands, ArgParser rootParser) {
   );
   buffer.writeln('agent_memory memory ask -q "How do we handle errors?"');
   buffer.writeln('```');
-
-  return buffer.toString();
 }
 
 String _buildJson(List<CliCommand> commands, ArgParser rootParser) {

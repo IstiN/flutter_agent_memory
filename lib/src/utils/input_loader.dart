@@ -140,21 +140,14 @@ class InputLoader {
     return idx == -1 ? '' : path.substring(idx).toLowerCase();
   }
 
-  String _mimeType(String ext) {
-    switch (ext) {
-      case '.png':
-        return 'image/png';
-      case '.jpg':
-      case '.jpeg':
-        return 'image/jpeg';
-      case '.gif':
-        return 'image/gif';
-      case '.webp':
-        return 'image/webp';
-      case '.bmp':
-        return 'image/bmp';
-      default:
-        return 'image/png';
-    }
-  }
+  static const _mimeTypes = {
+    '.png': 'image/png',
+    '.jpg': 'image/jpeg',
+    '.jpeg': 'image/jpeg',
+    '.gif': 'image/gif',
+    '.webp': 'image/webp',
+    '.bmp': 'image/bmp',
+  };
+
+  String _mimeType(String ext) => _mimeTypes[ext] ?? 'image/png';
 }

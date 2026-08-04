@@ -23,7 +23,7 @@ class Frontmatter {
     if (value is String) {
       final trimmed = value.trim();
       if (trimmed.startsWith('[') && trimmed.endsWith(']')) {
-        return _parseInlineList(trimmed);
+        return _tryParseInlineList(trimmed) ?? <String>[];
       }
       if (trimmed.isEmpty) return <String>[];
       return <String>[trimmed];
@@ -105,38 +105,59 @@ String extractBody(String content) {
 
 dynamic _parseValue(String raw) {
   final trimmed = raw.trim();
-  if (trimmed.startsWith('[') && trimmed.endsWith(']')) {
-    return _parseInlineList(trimmed);
+  final list = _tryParseInlineList(trimmed);
+  if (list != null) return list;
+  final quoted = _tryParseQuotedString(trimmed);
+  if (quoted != null) return quoted;
+  final boolValue = _tryParseBool(trimmed);
+  if (boolValue != null) return boolValue;
+  final number = _tryParseNumber(trimmed);
+  if (number != null) return number;
+  return trimmed;
+}
+
+List<String>? _tryParseInlineList(String trimmed) {
+  if (!trimmed.startsWith('[') || !trimmed.endsWith(']')) return null;
+  final inner = trimmed.substring(1, trimmed.length - 1);
+  if (inner.trim().isEmpty) return <String>[];
+  return inner
+      .split(RegExp(r',\s*'))
+      .map(_stripQuotes)
+      .where((s) => s.isNotEmpty)
+      .toList();
+}
+
+String _stripQuotes(String value) {
+  var trimmed = value.trim();
+  if (trimmed.startsWith('"') && trimmed.endsWith('"') && trimmed.length >= 2) {
+    return trimmed
+        .substring(1, trimmed.length - 1)
+        .replaceAll('\\"', '"');
   }
+  if (trimmed.startsWith("'") && trimmed.endsWith("'") && trimmed.length >= 2) {
+    return trimmed.substring(1, trimmed.length - 1);
+  }
+  return trimmed;
+}
+
+String? _tryParseQuotedString(String trimmed) {
   if (trimmed.startsWith('"') && trimmed.endsWith('"') && trimmed.length >= 2) {
     return trimmed.substring(1, trimmed.length - 1).replaceAll('\\"', '"');
   }
   if (trimmed.startsWith("'") && trimmed.endsWith("'") && trimmed.length >= 2) {
     return trimmed.substring(1, trimmed.length - 1);
   }
-  if (trimmed == 'true') return true;
-  if (trimmed == 'false') return false;
-  if (int.tryParse(trimmed) != null) return int.parse(trimmed);
-  if (double.tryParse(trimmed) != null) return double.parse(trimmed);
-  return trimmed;
+  return null;
 }
 
-List<String> _parseInlineList(String raw) {
-  final inner = raw.substring(1, raw.length - 1);
-  if (inner.trim().isEmpty) return <String>[];
-  return inner
-      .split(RegExp(r',\s*'))
-      .map((s) {
-        var value = s.trim();
-        if (value.startsWith('"') && value.endsWith('"') && value.length >= 2) {
-          value = value.substring(1, value.length - 1).replaceAll('\\"', '"');
-        } else if (value.startsWith("'") &&
-            value.endsWith("'") &&
-            value.length >= 2) {
-          value = value.substring(1, value.length - 1);
-        }
-        return value;
-      })
-      .where((s) => s.isNotEmpty)
-      .toList();
+bool? _tryParseBool(String trimmed) {
+  if (trimmed == 'true') return true;
+  if (trimmed == 'false') return false;
+  return null;
+}
+
+num? _tryParseNumber(String trimmed) {
+  final integer = int.tryParse(trimmed);
+  if (integer != null) return integer;
+  return double.tryParse(trimmed);
 }

@@ -164,23 +164,30 @@ void printAgentMemoryUsage({
   output.writeln(rootParser.usage);
 
   for (final entry in rootParser.commands.entries) {
-    final sub = entry.value;
-    final meta = rootCommands.firstWhere((c) => c.name == entry.key);
-    if (sub.options.isNotEmpty ||
-        sub.commands.isNotEmpty ||
-        meta.subcommands.isNotEmpty) {
-      output.writeln();
-      output.writeln('${entry.key} options:');
-      output.writeln(sub.usage);
-      if (meta.subcommands.isNotEmpty) {
-        output.writeln();
-        output.writeln('  Subcommands:');
-        for (final subCmd in meta.subcommands) {
-          output.writeln(
-            '    ${subCmd.name.padRight(10)} ${subCmd.description}',
-          );
-        }
-      }
+    _printCommandHelp(output, entry, rootCommands);
+  }
+}
+
+void _printCommandHelp(
+  StringSink output,
+  MapEntry<String, ArgParser> entry,
+  List<CliCommand> rootCommands,
+) {
+  final sub = entry.value;
+  final meta = rootCommands.firstWhere((c) => c.name == entry.key);
+  if (sub.options.isEmpty && sub.commands.isEmpty && meta.subcommands.isEmpty) {
+    return;
+  }
+  output.writeln();
+  output.writeln('${entry.key} options:');
+  output.writeln(sub.usage);
+  if (meta.subcommands.isNotEmpty) {
+    output.writeln();
+    output.writeln('  Subcommands:');
+    for (final subCmd in meta.subcommands) {
+      output.writeln(
+        '    ${subCmd.name.padRight(10)} ${subCmd.description}',
+      );
     }
   }
 }

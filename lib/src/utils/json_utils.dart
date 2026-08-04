@@ -34,69 +34,149 @@ String repairTrailingCommas(String json) {
 /// `"text": Docker image for Dart backend: ...` or `[Flutter, Dart]`. This
 /// repair quotes such values so the resulting text is valid JSON. It skips
 /// values that are already quoted, numbers, booleans, null, arrays or objects.
-String repairUnquotedValues(String json) {
-  final buffer = StringBuffer();
-  var i = 0;
-  final length = json.length;
+String repairUnquotedValues(String json) =>
+    _UnquotedValueRepairer(json).repair();
 
-  // Stack of contexts: true = object, false = array.
-  final stack = <bool>[];
-  // What we expect next: 'key', 'value' or 'none'.
+class _UnquotedValueRepairer {
+  final String json;
+  final StringBuffer buffer = StringBuffer();
+  final List<bool> stack = <bool>[];
   var expect = 'value';
   var inString = false;
+  var i = 0;
 
-  String escape(String s) => s
-      .replaceAll('\\', '\\\\')
-      .replaceAll('"', '\\"')
-      .replaceAll('\n', '\\n')
-      .replaceAll('\r', '\\r')
-      .replaceAll('\t', '\\t');
+  _UnquotedValueRepairer(this.json);
 
-  bool isLiteral(String value) {
-    final lower = value.toLowerCase();
-    return lower == 'true' || lower == 'false' || lower == 'null';
+  String repair() {
+    while (i < json.length) {
+      _processChar(json[i]);
+    }
+    return buffer.toString();
   }
 
-  bool isWhitespace(String ch) =>
-      ch == ' ' || ch == '\t' || ch == '\n' || ch == '\r';
+  static final _structuralHandlers =
+      <String, void Function(_UnquotedValueRepairer, String)>{
+        '"': (r, ch) => r._startString(ch),
+        '{': (r, _) => r._open(true, 'key'),
+        '[': (r, _) => r._open(false, 'value'),
+        '}': (r, ch) => r._close(ch),
+        ']': (r, ch) => r._close(ch),
+        ':': (r, ch) => r._setExpect('value', ch),
+        ',': (r, ch) => r._comma(ch),
+      };
 
-  /// Finds the end of a bare value in an object by looking for the next
-  /// `, "key":` delimiter or the closing `}`.
-  int findObjectValueEnd(int start) {
-    var j = start;
-    while (j < length) {
-      final c = json[j];
-      if (c == '}') return j;
-      if (c == ',') {
-        var k = j + 1;
-        while (k < length && isWhitespace(json[k])) k++;
-        if (k < length && json[k] == '"') {
-          // skip quoted key
-          k++;
-          while (k < length) {
-            if (json[k] == '\\') {
-              k += 2;
-            } else if (json[k] == '"') {
-              k++;
-              break;
-            } else {
-              k++;
-            }
-          }
-          while (k < length && isWhitespace(json[k])) k++;
-          if (k < length && json[k] == ':') return j;
-        }
-      }
-      j++;
+  void _processChar(String ch) {
+    if (inString) {
+      _handleInString(ch);
+      return;
     }
+    final handler = _structuralHandlers[ch];
+    if (handler != null) {
+      handler(this, ch);
+      return;
+    }
+    if (_isJsonWhitespace(ch)) {
+      _copy(ch);
+    } else {
+      _bareToken(ch);
+    }
+  }
+
+  void _handleInString(String ch) {
+    buffer.write(ch);
+    if (ch == '\\') {
+      i++;
+      if (i < json.length) buffer.write(json[i]);
+    } else if (ch == '"') {
+      inString = false;
+    }
+    i++;
+  }
+
+  void _startString(String ch) {
+    buffer.write(ch);
+    inString = true;
+    i++;
+  }
+
+  void _open(bool isObject, String nextExpect) {
+    stack.add(isObject);
+    expect = nextExpect;
+    buffer.write(isObject ? '{' : '[');
+    i++;
+  }
+
+  void _close(String ch) {
+    if (stack.isNotEmpty) stack.removeLast();
+    expect = 'none';
+    buffer.write(ch);
+    i++;
+  }
+
+  void _setExpect(String value, String ch) {
+    expect = value;
+    buffer.write(ch);
+    i++;
+  }
+
+  void _comma(String ch) {
+    expect = (stack.isNotEmpty && stack.last) ? 'key' : 'value';
+    buffer.write(ch);
+    i++;
+  }
+
+  void _copy(String ch) {
+    buffer.write(ch);
+    i++;
+  }
+
+  void _bareToken(String ch) {
+    if (expect == 'key') {
+      _quoteKey();
+    } else if (expect == 'value') {
+      _quoteValue();
+    } else {
+      buffer.write(ch);
+      i++;
+    }
+  }
+
+  void _quoteKey() {
+    final end = _findKeyEnd(i);
+    final key = json.substring(i, end).trim();
+    if (key.isNotEmpty) {
+      buffer.write('"${_escapeJsonString(key)}"');
+    }
+    i = end;
+  }
+
+  void _quoteValue() {
+    final end = _valueEnd();
+    final value = json.substring(i, end).trim();
+    if (value.isNotEmpty) {
+      if (_isJsonLiteral(value) || double.tryParse(value) != null) {
+        buffer.write(value);
+      } else {
+        buffer.write('"${_escapeJsonString(value)}"');
+      }
+    }
+    i = end;
+  }
+
+  int _valueEnd() {
+    if (stack.isEmpty) return json.length;
+    return stack.last ? _findObjectValueEnd(i) : _findArrayValueEnd(i);
+  }
+
+  int _findKeyEnd(int start) {
+    var j = start;
+    while (j < json.length && json[j] != ':') j++;
     return j;
   }
 
-  /// Finds the end of a bare value in an array by looking for the first
-  /// `,` or `]`.
-  int findArrayValueEnd(int start) {
+  int _findArrayValueEnd(int start) {
     var j = start;
-    while (j < length) {
+    while (j < json.length) {
       final c = json[j];
       if (c == ',' || c == ']') return j;
       j++;
@@ -104,131 +184,60 @@ String repairUnquotedValues(String json) {
     return j;
   }
 
-  /// Finds the end of an unquoted key by looking for `:`.
-  int findKeyEnd(int start) {
+  int _findObjectValueEnd(int start) {
     var j = start;
-    while (j < length) {
-      if (json[j] == ':') return j;
+    while (j < json.length) {
+      final c = json[j];
+      if (c == '}') return j;
+      if (c == ',' && _followedByQuotedKey(j)) return j;
       j++;
     }
     return j;
   }
 
-  while (i < length) {
-    final ch = json[i];
-
-    if (inString) {
-      buffer.write(ch);
-      if (ch == '\\') {
-        i++;
-        if (i < length) buffer.write(json[i]);
-      } else if (ch == '"') {
-        inString = false;
-      }
-      i++;
-      continue;
-    }
-
-    if (ch == '"') {
-      buffer.write(ch);
-      inString = true;
-      i++;
-      continue;
-    }
-
-    if (ch == '{') {
-      stack.add(true);
-      expect = 'key';
-      buffer.write(ch);
-      i++;
-      continue;
-    }
-
-    if (ch == '[') {
-      stack.add(false);
-      expect = 'value';
-      buffer.write(ch);
-      i++;
-      continue;
-    }
-
-    if (ch == '}') {
-      if (stack.isNotEmpty) stack.removeLast();
-      expect = 'none';
-      buffer.write(ch);
-      i++;
-      continue;
-    }
-
-    if (ch == ']') {
-      if (stack.isNotEmpty) stack.removeLast();
-      expect = 'none';
-      buffer.write(ch);
-      i++;
-      continue;
-    }
-
-    if (ch == ':') {
-      expect = 'value';
-      buffer.write(ch);
-      i++;
-      continue;
-    }
-
-    if (ch == ',') {
-      if (stack.isNotEmpty && stack.last) {
-        expect = 'key';
-      } else {
-        expect = 'value';
-      }
-      buffer.write(ch);
-      i++;
-      continue;
-    }
-
-    if (isWhitespace(ch)) {
-      buffer.write(ch);
-      i++;
-      continue;
-    }
-
-    // Bare token (key or value).
-    if (expect == 'key') {
-      final end = findKeyEnd(i);
-      final key = json.substring(i, end).trim();
-      if (key.isNotEmpty) {
-        buffer.write('"');
-        buffer.write(escape(key));
-        buffer.write('"');
-      }
-      i = end;
-    } else if (expect == 'value') {
-      final inObject = stack.isNotEmpty && stack.last;
-      final end = inObject
-          ? findObjectValueEnd(i)
-          : stack.isNotEmpty
-              ? findArrayValueEnd(i)
-              : length;
-      final value = json.substring(i, end).trim();
-      if (value.isNotEmpty) {
-        if (isLiteral(value) || double.tryParse(value) != null) {
-          buffer.write(value);
-        } else {
-          buffer.write('"');
-          buffer.write(escape(value));
-          buffer.write('"');
-        }
-      }
-      i = end;
-    } else {
-      // Unexpected bare token outside any context; copy as-is.
-      buffer.write(ch);
-      i++;
-    }
+  bool _followedByQuotedKey(int commaIndex) {
+    var k = _skipWhitespace(commaIndex + 1);
+    if (k >= json.length || json[k] != '"') return false;
+    k = _skipQuotedString(k + 1);
+    k = _skipWhitespace(k);
+    return k < json.length && json[k] == ':';
   }
 
-  return buffer.toString();
+  int _skipWhitespace(int start) {
+    var k = start;
+    while (k < json.length && _isJsonWhitespace(json[k])) k++;
+    return k;
+  }
+
+  int _skipQuotedString(int start) {
+    var k = start;
+    while (k < json.length) {
+      if (json[k] == '\\') {
+        k += 2;
+      } else if (json[k] == '"') {
+        return k + 1;
+      } else {
+        k++;
+      }
+    }
+    return k;
+  }
 }
+
+String _escapeJsonString(String s) => s
+    .replaceAll('\\', '\\\\')
+    .replaceAll('"', '\\"')
+    .replaceAll('\n', '\\n')
+    .replaceAll('\r', '\\r')
+    .replaceAll('\t', '\\t');
+
+bool _isJsonLiteral(String value) {
+  final lower = value.toLowerCase();
+  return lower == 'true' || lower == 'false' || lower == 'null';
+}
+
+bool _isJsonWhitespace(String ch) =>
+    ch == ' ' || ch == '\t' || ch == '\n' || ch == '\r';
 
 /// Repairs objects in arrays where the closing brace and following comma
 /// are missing because the model continued with the next array element.
@@ -248,52 +257,47 @@ String repairBrokenArrayObjects(String json) {
 
   while (i < length) {
     final ch = json[i];
-
-    // Detect pattern: newline/comma/whitespace then '{' inside an array
-    // when previous non-whitespace was not ',' or '[' or '{' or '}' or ':'
-    if (ch == '{') {
-      // Look backwards to see if we need a closing brace + comma before this
-      var j = buffer.length - 1;
-      while (j >= 0 &&
-          (buffer.toString()[j] == ' ' ||
-              buffer.toString()[j] == '\n' ||
-              buffer.toString()[j] == '\r' ||
-              buffer.toString()[j] == '\t' ||
-              buffer.toString()[j] == ',')) {
-        j--;
-      }
-      final prev = j >= 0 ? buffer.toString()[j] : '';
-      // If previous significant char is not array/object opener/comma/colon,
-      // we likely have a missing closing brace.
-      if (prev.isNotEmpty &&
-          prev != '[' &&
-          prev != '{' &&
-          prev != '}' &&
-          prev != ',' &&
-          prev != ':') {
-        // Insert closing brace before the preceding whitespace/comma
-        var insertPos = buffer.length;
-        while (insertPos > 0 &&
-            (buffer.toString()[insertPos - 1] == ' ' ||
-                buffer.toString()[insertPos - 1] == '\n' ||
-                buffer.toString()[insertPos - 1] == '\r' ||
-                buffer.toString()[insertPos - 1] == '\t')) {
-          insertPos--;
-        }
-        final tail = buffer.toString().substring(insertPos);
-        final head = buffer.toString().substring(0, insertPos);
-        buffer.clear();
-        buffer.write(head);
-        buffer.write('},');
-        buffer.write(tail);
-      }
+    if (ch == '{' && _needsClosingBrace(buffer)) {
+      _insertClosingBrace(buffer);
     }
-
     buffer.write(ch);
     i++;
   }
 
   return buffer.toString();
+}
+
+bool _isWhitespaceOrComma(String ch) =>
+    ch == ' ' || ch == '\n' || ch == '\r' || ch == '\t' || ch == ',';
+
+bool _isStructuralOrComma(String ch) =>
+    ch == '[' || ch == '{' || ch == '}' || ch == ',' || ch == ':';
+
+bool _needsClosingBrace(StringBuffer buffer) {
+  final prev = _previousSignificantChar(buffer);
+  return prev.isNotEmpty && !_isStructuralOrComma(prev);
+}
+
+String _previousSignificantChar(StringBuffer buffer) {
+  final text = buffer.toString();
+  var j = text.length - 1;
+  while (j >= 0 && _isWhitespaceOrComma(text[j])) {
+    j--;
+  }
+  return j >= 0 ? text[j] : '';
+}
+
+void _insertClosingBrace(StringBuffer buffer) {
+  final text = buffer.toString();
+  var insertPos = text.length;
+  while (insertPos > 0 && _isJsonWhitespace(text[insertPos - 1])) {
+    insertPos--;
+  }
+  buffer
+    ..clear()
+    ..write(text.substring(0, insertPos))
+    ..write('},')
+    ..write(text.substring(insertPos));
 }
 
 /// Repairs unterminated string values that reach the end of an object/array
@@ -319,37 +323,46 @@ String repairUnterminatedStringValues(String json) {
       continue;
     }
 
-    // Opening quote.
-    buffer.write(ch);
-    i++;
-    var inEscape = false;
-    while (i < length) {
-      final inner = json[i];
-      if (inEscape) {
-        buffer.write(inner);
-        inEscape = false;
-        i++;
-      } else if (inner == '\\') {
-        buffer.write(inner);
-        inEscape = true;
-        i++;
-      } else if (inner == '"') {
-        buffer.write(inner);
-        i++;
-        break;
-      } else if (inner == '\n' || inner == '\r') {
-        // Unterminated string: close it before the newline.
-        buffer.write('"');
-        // Leave the newline for the outer loop to process.
-        break;
-      } else {
-        buffer.write(inner);
-        i++;
-      }
-    }
+    i = _copyQuotedString(json, buffer, i);
   }
 
   return buffer.toString();
+}
+
+int _copyQuotedString(String json, StringBuffer buffer, int start) {
+  var i = start;
+  // Opening quote.
+  buffer.write(json[i]);
+  i++;
+  var inEscape = false;
+  while (i < json.length) {
+    final inner = json[i];
+    if (inEscape) {
+      buffer.write(inner);
+      inEscape = false;
+      i++;
+      continue;
+    }
+    if (inner == '\\') {
+      buffer.write(inner);
+      inEscape = true;
+      i++;
+      continue;
+    }
+    if (inner == '"') {
+      buffer.write(inner);
+      return i + 1;
+    }
+    if (inner == '\n' || inner == '\r') {
+      // Unterminated string: close it before the newline.
+      buffer.write('"');
+      // Leave the newline for the outer loop to process.
+      return i;
+    }
+    buffer.write(inner);
+    i++;
+  }
+  return i;
 }
 
 /// Repairs keys where the colon between key and value is missing.
@@ -539,59 +552,94 @@ List<Map<String, dynamic>> _extractArrayObjects(String text, String key) {
   final length = text.length;
   while (i < length) {
     final ch = text[i];
-    if (ch == ' ' || ch == '\n' || ch == '\r' || ch == '\t' || ch == ',') {
+    if (_isArraySeparator(ch)) {
       i++;
       continue;
     }
     if (ch == ']') break;
 
-    if (ch == '{') {
-      final object = _parseBalancedObject(text, i);
-      if (object == null) break;
-      try {
-        final decoded = jsonDecode(sanitizeJson(object)) as Map<String, dynamic>;
-        result.add(decoded);
-      } catch (_) {
-        // One malformed object inside the array: stop this array here.
-        break;
-      }
-      i += object.length;
-      continue;
-    }
-
-    // Unexpected token inside the array; stop extracting from it.
-    break;
+    final advance = _tryExtractObject(text, i, result);
+    if (advance == null) break;
+    i += advance;
   }
   return result;
 }
 
+int? _tryExtractObject(
+  String text,
+  int start,
+  List<Map<String, dynamic>> result,
+) {
+  if (text[start] != '{') return null;
+  final object = _parseBalancedObject(text, start);
+  if (object == null) return null;
+  final decoded = _tryDecodeObject(object);
+  if (decoded == null) return null;
+  result.add(decoded);
+  return object.length;
+}
+
+bool _isArraySeparator(String ch) =>
+    ch == ' ' || ch == '\n' || ch == '\r' || ch == '\t' || ch == ',';
+
+Map<String, dynamic>? _tryDecodeObject(String object) {
+  try {
+    return jsonDecode(sanitizeJson(object)) as Map<String, dynamic>;
+  } catch (_) {
+    return null;
+  }
+}
+
 String? _parseBalancedObject(String text, int start) {
   if (start >= text.length || text[start] != '{') return null;
+  return _BalancedObjectParser(text, start).parse();
+}
+
+class _BalancedObjectParser {
+  final String text;
+  final int start;
   var depth = 1;
   var inString = false;
   var escape = false;
-  for (var i = start + 1; i < text.length; i++) {
-    final ch = text[i];
-    if (inString) {
-      if (escape) {
-        escape = false;
-      } else if (ch == '\\') {
-        escape = true;
-      } else if (ch == '"') {
-        inString = false;
+
+  _BalancedObjectParser(this.text, this.start);
+
+  String? parse() {
+    for (var i = start + 1; i < text.length; i++) {
+      final ch = text[i];
+      if (inString) {
+        _handleInString(ch);
+      } else {
+        final done = _handleOutOfString(ch, i);
+        if (done) return text.substring(start, i + 1);
       }
-      continue;
     }
+    return null;
+  }
+
+  void _handleInString(String ch) {
+    if (escape) {
+      escape = false;
+    } else if (ch == '\\') {
+      escape = true;
+    } else if (ch == '"') {
+      inString = false;
+    }
+  }
+
+  bool _handleOutOfString(String ch, int index) {
     if (ch == '"') {
       inString = true;
-      continue;
+      return false;
     }
     if (ch == '{') {
       depth++;
-    } else if (ch == '}') {
-      depth--;
-      if (depth == 0) return text.substring(start, i + 1);
+      return false;
     }
+    if (ch == '}') {
+      depth--;
+      return depth == 0;
+    }
+    return false;
   }
-  return null;
 }

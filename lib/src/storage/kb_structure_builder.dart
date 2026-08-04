@@ -440,41 +440,56 @@ class KBStructureBuilder {
   ) {
     _deduplicateAndSort(contributions);
 
-    if (contributions.questions.isNotEmpty) {
-      buffer.writeln('## Questions Asked');
-      buffer.writeln();
-      for (final q in contributions.questions) {
-        buffer.writeln('- [[../../questions/${q.id}|${q.id}]] - ${q.date}');
-      }
-      buffer.writeln();
+    _appendQuestionContributions(buffer, contributions.questions);
+    _appendAnswerContributions(buffer, contributions.answers);
+    _appendNoteContributions(buffer, contributions.notes);
+    _appendTopicContributions(buffer, contributions.topics);
+  }
+
+  void _appendQuestionContributions(StringBuffer buffer, List<ContributionItem> questions) {
+    if (questions.isEmpty) return;
+    buffer.writeln('## Questions Asked');
+    buffer.writeln();
+    for (final q in questions) {
+      buffer.writeln('- [[../../questions/${q.id}|${q.id}]] - ${q.date}');
     }
-    if (contributions.answers.isNotEmpty) {
-      buffer.writeln('## Answers Provided');
-      buffer.writeln();
-      for (final a in contributions.answers) {
-        buffer.writeln('- [[../../answers/${a.id}|${a.id}]] - ${a.date}');
-      }
-      buffer.writeln();
+    buffer.writeln();
+  }
+
+  void _appendAnswerContributions(StringBuffer buffer, List<ContributionItem> answers) {
+    if (answers.isEmpty) return;
+    buffer.writeln('## Answers Provided');
+    buffer.writeln();
+    for (final a in answers) {
+      buffer.writeln('- [[../../answers/${a.id}|${a.id}]] - ${a.date}');
     }
-    if (contributions.notes.isNotEmpty) {
-      buffer.writeln('## Notes Contributed');
-      buffer.writeln();
-      for (final n in contributions.notes) {
-        buffer.writeln('- [[../../notes/${n.id}|${n.id}]] - ${n.date}');
-      }
-      buffer.writeln();
+    buffer.writeln();
+  }
+
+  void _appendNoteContributions(StringBuffer buffer, List<ContributionItem> notes) {
+    if (notes.isEmpty) return;
+    buffer.writeln('## Notes Contributed');
+    buffer.writeln();
+    for (final n in notes) {
+      buffer.writeln('- [[../../notes/${n.id}|${n.id}]] - ${n.date}');
     }
-    if (contributions.topics.isNotEmpty) {
-      buffer.writeln('## Topics');
-      buffer.writeln();
-      for (final t in contributions.topics.where((t) => t.count > 0)) {
-        final plural = t.count > 1 ? 's' : '';
-        buffer.writeln(
-          '- [[../../topics/${t.topicId}|${t.topicId}]] - ${t.count} contribution$plural',
-        );
-      }
-      buffer.writeln();
+    buffer.writeln();
+  }
+
+  void _appendTopicContributions(
+    StringBuffer buffer,
+    List<TopicContribution> topics,
+  ) {
+    if (topics.isEmpty) return;
+    buffer.writeln('## Topics');
+    buffer.writeln();
+    for (final t in topics.where((t) => t.count > 0)) {
+      final plural = t.count > 1 ? 's' : '';
+      buffer.writeln(
+        '- [[../../topics/${t.topicId}|${t.topicId}]] - ${t.count} contribution$plural',
+      );
     }
+    buffer.writeln();
   }
 
   void _deduplicateAndSort(PersonContributions contributions) {
@@ -739,18 +754,27 @@ class KBStructureBuilder {
     final answersToExclude = <String>{};
     for (final answerId in answersInTopic) {
       final answer = analysis.answers.where((a) => a.id == answerId).firstOrNull;
-      if (answer != null &&
-          answer.answersQuestion != null &&
-          questionsInTopic.contains(answer.answersQuestion)) {
+      if (_answerLinksQuestion(answer, questionsInTopic) ||
+          _answerLinkedViaData(answerId, data, questionsInTopic)) {
         answersToExclude.add(answerId);
-      } else if (data.linkedAnswers.contains(answerId)) {
-        final qId = data.aToQ[answerId];
-        if (qId != null && questionsInTopic.contains(qId)) {
-          answersToExclude.add(answerId);
-        }
       }
     }
     return answersToExclude;
+  }
+
+  bool _answerLinksQuestion(Answer? answer, Set<String> questionsInTopic) =>
+      answer != null &&
+      answer.answersQuestion != null &&
+      questionsInTopic.contains(answer.answersQuestion);
+
+  bool _answerLinkedViaData(
+    String answerId,
+    _TopicData data,
+    Set<String> questionsInTopic,
+  ) {
+    if (!data.linkedAnswers.contains(answerId)) return false;
+    final qId = data.aToQ[answerId];
+    return qId != null && questionsInTopic.contains(qId);
   }
 
   Set<String> _notesLinkedToQuestions(

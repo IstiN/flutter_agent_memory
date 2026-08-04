@@ -16,6 +16,13 @@ import 'file_kb_storage_factory.dart'
     if (dart.library.html) 'file_kb_storage_factory_stub.dart';
 
 export '../utils/memory_utils.dart';
+
+export 'memory/memory_consolidation_writer.dart';
+export 'memory/memory_dedup_service.dart';
+export 'memory/memory_level_service.dart';
+export 'memory/memory_provenance_service.dart';
+export 'memory/memory_revision_service.dart';
+
 import 'kb_file_parser.dart';
 import 'kb_graph_builder.dart';
 import 'kb_markdown_renderer.dart';
@@ -26,11 +33,7 @@ import 'memory/memory_level_service.dart';
 import 'memory/memory_provenance_service.dart';
 import 'memory/memory_revision_service.dart';
 
-export 'memory/memory_consolidation_writer.dart';
-export 'memory/memory_dedup_service.dart';
-export 'memory/memory_level_service.dart';
-export 'memory/memory_provenance_service.dart';
-export 'memory/memory_revision_service.dart';
+part 'kb_memory_store_helpers.dart';
 
 /// Agent memory store backed by a pluggable [KbStorage] backend.
 ///
@@ -445,26 +448,41 @@ class KBMemoryStore {
 
     for (final t in types) {
       for (final id in await storage.listEntityIds(t)) {
-        try {
-          final content = await storage.readEntity(t, id);
-          if (content == null) continue;
-          final record = _parseContent(t, content);
-          if (tags != null && tags.isNotEmpty) {
-            final normalizedRecordTags = record.tags
-                .map((x) => x.toLowerCase())
-                .toSet();
-            final normalizedRequested = tags
-                .map((x) => x.toLowerCase())
-                .toSet();
-            if (!normalizedRequested.any(normalizedRecordTags.contains))
-              continue;
-          }
-          if (asOf != null && !_isRecordActiveAt(record, asOf)) continue;
-          records.add(record);
-        } catch (_) {}
+        final record = await _loadRecord(t, id, tags: tags, asOf: asOf);
+        if (record != null) records.add(record);
       }
     }
 
+    _sortRecords(records, sortBy);
+    return _limitRecords(records, limit);
+  }
+
+  Future<MemoryRecord?> _loadRecord(
+    String type,
+    String id, {
+    List<String>? tags,
+    DateTime? asOf,
+  }) async {
+    try {
+      final content = await storage.readEntity(type, id);
+      if (content == null) return null;
+      final record = _parseContent(type, content);
+      if (!_matchesTags(record.tags, tags)) return null;
+      if (asOf != null && !_isRecordActiveAt(record, asOf)) return null;
+      return record;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  bool _matchesTags(List<String> recordTags, List<String>? requested) {
+    if (requested == null || requested.isEmpty) return true;
+    final normalizedRecordTags = recordTags.map((x) => x.toLowerCase()).toSet();
+    final normalizedRequested = requested.map((x) => x.toLowerCase()).toSet();
+    return normalizedRequested.any(normalizedRecordTags.contains);
+  }
+
+  void _sortRecords(List<MemoryRecord> records, String sortBy) {
     switch (sortBy) {
       case 'accessCount':
         records.sort((a, b) => b.accessCount.compareTo(a.accessCount));
@@ -478,7 +496,9 @@ class KBMemoryStore {
           return bDate.compareTo(aDate);
         });
     }
+  }
 
+  List<MemoryRecord> _limitRecords(List<MemoryRecord> records, int? limit) {
     if (limit != null && records.length > limit) {
       return records.sublist(0, limit);
     }
@@ -518,19 +538,41 @@ class KBMemoryStore {
 
     if (provider != null &&
         (resolvedArea == 'general' || resolvedTags.isEmpty)) {
-      final generated = await KBTagGeneratorAgent(provider!).generateTags(
+      final enriched = await _enrichFromProvider(
         text,
-        maxTags: 5,
+        resolvedArea,
+        resolvedTopics,
+        resolvedTags,
       );
-      resolvedTags = resolvedTags.isEmpty ? generated : resolvedTags;
-      if (resolvedTopics.isEmpty && generated.isNotEmpty) {
-        resolvedTopics = [slugify(generated.first)];
-      }
-      if (resolvedArea == 'general' && generated.isNotEmpty) {
-        resolvedArea = _guessArea(generated);
-      }
+      resolvedArea = enriched.area;
+      resolvedTopics = enriched.topics;
+      resolvedTags = enriched.tags;
     }
 
+    return _Enriched(
+      area: resolvedArea,
+      topics: resolvedTopics,
+      tags: resolvedTags,
+    );
+  }
+
+  Future<_Enriched> _enrichFromProvider(
+    String text,
+    String area,
+    List<String> topics,
+    List<String> tags,
+  ) async {
+    final generated = await KBTagGeneratorAgent(provider!).generateTags(
+      text,
+      maxTags: 5,
+    );
+    final resolvedTags = tags.isEmpty ? generated : tags;
+    final resolvedTopics = topics.isEmpty && generated.isNotEmpty
+        ? [slugify(generated.first)]
+        : topics;
+    final resolvedArea = area == 'general' && generated.isNotEmpty
+        ? _guessArea(generated)
+        : area;
     return _Enriched(
       area: resolvedArea,
       topics: resolvedTopics,
@@ -742,7 +784,7 @@ class KBMemoryStore {
 
     final agent = KBConsolidationAgent(provider!);
     final records = await list(limit: limit);
-    final existingSummary = await _readExistingSummary();
+    final existingSummary = await _readExistingSummary(this);
 
     final result = await agent.consolidate(
       records,
@@ -756,45 +798,6 @@ class KBMemoryStore {
     );
     return result;
   }
-
-  Future<String?> _readExistingSummary() async {
-    return (await storage.readFile('MEMORY.md'))?.trim();
-  }
-
-  bool _isRecordActiveAt(MemoryRecord record, DateTime asOf) {
-    final note = record.note;
-    if (note != null) {
-      return _isNoteActiveAt(note, asOf) && _isDateAtOrBefore(record.date, asOf);
-    }
-    return _isDateAtOrBefore(record.date, asOf);
-  }
-
-  bool _isNoteActiveAt(Note note, DateTime asOf) {
-    final from = _parseDate(note.validFrom);
-    if (from != null && asOf.isBefore(from)) return false;
-
-    final until = _parseDate(note.validUntil);
-    if (until != null && asOf.isAfter(until)) return false;
-
-    return true;
-  }
-
-  bool _isDateAtOrBefore(String? date, DateTime asOf) {
-    final dt = _parseDate(date);
-    if (dt == null) return true;
-    return !dt.isAfter(asOf);
-  }
-
-  DateTime? _parseDate(String? date) {
-    if (date == null || date.isEmpty) return null;
-    try {
-      return DateTime.parse(date);
-    } catch (_) {
-      return null;
-    }
-  }
-
-  String _pad(int value) => value.toString().padLeft(4, '0');
 
   /// Promotes or expires notes according to [promotionPolicy] and returns the
   /// number of records changed.
@@ -841,14 +844,6 @@ class KBMemoryStore {
       level: MemoryLevel.raw,
     );
   }
-}
-
-class _Enriched {
-  final String area;
-  final List<String> topics;
-  final List<String> tags;
-
-  _Enriched({required this.area, required this.topics, required this.tags});
 }
 
 /// A unified view of a knowledge-base record used by the memory store.

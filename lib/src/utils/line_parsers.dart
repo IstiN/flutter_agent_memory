@@ -62,31 +62,43 @@ List<String> parseRerankerLines(String response) {
 /// `MAPPING | answerId=a_1 | questionId=q_1 | confidence=0.9`
 QAMappingResult parseQaMappingLines(String response) {
   final cleaned = _stripCodeBlocks(response);
+  final mappings = _parseMappingLines(cleaned);
+  if (mappings.isNotEmpty) return QAMappingResult(mappings: mappings);
+  return _parseQaJsonFallback(cleaned);
+}
+
+List<Mapping> _parseMappingLines(String cleaned) {
   final mappings = <Mapping>[];
   for (final line in cleaned.split('\n')) {
-    final trimmed = line.trim();
-    if (!trimmed.startsWith('MAPPING')) continue;
-    final fields = parsePipeFields(trimmed);
-    final answerId = fields['ANSWERID'] ?? '';
-    final questionId = fields['QUESTIONID'] ?? '';
-    final confidence = double.tryParse(fields['CONFIDENCE'] ?? '') ?? 0.0;
-    if (answerId.isEmpty || questionId.isEmpty) continue;
-    mappings.add(
-      Mapping(
-        answerId: answerId,
-        questionId: questionId,
-        confidence: confidence,
-      ),
-    );
+    final mapping = _parseMappingLine(line);
+    if (mapping != null) mappings.add(mapping);
   }
-  if (mappings.isNotEmpty) return QAMappingResult(mappings: mappings);
+  return mappings;
+}
+
+Mapping? _parseMappingLine(String line) {
+  final trimmed = line.trim();
+  if (!trimmed.startsWith('MAPPING')) return null;
+  final fields = parsePipeFields(trimmed);
+  final answerId = fields['ANSWERID'] ?? '';
+  final questionId = fields['QUESTIONID'] ?? '';
+  final confidence = double.tryParse(fields['CONFIDENCE'] ?? '') ?? 0.0;
+  if (answerId.isEmpty || questionId.isEmpty) return null;
+  return Mapping(
+    answerId: answerId,
+    questionId: questionId,
+    confidence: confidence,
+  );
+}
+
+QAMappingResult _parseQaJsonFallback(String cleaned) {
   if (cleaned.trim().startsWith('{')) {
     try {
       final json = sanitizeAndDecodeJson(cleaned) as Map<String, dynamic>;
       return QAMappingResult.fromJson(json);
     } catch (_) {}
   }
-  return QAMappingResult(mappings: mappings);
+  return const QAMappingResult(mappings: []);
 }
 
 /// Parses consolidation output into a summary and skill cards.
@@ -99,40 +111,62 @@ ConsolidationResult parseConsolidationLines(String response) {
   final summaries = <String>[];
   final skills = <SkillCard>[];
   for (final line in cleaned.split('\n')) {
-    final trimmed = line.trim();
-    if (trimmed.isEmpty) continue;
-    if (trimmed.startsWith('SUMMARY=')) {
-      final text = trimmed.substring(8).trim();
-      if (text.isNotEmpty) summaries.add(text);
-    } else if (trimmed.startsWith('SKILL')) {
-      final fields = parsePipeFields(trimmed);
-      final id = fields['ID'] ?? '';
-      final title = fields['TITLE'] ?? '';
-      final instruction = fields['INSTRUCTION'] ?? '';
-      final tags = semicolonList(fields['TAGS']);
-      if (id.isEmpty || title.isEmpty) continue;
-      skills.add(
-        SkillCard(
-          id: id,
-          title: title,
-          instruction: instruction,
-          tags: tags,
-        ),
-      );
-    }
+    _parseConsolidationLine(line, summaries, skills);
   }
   if (summaries.isNotEmpty || skills.isNotEmpty) {
-    final summary = summaries.isEmpty ? '' : summaries.join('\n\n');
-    return ConsolidationResult(summary: summary, skills: skills);
+    return _buildConsolidationResult(summaries, skills);
   }
-  if (cleaned.trim().startsWith('{')) {
-    try {
-      final json = sanitizeAndDecodeJson(cleaned) as Map<String, dynamic>;
-      return ConsolidationResult.fromJson(json);
-    } catch (_) {}
+  return _tryJsonFallback(cleaned) ?? _buildConsolidationResult(summaries, skills);
+}
+
+void _parseConsolidationLine(
+  String line,
+  List<String> summaries,
+  List<SkillCard> skills,
+) {
+  final trimmed = line.trim();
+  if (trimmed.isEmpty) return;
+  if (trimmed.startsWith('SUMMARY=')) {
+    final text = trimmed.substring(8).trim();
+    if (text.isNotEmpty) summaries.add(text);
+    return;
   }
-  final summary = summaries.isEmpty ? '' : summaries.join('\n\n');
-  return ConsolidationResult(summary: summary, skills: skills);
+  if (trimmed.startsWith('SKILL')) {
+    final skill = _parseSkillLine(trimmed);
+    if (skill != null) skills.add(skill);
+  }
+}
+
+SkillCard? _parseSkillLine(String line) {
+  final fields = parsePipeFields(line);
+  final id = fields['ID'] ?? '';
+  final title = fields['TITLE'] ?? '';
+  if (id.isEmpty || title.isEmpty) return null;
+  return SkillCard(
+    id: id,
+    title: title,
+    instruction: fields['INSTRUCTION'] ?? '',
+    tags: semicolonList(fields['TAGS']),
+  );
+}
+
+ConsolidationResult _buildConsolidationResult(
+  List<String> summaries,
+  List<SkillCard> skills,
+) =>
+    ConsolidationResult(
+      summary: summaries.isEmpty ? '' : summaries.join('\n\n'),
+      skills: skills,
+    );
+
+ConsolidationResult? _tryJsonFallback(String cleaned) {
+  if (!cleaned.trim().startsWith('{')) return null;
+  try {
+    final json = sanitizeAndDecodeJson(cleaned) as Map<String, dynamic>;
+    return ConsolidationResult.fromJson(json);
+  } catch (_) {
+    return null;
+  }
 }
 
 /// Strips markdown code fences and common XML artifacts from model output.

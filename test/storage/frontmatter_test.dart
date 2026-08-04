@@ -36,6 +36,22 @@ quality: 0.85
     expect(yaml, contains('quality: 0.85'));
   });
 
+  test('getStringList handles strings, brackets and missing values', () {
+    final fm = Frontmatter()
+      ..['single'] = 'one'
+      ..['bracket'] = '[a, b, c]'
+      ..['empty'] = ''
+      ..['missing'] = null
+      ..['list'] = ['x', 'y'];
+
+    expect(fm.getStringList('single'), ['one']);
+    expect(fm.getStringList('bracket'), ['a', 'b', 'c']);
+    expect(fm.getStringList('empty'), isEmpty);
+    expect(fm.getStringList('missing'), isEmpty);
+    expect(fm.getStringList('list'), ['x', 'y']);
+    expect(fm.getStringList('absent'), isEmpty);
+  });
+
   test('extracts body without frontmatter', () {
     final content = '---\nid: "a_0001"\n---\n\n# Answer\n\nSome text.';
     expect(extractBody(content), '# Answer\n\nSome text.');

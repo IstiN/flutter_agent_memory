@@ -17,6 +17,30 @@ import 'kb_storage.dart';
 /// Output is written to `GRAPH.md` as a Mermaid diagram plus a typed-edge
 /// table. Everything stays Markdown, so Obsidian's native graph view and
 /// backlinks work out of the box.
+class _EdgeResolver {
+  final Map<String, _GraphNode> nodes;
+  final Map<String, String> bySlug = <String, String>{};
+
+  _EdgeResolver(this.nodes) {
+    for (final node in nodes.values) {
+      bySlug[slugify(node.title)] = node.id;
+      bySlug[slugify(node.id)] = node.id;
+      bySlug[node.id.toLowerCase()] = node.id;
+    }
+  }
+
+  String resolve(String raw) {
+    final target = raw.split('|').first.trim();
+    final lower = target.toLowerCase();
+    if (nodes.containsKey(target)) return target;
+    if (nodes.containsKey(lower)) return lower;
+    final slug = slugify(target);
+    if (bySlug.containsKey(slug)) return bySlug[slug]!;
+    if (bySlug.containsKey(lower)) return bySlug[lower]!;
+    return '';
+  }
+}
+
 class KBGraphBuilder {
   final KbStorage storage;
 
@@ -37,99 +61,143 @@ class KBGraphBuilder {
   Future<Map<String, _GraphNode>> _collectNodes() async {
     final nodes = <String, _GraphNode>{};
 
-    Future<void> scanEntity(String type) async {
-      for (final id in await storage.listEntityIds(type)) {
-        try {
-          final content = await storage.readEntity(type, id);
-          if (content == null) continue;
-          final fm = parseFrontmatter(content);
-          if (fm.getString('id')?.toLowerCase() != id.toLowerCase()) continue;
-          final title = fm.getString('title') ?? _extractTitle(content) ?? id;
-          final levelRaw = fm['level'];
-          final level = levelRaw is int
-              ? levelRaw
-              : (levelRaw is String
-                    ? int.tryParse(levelRaw) ?? MemoryLevel.raw
-                    : MemoryLevel.raw);
-          nodes[id] = _GraphNode(
-            id: id,
-            type: type,
-            title: title,
-            path: storage.describeLocation(type, id),
-            area: fm.getString('area') ?? '',
-            level: level,
-            memoryType: fm.getString('memoryType'),
-            tags: fm.getStringList('tags'),
-            topics: fm.getStringList('topics'),
-            content: content,
-            fm: fm,
-          );
-        } catch (_) {}
-      }
+    await _scanEntityNodes(nodes, 'question');
+    await _scanEntityNodes(nodes, 'answer');
+    await _scanEntityNodes(nodes, 'note');
+
+    await _scanFileNodes(nodes, 'people', 'person');
+    await _scanFileNodes(nodes, 'areas', 'area');
+    await _scanFileNodes(nodes, 'topics', 'topic');
+    await _scanFileNodes(nodes, 'skills', 'skill');
+
+    _ensureSharedNodes(nodes);
+
+    return nodes;
+  }
+
+  Future<void> _scanEntityNodes(
+    Map<String, _GraphNode> nodes,
+    String type,
+  ) async {
+    for (final id in await storage.listEntityIds(type)) {
+      try {
+        final content = await storage.readEntity(type, id);
+        if (content == null) continue;
+        final fm = parseFrontmatter(content);
+        if (fm.getString('id')?.toLowerCase() != id.toLowerCase()) continue;
+        nodes[id] = _buildEntityNode(id, type, content, fm);
+      } catch (_) {}
     }
+  }
 
-    await scanEntity('question');
-    await scanEntity('answer');
-    await scanEntity('note');
+  _GraphNode _buildEntityNode(
+    String id,
+    String type,
+    String content,
+    Frontmatter fm,
+  ) {
+    final title = fm.getString('title') ?? _extractTitle(content) ?? id;
+    return _GraphNode(
+      id: id,
+      type: type,
+      title: title,
+      path: storage.describeLocation(type, id),
+      area: fm.getString('area') ?? '',
+      level: _parseLevel(fm['level']),
+      memoryType: fm.getString('memoryType'),
+      tags: fm.getStringList('tags'),
+      topics: fm.getStringList('topics'),
+      content: content,
+      fm: fm,
+    );
+  }
 
-    Future<void> scanFiles(String prefix, String type) async {
-      for (final path in await storage.listFilePaths(prefix)) {
-        try {
-          final content = await storage.readFile(path);
-          if (content == null) continue;
-          final fm = parseFrontmatter(content);
-          final id = fm.getString('id') ?? _basenameWithoutExtension(path);
-          if (id.isEmpty) continue;
-          final title = fm.getString('title') ?? _extractTitle(content) ?? id;
-          nodes[id] = _GraphNode(
-            id: id,
-            type: type,
-            title: title,
-            path: path,
-            area: fm.getString('area') ?? '',
-            level: MemoryLevel.concept,
-            memoryType: fm.getString('memoryType'),
-            tags: fm.getStringList('tags'),
-            topics: fm.getStringList('topics'),
-            content: content,
-            fm: fm,
-          );
-        } catch (_) {}
-      }
+  int _parseLevel(dynamic raw) {
+    if (raw is int) return raw;
+    if (raw is String) return int.tryParse(raw) ?? MemoryLevel.raw;
+    return MemoryLevel.raw;
+  }
+
+  Future<void> _scanFileNodes(
+    Map<String, _GraphNode> nodes,
+    String prefix,
+    String type,
+  ) async {
+    for (final path in await storage.listFilePaths(prefix)) {
+      try {
+        final content = await storage.readFile(path);
+        if (content == null) continue;
+        final fm = parseFrontmatter(content);
+        final id = fm.getString('id') ?? _basenameWithoutExtension(path);
+        if (id.isEmpty) continue;
+        nodes[id] = _buildFileNode(id, type, path, content, fm);
+      } catch (_) {}
     }
+  }
 
-    await scanFiles('people', 'person');
-    await scanFiles('areas', 'area');
-    await scanFiles('topics', 'topic');
-    await scanFiles('skills', 'skill');
+  _GraphNode _buildFileNode(
+    String id,
+    String type,
+    String path,
+    String content,
+    Frontmatter fm,
+  ) {
+    final title = fm.getString('title') ?? _extractTitle(content) ?? id;
+    return _GraphNode(
+      id: id,
+      type: type,
+      title: title,
+      path: path,
+      area: fm.getString('area') ?? '',
+      level: MemoryLevel.concept,
+      memoryType: fm.getString('memoryType'),
+      tags: fm.getStringList('tags'),
+      topics: fm.getStringList('topics'),
+      content: content,
+      fm: fm,
+    );
+  }
 
-    // Add shared tag/topic/area/author nodes so the graph looks like
-    // Obsidian: pages cluster around common tags and people. Areas, tags and
-    // topics share the same namespace so that, for example, area "infrastructure"
-    // and tag "infrastructure" become one node.
+  void _ensureSharedNodes(Map<String, _GraphNode> nodes) {
     final entityNodes = nodes.values
         .where((n) => const {'question', 'answer', 'note'}.contains(n.type))
         .toList();
     for (final node in entityNodes) {
-      if (node.area.isNotEmpty) {
-        _ensureTagNode(nodes, 'tag_${slugify(node.area)}', node.area, 'tag');
-      }
-      for (final tag in node.tags) {
-        if (tag.startsWith('#')) continue;
-        _ensureTagNode(nodes, 'tag_${slugify(tag)}', tag, 'tag');
-      }
-      for (final topic in node.topics) {
-        if (topic.isEmpty) continue;
-        _ensureTagNode(nodes, 'tag_${slugify(topic)}', topic, 'tag');
-      }
+      _ensureAreaTagNode(nodes, node);
+      _ensureTagNodes(nodes, node);
+      _ensureTopicNodes(nodes, node);
       if (node.fm.getString('author')?.isNotEmpty == true) {
         final author = node.fm.getString('author')!;
         final authorId = _personId(author);
         _ensureTagNode(nodes, authorId, author, 'person');
       }
     }
+  }
 
-    return nodes;
+  void _ensureAreaTagNode(
+    Map<String, _GraphNode> nodes,
+    _GraphNode node,
+  ) {
+    if (node.area.isEmpty) return;
+    _ensureTagNode(nodes, 'tag_${slugify(node.area)}', node.area, 'tag');
+  }
+
+  void _ensureTagNodes(
+    Map<String, _GraphNode> nodes,
+    _GraphNode node,
+  ) {
+    for (final tag in node.tags.where((t) => !t.startsWith('#'))) {
+      _ensureTagNode(nodes, 'tag_${slugify(tag)}', tag, 'tag');
+    }
+  }
+
+  void _ensureTopicNodes(
+    Map<String, _GraphNode> nodes,
+    _GraphNode node,
+  ) {
+    for (final topic in node.topics.where((t) => t.isNotEmpty)) {
+      _ensureTagNode(nodes, 'tag_${slugify(topic)}', topic, 'tag');
+    }
   }
 
   void _ensureTagNode(
@@ -155,101 +223,129 @@ class KBGraphBuilder {
 
   List<_GraphEdge> _collectEdges(Map<String, _GraphNode> nodes) {
     final edges = <_GraphEdge>{};
-    final bySlug = <String, String>{};
+    final resolver = _EdgeResolver(nodes);
+
     for (final node in nodes.values) {
-      bySlug[slugify(node.title)] = node.id;
-      bySlug[slugify(node.id)] = node.id;
-      bySlug[node.id.toLowerCase()] = node.id;
+      _collectNodeEdges(node, edges, resolver, nodes);
     }
 
-    String resolve(String raw) {
-      final target = raw.split('|').first.trim();
-      final lower = target.toLowerCase();
-      if (nodes.containsKey(target)) return target;
-      if (nodes.containsKey(lower)) return lower;
-      final slug = slugify(target);
-      if (bySlug.containsKey(slug)) return bySlug[slug]!;
-      if (bySlug.containsKey(lower)) return bySlug[lower]!;
-      return '';
-    }
+    _collectAnswerEdges(nodes, edges);
+    _collectNoteAnswerEdges(nodes, edges);
 
-    void addEdge(
-      String source,
-      String target,
-      String type, {
-      double weight = 1.0,
-    }) {
-      if (source.isEmpty || target.isEmpty || source == target) return;
-      edges.add(
-        _GraphEdge(source: source, target: target, type: type, weight: weight),
+    return _deduplicateWikiLinks(edges);
+  }
+
+  void _collectNodeEdges(
+    _GraphNode node,
+    Set<_GraphEdge> edges,
+    _EdgeResolver resolver,
+    Map<String, _GraphNode> nodes,
+  ) {
+    if (node.content.isNotEmpty) {
+      _collectWikiEdges(node, edges, resolver);
+      _collectRelationEdges(node, edges);
+    }
+    _collectMetadataEdges(node, edges, nodes);
+  }
+
+  void _collectWikiEdges(
+    _GraphNode node,
+    Set<_GraphEdge> edges,
+    _EdgeResolver resolver,
+  ) {
+    final wikiRegex = RegExp(r'\[\[([^\]|]+)(?:\|[^\]]+)?\]\]');
+    for (final m in wikiRegex.allMatches(node.content)) {
+      final target = resolver.resolve(m.group(1)!);
+      if (target.isNotEmpty) {
+        _addEdge(edges, node.id, target, 'links_to');
+      }
+    }
+  }
+
+  void _collectRelationEdges(_GraphNode node, Set<_GraphEdge> edges) {
+    for (final r in node.fm.getStringList('relations')) {
+      final relation = Relation.fromFrontmatterString(node.id, r);
+      _addEdge(
+        edges,
+        node.id,
+        relation.target,
+        relation.type,
+        weight: relation.weight,
       );
     }
+  }
 
-    for (final node in nodes.values) {
-      final content = node.content;
-      if (content.isEmpty) continue;
+  void _collectMetadataEdges(
+    _GraphNode node,
+    Set<_GraphEdge> edges,
+    Map<String, _GraphNode> nodes,
+  ) {
+    if (!_isEntityNode(node.type)) return;
 
-      // Wiki-links.
-      final wikiRegex = RegExp(r'\[\[([^\]|]+)(?:\|[^\]]+)?\]\]');
-      for (final m in wikiRegex.allMatches(content)) {
-        final target = resolve(m.group(1)!);
-        if (target.isNotEmpty) addEdge(node.id, target, 'links_to');
-      }
+    _collectAreaEdge(node, edges);
+    _collectTagEdges(node, edges);
+    _collectTopicEdges(node, edges);
+    _collectAuthorEdge(node, edges, nodes);
+  }
 
-      // Explicit frontmatter relations (notes only).
-      final relations = node.fm.getStringList('relations');
-      for (final r in relations) {
-        final relation = Relation.fromFrontmatterString(node.id, r);
-        addEdge(
-          node.id,
-          relation.target,
-          relation.type,
-          weight: relation.weight,
-        );
-      }
+  bool _isEntityNode(String type) =>
+      const {'question', 'answer', 'note'}.contains(type);
 
-      // Tag/topic/area/author edges — make the graph Obsidian-like by
-      // clustering records around shared metadata nodes.
-      if (const {'question', 'answer', 'note'}.contains(node.type)) {
-        if (node.area.isNotEmpty) {
-          addEdge(node.id, 'tag_${slugify(node.area)}', 'area');
-        }
-        for (final tag in node.tags) {
-          if (tag.startsWith('#')) continue;
-          addEdge(node.id, 'tag_${slugify(tag)}', 'tagged');
-        }
-        for (final topic in node.topics) {
-          if (topic.isEmpty) continue;
-          addEdge(node.id, 'tag_${slugify(topic)}', 'topic');
-        }
-        final author = node.fm.getString('author');
-        if (author != null && author.isNotEmpty) {
-          final authorId = _personId(author);
-          if (nodes.containsKey(authorId)) {
-            addEdge(node.id, authorId, 'authored_by');
-          }
-        }
-      }
+  void _collectAreaEdge(_GraphNode node, Set<_GraphEdge> edges) {
+    if (node.area.isEmpty) return;
+    _addEdge(edges, node.id, 'tag_${slugify(node.area)}', 'area');
+  }
+
+  void _collectTagEdges(_GraphNode node, Set<_GraphEdge> edges) {
+    for (final tag in node.tags.where((t) => !t.startsWith('#'))) {
+      _addEdge(edges, node.id, 'tag_${slugify(tag)}', 'tagged');
     }
+  }
 
-    // Question/answer links from answer nodes.
+  void _collectTopicEdges(_GraphNode node, Set<_GraphEdge> edges) {
+    for (final topic in node.topics.where((t) => t.isNotEmpty)) {
+      _addEdge(edges, node.id, 'tag_${slugify(topic)}', 'topic');
+    }
+  }
+
+  void _collectAuthorEdge(
+    _GraphNode node,
+    Set<_GraphEdge> edges,
+    Map<String, _GraphNode> nodes,
+  ) {
+    final author = node.fm.getString('author');
+    if (author == null || author.isEmpty) return;
+    final authorId = _personId(author);
+    if (nodes.containsKey(authorId)) {
+      _addEdge(edges, node.id, authorId, 'authored_by');
+    }
+  }
+
+  void _collectAnswerEdges(
+    Map<String, _GraphNode> nodes,
+    Set<_GraphEdge> edges,
+  ) {
     for (final node in nodes.values.where((n) => n.type == 'answer')) {
       final answer = node.fm.getString('answersQuestion');
       if (answer != null && answer.isNotEmpty) {
-        addEdge(node.id, answer, 'answers');
+        _addEdge(edges, node.id, answer, 'answers');
       }
     }
+  }
 
-    // Note -> answered questions.
+  void _collectNoteAnswerEdges(
+    Map<String, _GraphNode> nodes,
+    Set<_GraphEdge> edges,
+  ) {
     for (final node in nodes.values.where((n) => n.type == 'note')) {
       for (final qid in node.fm.getStringList('answersQuestions')) {
-        addEdge(node.id, qid, 'answers');
+        _addEdge(edges, node.id, qid, 'answers');
       }
     }
+  }
 
+  List<_GraphEdge> _deduplicateWikiLinks(Set<_GraphEdge> edges) {
     final edgeList = edges.toList();
-
-    // If a pair has a typed relation, drop the generic wiki-link duplicate.
     final typedKeys = edgeList
         .where((e) => e.type != 'links_to')
         .map((e) => '${e.source}|${e.target}')
@@ -259,6 +355,19 @@ class KBGraphBuilder {
           (e) => e.type != 'links_to' || !typedKeys.contains('${e.source}|${e.target}'),
         )
         .toList();
+  }
+
+  void _addEdge(
+    Set<_GraphEdge> edges,
+    String source,
+    String target,
+    String type, {
+    double weight = 1.0,
+  }) {
+    if (source.isEmpty || target.isEmpty || source == target) return;
+    edges.add(
+      _GraphEdge(source: source, target: target, type: type, weight: weight),
+    );
   }
 
   String _personId(String name) {
@@ -286,60 +395,77 @@ class KBGraphBuilder {
   }) async {
     final nodeList = nodes.values.toList();
     final edgeList = edges.toList();
-
-    // For the Mermaid diagram, show everything when the graph is small.
-    // Otherwise prefer higher-level entity nodes plus their immediate metadata
-    // neighbors, so the diagram stays focused on records rather than tags.
-    final Set<String> mermaidIds;
-    if (nodeList.length <= maxMermaidNodes) {
-      mermaidIds = nodes.keys.toSet();
-    } else {
-      final entityTypes = const {'question', 'answer', 'note'};
-      final priority = nodeList
-          .where(
-            (n) => entityTypes.contains(n.type) && n.level >= MemoryLevel.concept,
-          )
-          .map((n) => n.id)
-          .toSet();
-      final seed = priority.take(maxMermaidNodes ~/ 2).toList();
-      for (final e in edgeList) {
-        if (seed.length >= maxMermaidNodes) break;
-        if (priority.contains(e.source)) seed.add(e.target);
-        if (priority.contains(e.target)) seed.add(e.source);
-      }
-      mermaidIds = seed.toSet();
-    }
-    final mermaidEdges = edgeList
-        .where(
-          (e) => mermaidIds.contains(e.source) && mermaidIds.contains(e.target),
-        )
-        .toList();
-
-    // Mermaid node ids must not clash with keywords such as `graph`.
-    String mermaidId(String id) {
-      final safe = id.replaceAll(RegExp(r'[^a-zA-Z0-9_]'), '_');
-      return 'n_${safe}_id';
-    }
+    final mermaidIds = _selectMermaidIds(nodes, edgeList, maxMermaidNodes);
+    final mermaidEdges = _filterMermaidEdges(edgeList, mermaidIds);
 
     final buffer = StringBuffer()
-      ..writeln('---')
-      ..writeln('id: graph')
-      ..writeln('type: graph')
-      ..writeln('nodes: ${nodeList.length}')
-      ..writeln('edges: ${edgeList.length}')
-      ..writeln('generated: ${DateTime.now().toUtc().toIso8601String()}')
-      ..writeln('---')
-      ..writeln()
+      ..writeln(_graphFrontmatter(nodeList.length, edgeList.length))
       ..writeln('# Knowledge Graph')
       ..writeln()
-      ..writeln('## Stats')
-      ..writeln()
-      ..writeln('- **Nodes:** ${nodeList.length}')
-      ..writeln('- **Edges:** ${edgeList.length}')
-      ..writeln(
-        '- **Types:** ${nodes.values.map((n) => n.type).toSet().join(', ')}',
+      ..writeln(_graphStats(nodes, nodeList.length, edgeList.length))
+      ..writeln(_mermaidDiagram(nodes, mermaidIds, mermaidEdges))
+      ..writeln(_typedRelations(edgeList));
+
+    await storage.writeFile('GRAPH.md', buffer.toString());
+  }
+
+  Set<String> _selectMermaidIds(
+    Map<String, _GraphNode> nodes,
+    List<_GraphEdge> edges,
+    int maxMermaidNodes,
+  ) {
+    if (nodes.length <= maxMermaidNodes) return nodes.keys.toSet();
+
+    final entityTypes = const {'question', 'answer', 'note'};
+    final priority = nodes.values
+        .where(
+          (n) => entityTypes.contains(n.type) && n.level >= MemoryLevel.concept,
+        )
+        .map((n) => n.id)
+        .toSet();
+    final seed = priority.take(maxMermaidNodes ~/ 2).toList();
+    for (final e in edges) {
+      if (seed.length >= maxMermaidNodes) break;
+      if (priority.contains(e.source)) seed.add(e.target);
+      if (priority.contains(e.target)) seed.add(e.source);
+    }
+    return seed.toSet();
+  }
+
+  List<_GraphEdge> _filterMermaidEdges(
+    List<_GraphEdge> edges,
+    Set<String> mermaidIds,
+  ) => edges
+      .where(
+        (e) => mermaidIds.contains(e.source) && mermaidIds.contains(e.target),
       )
-      ..writeln()
+      .toList();
+
+  String _graphFrontmatter(int nodeCount, int edgeCount) =>
+      '---\n'
+      'id: graph\n'
+      'type: graph\n'
+      'nodes: $nodeCount\n'
+      'edges: $edgeCount\n'
+      'generated: ${DateTime.now().toUtc().toIso8601String()}\n'
+      '---\n\n';
+
+  String _graphStats(
+    Map<String, _GraphNode> nodes,
+    int nodeCount,
+    int edgeCount,
+  ) =>
+      '## Stats\n\n'
+      '- **Nodes:** $nodeCount\n'
+      '- **Edges:** $edgeCount\n'
+      '- **Types:** ${nodes.values.map((n) => n.type).toSet().join(', ')}\n\n';
+
+  String _mermaidDiagram(
+    Map<String, _GraphNode> nodes,
+    Set<String> mermaidIds,
+    List<_GraphEdge> edges,
+  ) {
+    final buffer = StringBuffer()
       ..writeln('## Graph')
       ..writeln()
       ..writeln('```mermaid')
@@ -347,28 +473,42 @@ class KBGraphBuilder {
       ..writeln(
         '    %% Click nodes to open files (Obsidian supports mermaid click events in preview)',
       );
-
     for (final id in mermaidIds) {
       final node = nodes[id];
       if (node == null) continue;
-      var label = node.title;
-      if (label.length > 60) label = '${label.substring(0, 57)}...';
-      label = label.replaceAll('"', '\\"');
-      buffer.writeln('    ${mermaidId(node.id)}["$label"];');
+      buffer.writeln('    ${_mermaidNodeLine(node)};');
     }
-    for (final e in mermaidEdges) {
+    for (final e in edges) {
       buffer.writeln(
-        '    ${mermaidId(e.source)} -->|${e.type}| ${mermaidId(e.target)};',
+        '    ${_mermaidId(e.source)} -->|${e.type}| ${_mermaidId(e.target)};',
       );
     }
-    buffer
-      ..writeln('```')
-      ..writeln()
+    buffer.writeln('```\n');
+    return buffer.toString();
+  }
+
+  String _mermaidNodeLine(_GraphNode node) {
+    final label = _mermaidLabel(node.title);
+    return '${_mermaidId(node.id)}["$label"]';
+  }
+
+  String _mermaidLabel(String title) {
+    var label = title.length > 60 ? '${title.substring(0, 57)}...' : title;
+    return label.replaceAll('"', '\\"');
+  }
+
+  // Mermaid node ids must not clash with keywords such as `graph`.
+  String _mermaidId(String id) {
+    final safe = id.replaceAll(RegExp(r'[^a-zA-Z0-9_]'), '_');
+    return 'n_${safe}_id';
+  }
+
+  String _typedRelations(List<_GraphEdge> edges) {
+    final buffer = StringBuffer()
       ..writeln('## Typed Relations')
       ..writeln();
-
     final byType = <String, List<_GraphEdge>>{};
-    for (final e in edgeList) {
+    for (final e in edges) {
       byType.putIfAbsent(e.type, () => []).add(e);
     }
     for (final type in byType.keys.toList()..sort()) {
@@ -379,8 +519,7 @@ class KBGraphBuilder {
       }
       buffer.writeln();
     }
-
-    await storage.writeFile('GRAPH.md', buffer.toString());
+    return buffer.toString();
   }
 }
 

@@ -1,14 +1,13 @@
 # crap4dart configuration for flutter_agent_memory.
 # Pure Dart package; Flutter-specific gates are disabled.
 #
-# This is the *ratchet baseline* for a legacy codebase. Thresholds are relaxed
-# to make the gate green today; they will be tightened incrementally in follow-up
-# commits until the project reaches the yellow/green zone.
+# Target CRAP threshold for the framework. Methods above this line are flagged
+# in CI; the badge reflects the current max CRAP score.
 sources: [lib, bin, test]
 
 crap:
   enabled: true
-  threshold: 60.0
+  threshold: 8.0
 
 coverage:
   lcov_path: coverage/lcov.info

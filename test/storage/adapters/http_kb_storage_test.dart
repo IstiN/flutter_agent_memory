@@ -145,6 +145,26 @@ void main() {
       expect(requests.single.url.queryParameters['clean'], 'true');
     });
 
+    test('reads and writes file by path', () async {
+      storage = HttpKbStorage(
+        'http://localhost/kb',
+        client: MockClient((request) async {
+          requests.add(request);
+          if (request.method == 'PUT' && request.url.path == '/kb/files/stats%2Ftimeline.md') {
+            return http.Response('ok', 200);
+          }
+          if (request.method == 'GET' && request.url.path == '/kb/files/stats%2Ftimeline.md') {
+            return http.Response('# Timeline', 200);
+          }
+          return http.Response('not found', 404);
+        }),
+      );
+
+      await storage.writeFile('stats/timeline.md', '# Timeline');
+      final content = await storage.readFile('stats/timeline.md');
+      expect(content, '# Timeline');
+    });
+
     test('describeLocation returns the entity URL', () {
       storage = HttpKbStorage('http://localhost/kb');
       expect(

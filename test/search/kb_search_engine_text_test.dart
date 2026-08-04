@@ -117,6 +117,20 @@ Use the test package.
       throwsStateError,
     );
   });
+
+  test('searchByText returns empty result for empty query', () async {
+    final result = await engine.searchByText('  ');
+    expect(result.generatedTags, isEmpty);
+    expect(result.results, isEmpty);
+  });
+
+  test('searchByText skips reranking when rerankTopN is zero', () async {
+    final result = await engine.searchByText(
+      'Dart tests',
+      rerankTopN: 0,
+    );
+    expect(result.results, isNotEmpty);
+  });
 }
 
 class _AlwaysUnknownTagsProvider implements LlmProvider {

@@ -71,5 +71,13 @@ void main() {
       ).toJson();
       expect(json['relations'], ['supports|n_2']);
     });
+
+    test('toString includes id, level, memoryType and author', () {
+      final note = base.copyWith(
+        memoryType: 'fact',
+        level: 2,
+      );
+      expect(note.toString(), 'Note(n_1 L2 fact by A)');
+    });
   });
 }

@@ -120,24 +120,12 @@ class KBSearchEngine {
       );
     }
 
-    final allExistingTags = await _collectExistingTags();
-    final relevantTags = _selectRelevantTags(query, allExistingTags, max: 30);
-    final generator = KBTagGeneratorAgent(provider!);
-    final generatedTags = await generator.generateTags(
-      query,
-      existingTags: relevantTags,
-      maxTags: maxGeneratedTags,
+    final generatedTags = await _generateTags(query, maxGeneratedTags);
+    final tagResults = await _searchByGeneratedTags(
+      generatedTags,
+      matchAll: matchAll,
+      entityTypes: entityTypes,
     );
-    // ignore: avoid_print
-    print('[KBSearchEngine] searchByText "$query" generated tags: $generatedTags');
-
-    final tagResults = generatedTags.isEmpty
-        ? <KBSearchResult>[]
-        : await searchByTags(
-            generatedTags,
-            matchAll: matchAll,
-            entityTypes: entityTypes,
-          );
 
     final (keywordResults, keywordHits) = await _searchByKeywords(
       query,
@@ -145,38 +133,73 @@ class KBSearchEngine {
     );
     var merged = _mergeResults(tagResults, keywordResults);
     merged = _rankAndSort(merged, keywordHits: keywordHits);
-
-    if (rerankTopN > 0 && merged.length > 1 && provider != null) {
-      final take = merged.length < rerankTopN ? merged.length : rerankTopN;
-      final top = merged.sublist(0, take);
-      final candidates = top
-          .map(
-            (r) => MemoryRecord(
-              entityType: r.entityType,
-              path: r.path,
-              question: r.question,
-              answer: r.answer,
-              note: r.note,
-            ),
-          )
-          .toList();
-      final agent = KBRerankerAgent(provider!);
-      final rankedIds = await agent.rerank(query, candidates);
-      final byId = {for (final r in top) r.id!: r};
-      final reranked = rankedIds
-          .map((id) => byId[id])
-          .whereType<KBSearchResult>()
-          .toList();
-      // Append any remaining results in their original order.
-      final rerankedIds = rankedIds.toSet();
-      final tail = merged
-          .sublist(take)
-          .where((r) => !rerankedIds.contains(r.id))
-          .toList();
-      merged = [...reranked, ...tail];
-    }
+    merged = await _rerankIfNeeded(query, merged, rerankTopN);
 
     return KBTextSearchResult(generatedTags: generatedTags, results: merged);
+  }
+
+  Future<List<String>> _generateTags(String query, int maxTags) async {
+    final allExistingTags = await _collectExistingTags();
+    final relevantTags = _selectRelevantTags(query, allExistingTags, max: 30);
+    final generator = KBTagGeneratorAgent(provider!);
+    final tags = await generator.generateTags(
+      query,
+      existingTags: relevantTags,
+      maxTags: maxTags,
+    );
+    // ignore: avoid_print
+    print('[KBSearchEngine] searchByText "$query" generated tags: $tags');
+    return tags;
+  }
+
+  Future<List<KBSearchResult>> _searchByGeneratedTags(
+    List<String> generatedTags, {
+    required bool matchAll,
+    required List<String>? entityTypes,
+  }) async {
+    if (generatedTags.isEmpty) return const [];
+    return searchByTags(
+      generatedTags,
+      matchAll: matchAll,
+      entityTypes: entityTypes,
+    );
+  }
+
+  Future<List<KBSearchResult>> _rerankIfNeeded(
+    String query,
+    List<KBSearchResult> merged,
+    int rerankTopN,
+  ) async {
+    if (rerankTopN <= 0 || merged.length <= 1 || provider == null) {
+      return merged;
+    }
+
+    final take = merged.length < rerankTopN ? merged.length : rerankTopN;
+    final top = merged.sublist(0, take);
+    final candidates = top
+        .map(
+          (r) => MemoryRecord(
+            entityType: r.entityType,
+            path: r.path,
+            question: r.question,
+            answer: r.answer,
+            note: r.note,
+          ),
+        )
+        .toList();
+    final agent = KBRerankerAgent(provider!);
+    final rankedIds = await agent.rerank(query, candidates);
+    final byId = {for (final r in top) r.id!: r};
+    final reranked = rankedIds
+        .map((id) => byId[id])
+        .whereType<KBSearchResult>()
+        .toList();
+    final rerankedIds = rankedIds.toSet();
+    final tail = merged
+        .sublist(take)
+        .where((r) => !rerankedIds.contains(r.id))
+        .toList();
+    return [...reranked, ...tail];
   }
 
   /// Collects all unique tags currently used in the knowledge base.

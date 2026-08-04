@@ -44,4 +44,21 @@ TYPE=A | ID=a_1 | AUTHOR=Bob | DATE=2024-01-01T10:05:00Z | AREA=development | TO
     expect(qFile.existsSync(), isTrue);
     expect(aFile.existsSync(), isTrue);
   });
+
+  test('regenerateStructureFromExistingFiles counts topics correctly', () async {
+    final orchestrator = KBOrchestrator(FakeLlmProvider({}));
+
+    Directory('${tmpDir.path}/topics').createSync(recursive: true);
+    File('${tmpDir.path}/topics/dart.md').writeAsStringSync('');
+    File('${tmpDir.path}/topics/flutter.md').writeAsStringSync('');
+    File('${tmpDir.path}/topics/flutter-desc.md').writeAsStringSync('');
+
+    final result = await orchestrator.regenerateStructureFromExistingFiles(
+      tmpDir.path,
+      'chat',
+    );
+
+    expect(result.success, isTrue);
+    expect(result.topicsCount, 2);
+  });
 }

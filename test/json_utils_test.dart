@@ -102,6 +102,15 @@ void main() {
       expect(decoded['d3'], isNotEmpty);
     });
 
+    test('repairs unquoted object keys', () {
+      const broken = '{id: "n_1", text: "hello world", area: "gen"}';
+      final result = sanitizeJson(broken);
+      final decoded = jsonDecode(result) as Map<String, dynamic>;
+      expect(decoded['id'], 'n_1');
+      expect(decoded['text'], 'hello world');
+      expect(decoded['area'], 'gen');
+    });
+
     test('repairs broken array objects', () {
       const broken = '{"answers": [{"id": "a_1", "text": "first"\n{"id": "a_2", "text": "second"}]}';
       final result = sanitizeJson(broken);

@@ -63,6 +63,14 @@ void main() {
       expect(result.mappings, hasLength(1));
       expect(result.mappings.first.confidence, 0.8);
     });
+
+    test('ignores MAPPING lines with missing ids', () {
+      final result = parseQaMappingLines(
+        'MAPPING | answerId= | questionId=q_1 | confidence=0.9\n'
+        'MAPPING | answerId=a_1 | questionId= | confidence=0.9',
+      );
+      expect(result.mappings, isEmpty);
+    });
   });
 
   group('parseConsolidationLines', () {

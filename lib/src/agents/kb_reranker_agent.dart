@@ -42,7 +42,13 @@ class KBRerankerAgent {
     final response = await _provider.chat(prompt);
     final ranked = parseRerankerLines(response);
 
-    // Preserve any candidates the model forgot, but at the bottom.
+    return _mergeRankedWithCandidates(ranked, candidates);
+  }
+
+  List<String> _mergeRankedWithCandidates(
+    List<String> ranked,
+    List<MemoryRecord> candidates,
+  ) {
     final seen = <String>{};
     final result = <String>[];
     for (final id in ranked) {

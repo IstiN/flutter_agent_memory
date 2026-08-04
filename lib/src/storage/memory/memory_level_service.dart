@@ -49,29 +49,33 @@ class MemoryLevelService {
     final now = DateTime.parse(currentUtcTimestamp());
 
     for (final note in await listNotes()) {
-      final date = _parseDate(note.date);
-      if (date == null) continue;
-
-      final age = now.difference(date);
-      if (note.level == MemoryLevel.raw) {
-        if (age > policy.rawExpiryAfter) {
-          await deleteRecord(note.id);
-          changed++;
-          continue;
-        }
-        if (age > policy.rawToConsolidatedAfter) {
-          await writeNote(note.copyWith(level: MemoryLevel.consolidated));
-          changed++;
-          continue;
-        }
-      }
-      if (note.level == MemoryLevel.consolidated &&
-          age > policy.consolidatedToConceptAfter) {
-        await writeNote(note.copyWith(level: MemoryLevel.concept));
-        changed++;
-      }
+      if (await _processNote(note, now)) changed++;
     }
     return changed;
+  }
+
+  Future<bool> _processNote(Note note, DateTime now) async {
+    final date = _parseDate(note.date);
+    if (date == null) return false;
+
+    final age = now.difference(date);
+    if (note.level == MemoryLevel.raw) {
+      if (age > policy.rawExpiryAfter) {
+        await deleteRecord(note.id);
+        return true;
+      }
+      if (age > policy.rawToConsolidatedAfter) {
+        await writeNote(note.copyWith(level: MemoryLevel.consolidated));
+        return true;
+      }
+      return false;
+    }
+    if (note.level == MemoryLevel.consolidated &&
+        age > policy.consolidatedToConceptAfter) {
+      await writeNote(note.copyWith(level: MemoryLevel.concept));
+      return true;
+    }
+    return false;
   }
 
   DateTime? _parseDate(String date) {

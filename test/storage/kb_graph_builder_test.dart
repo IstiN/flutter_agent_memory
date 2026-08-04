@@ -57,6 +57,79 @@ void main() {
     expect(content, contains('[[n_0001]]'));
   });
 
+  test('parses level as string and includes area/topic file nodes', () async {
+    Directory('${tmpDir.path}/areas').createSync(recursive: true);
+    Directory('${tmpDir.path}/topics').createSync(recursive: true);
+    File('${tmpDir.path}/areas/development.md').writeAsStringSync('''---
+id: development
+type: area
+title: Development
+---
+# Development
+''');
+    File('${tmpDir.path}/topics/dart.md').writeAsStringSync('''---
+id: dart
+type: topic
+title: Dart
+---
+# Dart
+''');
+    await store.addNote(
+      text: 'Note with string level.',
+      area: 'development',
+      tags: ['dart'],
+      level: MemoryLevel.concept,
+    );
+
+    // Rewrite note frontmatter with level as a string to cover that branch.
+    final noteFile = File('${tmpDir.path}/notes/n_0001.md');
+    final noteContent = noteFile.readAsStringSync().replaceFirst(
+      'level: 3',
+      'level: "3"',
+    );
+    noteFile.writeAsStringSync(noteContent);
+
+    await KBGraphBuilder.file(tmpDir).build();
+
+    final content = File('${tmpDir.path}/GRAPH.md').readAsStringSync();
+    expect(content, contains('development'));
+    expect(content, contains('dart'));
+  });
+
+  test('skips entity files with mismatched frontmatter id', () async {
+    await store.addNote(text: 'Note', area: 'dev', tags: ['x']);
+    final file = File('${tmpDir.path}/notes/n_0001.md');
+    final content = file.readAsStringSync().replaceFirst('id: "n_0001"', 'id: "n_9999"');
+    file.writeAsStringSync(content);
+
+    await KBGraphBuilder.file(tmpDir).build();
+
+    final graphContent = File('${tmpDir.path}/GRAPH.md').readAsStringSync();
+    expect(graphContent, isNot(contains('n_0001')));
+  });
+
+  test('adds authored_by edge when person node exists', () async {
+    Directory('${tmpDir.path}/people').createSync(recursive: true);
+    File('${tmpDir.path}/people/alice.md').writeAsStringSync('''---
+id: alice
+type: person
+title: Alice
+---
+# Alice
+''');
+    await store.addNote(
+      text: 'By Alice.',
+      area: 'dev',
+      tags: ['x'],
+      author: 'Alice',
+    );
+
+    await KBGraphBuilder.file(tmpDir).build();
+
+    final content = File('${tmpDir.path}/GRAPH.md').readAsStringSync();
+    expect(content, contains('### authored_by'));
+  });
+
   test('explicit relations are rendered as typed edges', () async {
     final source = await store.addNote(
       text: 'Source note',
