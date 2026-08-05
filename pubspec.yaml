@@ -1,6 +1,7 @@
 name: flutter_agent_memory
 description: Dart memory library (questions, answers, notes, people) with LLM-powered analysis and CLI integration.
 version: 0.0.2
+publish_to: none
 homepage: https://istin.github.io/flutter_agent_memory/
 repository: https://github.com/IstiN/flutter_agent_memory
 issue_tracker: https://github.com/IstiN/flutter_agent_memory/issues
@@ -17,6 +18,10 @@ environment:
 dependencies:
   args: ^2.7.0
   crypto: ^3.0.6
+  fa_llm:
+    git:
+      url: https://github.com/IstiN/flutter_agent_harness.git
+      path: packages/fa_llm
   http: ^1.6.0
   path: ^1.9.1
   meta: ^1.18.0
