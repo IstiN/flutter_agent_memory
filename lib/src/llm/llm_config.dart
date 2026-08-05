@@ -14,10 +14,13 @@ class LlmConfig {
 
   /// Maximum number of tokens the model is allowed to generate in a single
   /// response. This is the `max_tokens` / `max_completion_tokens` parameter.
-  final int maxTokens;
+  ///
+  /// When `null` the limit is not sent to the provider, letting the model use
+  /// its own default.
+  final int? maxTokens;
 
-  /// Total context-window size (input + output tokens). Defaults to [maxTokens]
-  /// for providers that do not expose a separate context length.
+  /// Total context-window size (input + output tokens). Defaults to 4096 for
+  /// providers that do not expose a separate context length.
   final int contextWindow;
 
   final double temperature;
@@ -28,11 +31,11 @@ class LlmConfig {
     required this.apiKey,
     required this.baseUrl,
     required this.model,
-    this.maxTokens = 4096,
+    this.maxTokens,
     int? contextWindow,
     this.temperature = -1,
     this.maxTokensParamName = 'max_completion_tokens',
-  }) : contextWindow = contextWindow ?? maxTokens;
+  }) : contextWindow = contextWindow ?? 4096;
 
   factory LlmConfig.fromEnvironment({
     String provider = 'openai',
@@ -100,7 +103,7 @@ class LlmConfig {
       apiKey: apiKey ?? envKey('API_KEY') ?? '',
       baseUrl: resolvedBaseUrl,
       model: model ?? envKey('MODEL') ?? '',
-      maxTokens: maxTokens ?? int.tryParse(envKey('MAX_TOKENS') ?? '') ?? 4096,
+      maxTokens: maxTokens ?? int.tryParse(envKey('MAX_TOKENS') ?? ''),
       contextWindow: int.tryParse(envKey('CONTEXT_WINDOW') ?? ''),
       temperature:
           temperature ?? double.tryParse(envKey('TEMPERATURE') ?? '') ?? -1,

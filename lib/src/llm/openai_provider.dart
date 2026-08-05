@@ -15,7 +15,7 @@ class OpenAiProvider implements LlmProvider {
   final String baseUrl;
   @override
   final String defaultModel;
-  final int maxTokens;
+  final int? maxTokens;
   final double temperature;
   final String maxTokensParamName;
   final Map<String, String> customHeaders;
@@ -25,7 +25,7 @@ class OpenAiProvider implements LlmProvider {
     required this.apiKey,
     this.baseUrl = 'https://api.openai.com/v1/chat/completions',
     required this.defaultModel,
-    this.maxTokens = 4096,
+    this.maxTokens,
     this.temperature = -1,
     this.maxTokensParamName = 'max_completion_tokens',
     this.customHeaders = const {},
@@ -92,7 +92,7 @@ class OpenAiProvider implements LlmProvider {
     if (temperature >= 0) {
       payload['temperature'] = temperature;
     }
-    if (maxTokensParamName.isNotEmpty) {
+    if (maxTokens != null && maxTokensParamName.isNotEmpty) {
       payload[maxTokensParamName] = maxTokens;
     }
     return payload;
