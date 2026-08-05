@@ -7,9 +7,17 @@ Future<String?> _readExistingSummary(KBMemoryStore store) async {
 bool _isRecordActiveAt(MemoryRecord record, DateTime asOf) {
   final note = record.note;
   if (note != null) {
+    if (_hasValidityWindow(note)) {
+      return _isNoteActiveAt(note, asOf);
+    }
     return _isNoteActiveAt(note, asOf) && _isDateAtOrBefore(record.date, asOf);
   }
   return _isDateAtOrBefore(record.date, asOf);
+}
+
+bool _hasValidityWindow(Note note) {
+  return (note.validFrom != null && note.validFrom!.isNotEmpty) ||
+      (note.validUntil != null && note.validUntil!.isNotEmpty);
 }
 
 bool _isNoteActiveAt(Note note, DateTime asOf) {
