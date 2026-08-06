@@ -136,7 +136,9 @@ class _SettingsPageState extends State<SettingsPage> {
                     controller: _baseUrlController,
                     style: const TextStyle(color: AppColors.text),
                     decoration: InputDecoration(
-                      labelText: 'Base URL (optional)',
+                      labelText: _type == ProviderType.local
+                          ? 'Base URL (required)'
+                          : 'Base URL (optional)',
                       helperText: _type == ProviderType.local
                           ? 'Full URL, e.g. http://localhost:1234/v1/chat/completions'
                           : 'For Ollama e.g. http://localhost:11434',
@@ -308,6 +310,10 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   Future<void> _save() async {
+    if (_type == ProviderType.local && _baseUrlController.text.trim().isEmpty) {
+      setState(() => _message = 'Error: Base URL is required for Local server.');
+      return;
+    }
     setState(() => _saving = true);
     try {
       await widget.kbService.updateSettings(
