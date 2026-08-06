@@ -181,5 +181,30 @@ void main() {
         );
       });
     });
+
+  group('_KeywordProvider', () {
+    final provider = _KeywordProvider();
+
+    test('returns state-management tags for state prompts', () async {
+      expect(
+        await provider.chat('Flutter state management'),
+        contains('state-management'),
+      );
+    });
+
+    test('returns CI/CD tags for CI prompts', () async {
+      expect(
+        await provider.chat('github actions deploy ci'),
+        contains('ci-cd'),
+      );
+    });
+
+    test('returns default dart tags for unrelated prompts', () async {
+      expect(
+        await provider.chat('something else'),
+        contains('dart'),
+      );
+    });
+  });
 }
 }

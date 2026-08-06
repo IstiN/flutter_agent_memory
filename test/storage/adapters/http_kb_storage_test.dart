@@ -21,6 +21,61 @@ tags: ["dart", "testing"]
 How to test?
 ''';
 
+MockClient _buildClient(
+  Map<String, dynamic> responses,
+  List<http.BaseRequest> requests,
+) {
+  return MockClient((request) async {
+    requests.add(request);
+    final key = '${request.method} ${request.url.path}';
+    final response = responses[key];
+    if (response == null) {
+      return http.Response('not found', 404);
+    }
+    if (response is String) {
+      return http.Response(response, 200);
+    }
+    return http.Response(jsonEncode(response), 200);
+  });
+}
+
+MockClient _putGetClient(
+  List<http.BaseRequest> requests,
+  Map<String, dynamic> backend,
+) {
+  return MockClient((request) async {
+    requests.add(request);
+    if (request.method == 'PUT' &&
+        request.url.path == '/kb/entities/question/q_0001') {
+      backend['question/q_0001'] = request.body;
+      return http.Response('ok', 200);
+    }
+    if (request.method == 'GET' &&
+        request.url.path == '/kb/entities/question/q_0001') {
+      return http.Response(
+        backend['question/q_0001'] ?? 'not found',
+        backend.containsKey('question/q_0001') ? 200 : 404,
+      );
+    }
+    return http.Response('not found', 404);
+  });
+}
+
+MockClient _fileClient(List<http.BaseRequest> requests) {
+  return MockClient((request) async {
+    requests.add(request);
+    if (request.method == 'PUT' &&
+        request.url.path == '/kb/files/stats%2Ftimeline.md') {
+      return http.Response('ok', 200);
+    }
+    if (request.method == 'GET' &&
+        request.url.path == '/kb/files/stats%2Ftimeline.md') {
+      return http.Response('# Timeline', 200);
+    }
+    return http.Response('not found', 404);
+  });
+}
+
 void main() {
   group('HttpKbStorage', () {
     late List<http.BaseRequest> requests;
@@ -30,41 +85,12 @@ void main() {
       requests = [];
     });
 
-    MockClient _buildClient(Map<String, dynamic> responses) {
-      return MockClient((request) async {
-        requests.add(request);
-        final key = '${request.method} ${request.url.path}';
-        final response = responses[key];
-        if (response == null) {
-          return http.Response('not found', 404);
-        }
-        if (response is String) {
-          return http.Response(response, 200);
-        }
-        return http.Response(jsonEncode(response), 200);
-      });
-    }
-
     test('PUTs entity and GETs it back', () async {
       final backend = <String, dynamic>{};
-      final client = MockClient((request) async {
-        requests.add(request);
-        if (request.method == 'PUT' &&
-            request.url.path == '/kb/entities/question/q_0001') {
-          backend['question/q_0001'] = request.body;
-          return http.Response('ok', 200);
-        }
-        if (request.method == 'GET' &&
-            request.url.path == '/kb/entities/question/q_0001') {
-          return http.Response(
-            backend['question/q_0001'] ?? 'not found',
-            backend.containsKey('question/q_0001') ? 200 : 404,
-          );
-        }
-        return http.Response('not found', 404);
-      });
-
-      storage = HttpKbStorage('http://localhost/kb', client: client);
+      storage = HttpKbStorage(
+        'http://localhost/kb',
+        client: _putGetClient(requests, backend),
+      );
 
       await storage.writeEntity('question', 'q_0001', _questionMarkdown);
       final content = await storage.readEntity('question', 'q_0001');
@@ -78,7 +104,7 @@ void main() {
     test('DELETEs entity and returns null on 404', () async {
       storage = HttpKbStorage(
         'http://localhost/kb',
-        client: _buildClient({'DELETE /kb/entities/question/q_0001': 'ok'}),
+        client: _buildClient({'DELETE /kb/entities/question/q_0001': 'ok'}, requests),
       );
 
       await storage.deleteEntity('question', 'q_0001');
@@ -92,7 +118,7 @@ void main() {
         client: _buildClient({
           'GET /kb/entities/question': ['q_0001', 'q_0002'],
           'GET /kb/files': ['INDEX.md', 'stats/timeline.md'],
-        }),
+        }, requests),
       );
 
       final ids = await storage.listEntityIds('question');
@@ -122,7 +148,7 @@ void main() {
               },
             ],
           },
-        }),
+        }, requests),
       );
 
       final context = await storage.loadContext();
@@ -136,7 +162,7 @@ void main() {
     test('initializes remote backend', () async {
       storage = HttpKbStorage(
         'http://localhost/kb',
-        client: _buildClient({'POST /kb/initialize': 'ok'}),
+        client: _buildClient({'POST /kb/initialize': 'ok'}, requests),
       );
 
       await storage.initialize(clean: true);
@@ -148,16 +174,7 @@ void main() {
     test('reads and writes file by path', () async {
       storage = HttpKbStorage(
         'http://localhost/kb',
-        client: MockClient((request) async {
-          requests.add(request);
-          if (request.method == 'PUT' && request.url.path == '/kb/files/stats%2Ftimeline.md') {
-            return http.Response('ok', 200);
-          }
-          if (request.method == 'GET' && request.url.path == '/kb/files/stats%2Ftimeline.md') {
-            return http.Response('# Timeline', 200);
-          }
-          return http.Response('not found', 404);
-        }),
+        client: _fileClient(requests),
       );
 
       await storage.writeFile('stats/timeline.md', '# Timeline');

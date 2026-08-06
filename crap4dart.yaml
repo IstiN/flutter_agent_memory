@@ -4,6 +4,10 @@
 # Target CRAP threshold for the framework. Methods above this line are flagged
 # in CI; the badge reflects the current max CRAP score.
 sources: [lib, bin, test]
+exclude:
+  # Integration tests are excluded from CI test runs (they hit real/external
+  # LLM endpoints), so they are also excluded from the CRAP ratchet.
+  - 'test/integration/**'
 
 crap:
   enabled: true
