@@ -1,0 +1,238 @@
+name: Fa release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version for this Fa release (e.g., 1.2.3).'
+        required: true
+        type: string
+  push:
+    tags:
+      - 'fa-v*'
+
+permissions:
+  contents: write
+
+jobs:
+  version:
+    name: Determine version
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      tag: ${{ steps.version.outputs.tag }}
+    steps:
+      - name: Compute version and tag
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" = "push" ]; then
+            tag="${{ github.ref_name }}"
+            version="${tag#fa-v}"
+          else
+            version="${{ github.event.inputs.version }}"
+            tag="fa-v$version"
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "Version: $version, Tag: $tag"
+
+  build-android:
+    name: Android APK
+    needs: version
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+      - run: flutter config --enable-android
+      - run: cd demo && flutter pub get
+      - run: cd demo && flutter build apk --release
+      - run: |
+          mkdir -p artifacts
+          cp demo/build/app/outputs/flutter-apk/app-release.apk artifacts/fa-android-${{ needs.version.outputs.version }}.apk
+      - uses: actions/upload-artifact@v7
+        with:
+          name: fa-android
+          path: artifacts/*.apk
+          if-no-files-found: error
+
+  build-ios:
+    name: iOS
+    needs: version
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v6
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+      - run: cd demo && flutter pub get
+      - run: cd demo && flutter build ios --release --no-codesign
+      - run: |
+          mkdir -p artifacts
+          app_path="demo/build/ios/iphoneos/demo.app"
+          if [ ! -d "$app_path" ]; then
+            app_path="demo/build/ios/iphoneos/Runner.app"
+          fi
+          if [ ! -d "$app_path" ]; then
+            echo "error: no iOS app bundle found" >&2
+            exit 1
+          fi
+          ditto -c -k --keepParent "$app_path" "artifacts/fa-ios-${{ needs.version.outputs.version }}.zip"
+      - uses: actions/upload-artifact@v7
+        with:
+          name: fa-ios
+          path: artifacts/*.zip
+          if-no-files-found: error
+
+  build-macos-sandbox:
+    name: macOS (sandboxed)
+    needs: version
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v6
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+      - run: cd demo && flutter pub get
+      - run: cd demo && ./scripts/build_macos.sh --release
+      - run: |
+          mkdir -p artifacts
+          ditto -c -k --keepParent demo/build/macos/Build/Products/Release/demo.app "artifacts/fa-macos-${{ needs.version.outputs.version }}.zip"
+      - uses: actions/upload-artifact@v7
+        with:
+          name: fa-macos-sandbox
+          path: artifacts/*.zip
+          if-no-files-found: error
+
+  build-macos-nosandbox:
+    name: macOS (no sandbox)
+    needs: version
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v6
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+      - run: cd demo && flutter pub get
+      - run: cd demo && ./scripts/build_macos_nosandbox.sh
+      - run: |
+          mkdir -p artifacts
+          cp "demo/build/macos/release-nosandbox/fa-macos-nosandbox.zip" "artifacts/fa-macos-nosandbox-${{ needs.version.outputs.version }}.zip"
+      - uses: actions/upload-artifact@v7
+        with:
+          name: fa-macos-nosandbox
+          path: artifacts/*.zip
+          if-no-files-found: error
+
+  build-windows:
+    name: Windows
+    needs: version
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+      - run: cd demo && flutter pub get
+      - run: cd demo && flutter build windows --release
+      - run: |
+          mkdir artifacts
+          $dir = "demo/build/windows/x64/runner/Release"
+          if (-not (Test-Path $dir)) { throw "Expected $dir" }
+          Compress-Archive -Path "$dir\*" -Destination "artifacts\fa-windows-${{ needs.version.outputs.version }}.zip"
+      - uses: actions/upload-artifact@v7
+        with:
+          name: fa-windows
+          path: artifacts/*.zip
+          if-no-files-found: error
+
+  build-linux:
+    name: Linux
+    needs: version
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+      - name: Install Linux build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libblkid-dev liblzma-dev libgtk-3-dev
+      - run: cd demo && flutter pub get
+      - run: cd demo && flutter build linux --release
+      - run: |
+          mkdir -p artifacts
+          cd demo/build/linux/x64/release/bundle
+          zip -r "../../../../../artifacts/fa-linux-${{ needs.version.outputs.version }}.zip" .
+      - uses: actions/upload-artifact@v7
+        with:
+          name: fa-linux
+          path: artifacts/*.zip
+          if-no-files-found: error
+
+  build-web:
+    name: Web
+    needs: version
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+      - run: cd demo && flutter pub get
+      - run: cd demo && flutter build web --release
+      - run: |
+          mkdir -p artifacts
+          cd demo/build/web
+          zip -r "../../../artifacts/fa-web-${{ needs.version.outputs.version }}.zip" .
+      - uses: actions/upload-artifact@v7
+        with:
+          name: fa-web
+          path: artifacts/*.zip
+          if-no-files-found: error
+
+  release:
+    name: Create GitHub Release
+    needs:
+      - version
+      - build-android
+      - build-ios
+      - build-macos-sandbox
+      - build-macos-nosandbox
+      - build-windows
+      - build-linux
+      - build-web
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ needs.version.outputs.tag }}
+      - uses: actions/download-artifact@v8
+        with:
+          path: artifacts
+          merge-multiple: true
+      - run: ls -R artifacts
+      - uses: softprops/action-gh-release@v3
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ needs.version.outputs.tag }}
+          name: "Fa v${{ needs.version.outputs.version }}"
+          draft: false
+          prerelease: false
+          files: artifacts/*
+          body: |
+            Fa Flutter app release v${{ needs.version.outputs.version }}.
+
+            ### Downloads
+            - **Android**: `fa-android-${{ needs.version.outputs.version }}.apk`
+            - **iOS**: `fa-ios-${{ needs.version.outputs.version }}.zip`
+            - **macOS (sandboxed)**: `fa-macos-${{ needs.version.outputs.version }}.zip`
+            - **macOS (no sandbox)**: `fa-macos-nosandbox-${{ needs.version.outputs.version }}.zip`
+            - **Windows**: `fa-windows-${{ needs.version.outputs.version }}.zip`
+            - **Linux**: `fa-linux-${{ needs.version.outputs.version }}.zip`
+            - **Web**: `fa-web-${{ needs.version.outputs.version }}.zip`
+
+            The **no-sandbox macOS build** can run local interpreters and scripts that the App Sandbox blocks.

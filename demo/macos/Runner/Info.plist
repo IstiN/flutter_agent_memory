@@ -24,6 +24,16 @@
 	<string>$(MACOSX_DEPLOYMENT_TARGET)</string>
 	<key>NSHumanReadableCopyright</key>
 	<string>$(PRODUCT_COPYRIGHT)</string>
+	<key>NSCalendarsUsageDescription</key>
+	<string>Fa uses Calendar access only when you explicitly connect a calendar integration.</string>
+	<key>NSContactsUsageDescription</key>
+	<string>Fa uses Contacts access only when you explicitly connect a contacts integration.</string>
+	<key>NSHealthShareUsageDescription</key>
+	<string>Fa uses Health data only when you explicitly connect a health integration.</string>
+	<key>NSHealthUpdateUsageDescription</key>
+	<string>Fa uses Health data only when you explicitly connect a health integration.</string>
+	<key>NSHomeKitUsageDescription</key>
+	<string>Fa uses HomeKit access only when you explicitly connect a home integration.</string>
 	<key>NSMainNibFile</key>
 	<string>MainMenu</string>
 	<key>NSPrincipalClass</key>

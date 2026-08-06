@@ -145,7 +145,7 @@ class RawTextProcessorService {
       if (info != null && info.contextLength > 0) {
         final outputTokens = info.maxCompletionTokens > 0
             ? info.maxCompletionTokens
-            : baseConfig.maxTokens;
+            : (baseConfig.maxTokens ?? 4096);
         // Leave roughly half of the post-output context for input so we stay
         // well below the model's total context window even with system prompts.
         inputChunkTokens = max(
@@ -158,7 +158,7 @@ class RawTextProcessorService {
       // try to feed the model more input than fits in its context window.
       final systemOverhead = await _estimateAnalysisPromptTokens();
       // Reserve tokens for the model's response as well.
-      final outputBuffer = baseConfig.maxTokens;
+      final outputBuffer = baseConfig.maxTokens ?? 4096;
       inputChunkTokens = max(
         256,
         baseConfig.contextWindow - systemOverhead - outputBuffer,
