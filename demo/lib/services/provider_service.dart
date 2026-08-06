@@ -11,6 +11,7 @@ enum ProviderType {
   ollama,
   openRouter,
   openAi,
+  local,
   gemma,
   webllm,
   none;
@@ -20,6 +21,7 @@ enum ProviderType {
       'ollama' => ProviderType.ollama,
       'openai' => ProviderType.openAi,
       'open_router' || 'openrouter' => ProviderType.openRouter,
+      'local' => ProviderType.local,
       'gemma' || 'flutter_gemma' => ProviderType.gemma,
       'webllm' => ProviderType.webllm,
       _ => ProviderType.none,
@@ -30,6 +32,7 @@ enum ProviderType {
     ProviderType.ollama => 'ollama',
     ProviderType.openRouter => 'openrouter',
     ProviderType.openAi => 'openai',
+    ProviderType.local => 'local',
     ProviderType.gemma => 'flutter_gemma',
     ProviderType.webllm => 'webllm',
     ProviderType.none => 'none',
@@ -39,6 +42,7 @@ enum ProviderType {
     ProviderType.ollama => 'Ollama',
     ProviderType.openRouter => 'OpenRouter',
     ProviderType.openAi => 'OpenAI',
+    ProviderType.local => 'Local server',
     ProviderType.gemma => 'Flutter Gemma',
     ProviderType.webllm => 'WebLLM',
     ProviderType.none => 'None',
@@ -104,9 +108,14 @@ class ProviderService {
       return WebLlmProvider(webLlmService, preset, settings);
     }
 
-    final needsKey = type != ProviderType.ollama;
+    final needsKey = type != ProviderType.ollama && type != ProviderType.local;
     if (settings.model.isEmpty) return null;
     if (needsKey && settings.apiKey.isEmpty) return null;
+    // Local servers are OpenAI-compatible. Use a dummy key when the user left
+    // the field empty so the Authorization header is still well-formed.
+    if (type == ProviderType.local && settings.apiKey.isEmpty) {
+      return ProviderFactory.create(baseConfig.copyWith(apiKey: 'not-used'));
+    }
     return ProviderFactory.create(baseConfig);
   }
 
@@ -121,6 +130,11 @@ class ProviderService {
     if (type == ProviderType.ollama) {
       return 'Ollama must be started with CORS headers enabled, e.g. '
           'OLLAMA_ORIGINS=* ollama serve.';
+    }
+    if (type == ProviderType.local) {
+      return 'Use the full chat-completions URL, e.g. '
+          'http://localhost:1234/v1/chat/completions. Enter any value in '
+          'the API key field if your server requires one.';
     }
     if (type == ProviderType.gemma) {
       return 'Models are downloaded from HuggingFace. Gated models may need a HuggingFace token.';

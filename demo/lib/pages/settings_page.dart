@@ -135,9 +135,11 @@ class _SettingsPageState extends State<SettingsPage> {
                   TextField(
                     controller: _baseUrlController,
                     style: const TextStyle(color: AppColors.text),
-                    decoration: const InputDecoration(
+                    decoration: InputDecoration(
                       labelText: 'Base URL (optional)',
-                      helperText: 'For Ollama e.g. http://localhost:11434',
+                      helperText: _type == ProviderType.local
+                          ? 'Full URL, e.g. http://localhost:1234/v1/chat/completions'
+                          : 'For Ollama e.g. http://localhost:11434',
                     ),
                   ),
                   const SizedBox(height: 12),
@@ -151,7 +153,9 @@ class _SettingsPageState extends State<SettingsPage> {
                         ? 'Selected Gemma preset id'
                         : _type == ProviderType.webllm
                             ? 'Selected WebLLM model id'
-                            : 'e.g. gpt-4o-mini, llama3, mistral',
+                            : _type == ProviderType.local
+                                ? 'Model id served by your local endpoint'
+                                : 'e.g. gpt-4o-mini, llama3, mistral',
                   ),
                 ),
                 const SizedBox(height: 10),
@@ -296,6 +300,7 @@ class _SettingsPageState extends State<SettingsPage> {
       ProviderType.ollama => 'Ollama token (optional)',
       ProviderType.openRouter => 'OpenRouter API key',
       ProviderType.openAi => 'OpenAI API key',
+      ProviderType.local => 'API key (optional)',
       ProviderType.gemma => 'HuggingFace token (optional)',
       ProviderType.webllm => 'Token (unused)',
       ProviderType.none => 'Token (unused)',
@@ -438,6 +443,12 @@ class _ModelPresets extends StatelessWidget {
       label: 'llava',
       model: 'llava',
       baseUrl: 'http://localhost:11434/v1/chat/completions',
+    ),
+    (
+      provider: 'local',
+      label: 'LM Studio / local',
+      model: 'local-model',
+      baseUrl: 'http://localhost:1234/v1/chat/completions',
     ),
   ];
 
@@ -881,6 +892,7 @@ class _ProviderGrid extends StatelessWidget {
       (ProviderType.ollama, 'Ollama', Icons.computer),
       (ProviderType.openRouter, 'OpenRouter', Icons.router),
       (ProviderType.openAi, 'OpenAI', Icons.bolt),
+      (ProviderType.local, 'Local server', Icons.home),
       (ProviderType.gemma, 'Flutter Gemma', Icons.memory),
       (ProviderType.webllm, 'WebLLM', Icons.web),
       (ProviderType.none, 'None', Icons.block),
@@ -942,6 +954,14 @@ class _ProviderHint extends StatelessWidget {
         icon: Icons.open_in_new,
         text: 'Get OpenAI key',
         url: 'https://platform.openai.com/api-keys',
+      );
+    }
+    if (type == ProviderType.local) {
+      return _HintCard(
+        icon: Icons.info_outline,
+        text: 'Local OpenAI-compatible endpoint',
+        url: 'https://platform.openai.com/docs/api-reference/chat/create',
+        subtext: 'Use the full /v1/chat/completions URL and a model id served by your endpoint.',
       );
     }
     if (type == ProviderType.gemma) {
