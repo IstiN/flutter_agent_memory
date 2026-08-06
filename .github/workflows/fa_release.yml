@@ -207,8 +207,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
-        with:
-          ref: ${{ needs.version.outputs.tag }}
+      - name: Ensure release tag exists
+        run: |
+          tag="${{ needs.version.outputs.tag }}"
+          git fetch origin "refs/tags/${tag}:refs/tags/${tag}" || true
+          if git rev-parse -q --verify "refs/tags/${tag}" >/dev/null; then
+            echo "Tag ${tag} already exists."
+          else
+            git tag "${tag}"
+            git push origin "${tag}"
+            echo "Created and pushed tag ${tag}."
+          fi
       - uses: actions/download-artifact@v8
         with:
           path: artifacts
