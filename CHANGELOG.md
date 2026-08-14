@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.0.3
+
+- Published to pub.dev.
+- Switched `fa_llm` dependency from git to hosted (`^0.1.0`).
+
+## 0.0.2
+
+- Adjusted dependencies for hosted publishing.
+- Updated CI workflows.
+
 ## 0.0.1
 
 - Initial release of `agent_memory`.
