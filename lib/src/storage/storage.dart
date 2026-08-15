@@ -13,5 +13,4 @@ export 'kb_storage_context_mixin.dart';
 export 'kb_structure_builder.dart';
 export 'kb_structure_manager.dart';
 export 'source_config_manager.dart';
-export 'sqlite_kb_storage.dart';
 export 'web/web_kb_storage.dart';

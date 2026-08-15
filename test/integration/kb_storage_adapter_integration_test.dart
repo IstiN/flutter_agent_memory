@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:flutter_agent_memory/flutter_agent_memory.dart';
 import 'package:flutter_agent_memory/src/models/memory_level.dart';
 import 'package:flutter_agent_memory/src/models/relation.dart';
+import 'package:flutter_agent_memory/src/storage/sqlite_kb_storage.dart';
 import 'package:sqlite3/sqlite3.dart';
 import 'package:test/test.dart';
 

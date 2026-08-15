@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.0.6
+
+- Web fix: `sqlite_kb_storage` (dart:ffi) is no longer re-exported from the
+  package barrels — importing `flutter_agent_memory` compiles for web again.
+  SQLite hosts import `src/storage/sqlite_kb_storage.dart` directly.
+
 ## 0.0.5
 
 - `KBSearchEngine.searchByKeywords`: public keyword-only search that works

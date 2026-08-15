@@ -8,5 +8,4 @@ export 'src/storage/file_kb_storage.dart';
 export 'src/storage/http_kb_storage.dart';
 export 'src/storage/in_memory_kb_storage.dart';
 export 'src/storage/kb_storage.dart';
-export 'src/storage/sqlite_kb_storage.dart';
 export 'src/storage/web/web_kb_storage.dart';

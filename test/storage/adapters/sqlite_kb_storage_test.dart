@@ -1,5 +1,5 @@
 @TestOn('vm')
-import 'package:flutter_agent_memory/flutter_agent_memory.dart';
+import 'package:flutter_agent_memory/src/storage/sqlite_kb_storage.dart';
 import 'package:sqlite3/sqlite3.dart';
 import 'package:test/test.dart';
 
