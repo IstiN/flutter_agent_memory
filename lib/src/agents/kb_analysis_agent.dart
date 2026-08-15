@@ -45,7 +45,8 @@ class KBAnalysisAgent {
 
   AnalysisResult _decodeResponse(String response, String template) {
     final lineResult = recoverPartialLineAnalysis(response);
-    final lineTotal = lineResult.questions.length +
+    final lineTotal =
+        lineResult.questions.length +
         lineResult.answers.length +
         lineResult.notes.length;
     if (lineTotal > 0) {
@@ -61,7 +62,8 @@ class KBAnalysisAgent {
       } on FormatException catch (e) {
         _log('JSON fallback decode failed: $e');
         final recovered = recoverPartialAnalysisJson(response);
-        final total = (recovered['questions'] as List).length +
+        final total =
+            (recovered['questions'] as List).length +
             (recovered['answers'] as List).length +
             (recovered['notes'] as List).length;
         if (total == 0) rethrow;
@@ -117,5 +119,4 @@ class KBAnalysisAgent {
       'extraInstructions': extraInstructions,
     });
   }
-
 }

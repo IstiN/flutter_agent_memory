@@ -6,11 +6,11 @@ import '../../utils/memory_utils.dart';
 
 /// Creates cross-scope note copies with a provenance marker.
 class MemoryProvenanceService {
-/// Prepares a copy of [note] annotated with its [sourceScope].
+  /// Prepares a copy of [note] annotated with its [sourceScope].
   ///
   /// The copied note receives a `(said in <sourceScope>)` suffix so the
-/// receiving scope can evaluate the source of the fact. Returns null if
-/// an equivalent note already exists in the target scope.
+  /// receiving scope can evaluate the source of the fact. Returns null if
+  /// an equivalent note already exists in the target scope.
   static Future<Note?> prepareCopy(
     Note note,
     String sourceScope,
@@ -22,7 +22,8 @@ class MemoryProvenanceService {
     final normalized = normalizeMemoryText(note.text);
     if (await existsInTarget(normalized)) return null;
 
-    final text = note.text.endsWith('.') ||
+    final text =
+        note.text.endsWith('.') ||
             note.text.endsWith('!') ||
             note.text.endsWith('?')
         ? '${note.text} (said in $provenance)'

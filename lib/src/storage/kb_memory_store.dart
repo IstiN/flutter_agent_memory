@@ -134,7 +134,8 @@ class KBMemoryStore {
       importance: importance,
     );
 
-    if (deduplicateOnCapture && await _dedup.hasDuplicateQuestion(question.text)) {
+    if (deduplicateOnCapture &&
+        await _dedup.hasDuplicateQuestion(question.text)) {
       return _toRecord(question: question);
     }
 
@@ -259,20 +260,32 @@ class KBMemoryStore {
     if (record == null) throw ArgumentError('Record not found: $id');
 
     return switch (record.entityType) {
-      'question' => _updateQuestion(record.question!, text: text, tags: tags, importance: importance),
-      'answer' => _updateAnswer(record.answer!, text: text, tags: tags, importance: importance),
+      'question' => _updateQuestion(
+        record.question!,
+        text: text,
+        tags: tags,
+        importance: importance,
+      ),
+      'answer' => _updateAnswer(
+        record.answer!,
+        text: text,
+        tags: tags,
+        importance: importance,
+      ),
       'note' => _updateNote(
-          record.note!,
-          text: text,
-          tags: tags,
-          importance: importance,
-          memoryType: memoryType,
-          validFrom: validFrom,
-          validUntil: validUntil,
-          level: level,
-          relations: relations,
-        ),
-      _ => throw UnsupportedError('Unsupported entity type: ${record.entityType}'),
+        record.note!,
+        text: text,
+        tags: tags,
+        importance: importance,
+        memoryType: memoryType,
+        validFrom: validFrom,
+        validUntil: validUntil,
+        level: level,
+        relations: relations,
+      ),
+      _ => throw UnsupportedError(
+        'Unsupported entity type: ${record.entityType}',
+      ),
     };
   }
 
@@ -363,7 +376,15 @@ class KBMemoryStore {
     return _toRecord(note: next);
   }
 
-  Future<({String text, List<String> tags, List<String> topics, String area, double importance})>
+  Future<
+    ({
+      String text,
+      List<String> tags,
+      List<String> topics,
+      String area,
+      double importance,
+    })
+  >
   _updateEntity(
     String originalText,
     String area,
@@ -562,10 +583,9 @@ class KBMemoryStore {
     List<String> topics,
     List<String> tags,
   ) async {
-    final generated = await KBTagGeneratorAgent(provider!).generateTags(
-      text,
-      maxTags: 5,
-    );
+    final generated = await KBTagGeneratorAgent(
+      provider!,
+    ).generateTags(text, maxTags: 5);
     final resolvedTags = tags.isEmpty ? generated : tags;
     final resolvedTopics = topics.isEmpty && generated.isNotEmpty
         ? [slugify(generated.first)]
@@ -762,10 +782,7 @@ class KBMemoryStore {
   /// Writes [content] to [MEMORY.md] only if the current revision matches
   /// [expectedHash]. Returns true when the write succeeded, false if the file
   /// was modified concurrently.
-  Future<bool> writeMemoryRevision(
-    String content,
-    String expectedHash,
-  ) =>
+  Future<bool> writeMemoryRevision(String content, String expectedHash) =>
       _revision.write(content, expectedHash);
 
   /// Consolidates the top [limit] memory records into a high-level summary and
@@ -820,17 +837,15 @@ class KBMemoryStore {
     if (record == null || record.note == null) return null;
 
     final note = record.note!;
-    final copy = await MemoryProvenanceService.prepareCopy(
-      note,
-      sourceScope,
-      (normalized) async {
-        final existing = await targetStore.list(type: 'note', limit: null);
-        return existing.any((r) {
-          final n = r.note;
-          return n != null && normalizeMemoryText(n.text) == normalized;
-        });
-      },
-    );
+    final copy = await MemoryProvenanceService.prepareCopy(note, sourceScope, (
+      normalized,
+    ) async {
+      final existing = await targetStore.list(type: 'note', limit: null);
+      return existing.any((r) {
+        final n = r.note;
+        return n != null && normalizeMemoryText(n.text) == normalized;
+      });
+    });
     if (copy == null) return null;
 
     return targetStore.addNote(

@@ -185,9 +185,7 @@ void _printCommandHelp(
     output.writeln();
     output.writeln('  Subcommands:');
     for (final subCmd in meta.subcommands) {
-      output.writeln(
-        '    ${subCmd.name.padRight(10)} ${subCmd.description}',
-      );
+      output.writeln('    ${subCmd.name.padRight(10)} ${subCmd.description}');
     }
   }
 }

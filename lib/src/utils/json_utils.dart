@@ -6,7 +6,9 @@ String extractJsonFromMarkdown(String response) {
   var text = response.trim();
 
   // Strip reasoning/thinking blocks produced by models like Qwen3/DeepSeek.
-  text = text.replaceAll(RegExp(r'<think>.*?</think>', dotAll: true), '').trim();
+  text = text
+      .replaceAll(RegExp(r'<think>.*?</think>', dotAll: true), '')
+      .trim();
 
   if (text.startsWith('```json')) {
     text = text.substring(7);
@@ -24,8 +26,10 @@ String extractJsonFromMarkdown(String response) {
 /// are not valid JSON. This lightweight repair lets the rest of the pipeline
 /// consume their output without failing.
 String repairTrailingCommas(String json) {
-  return json
-      .replaceAllMapped(RegExp(r',(\s*[}\]])'), (match) => match.group(1)!);
+  return json.replaceAllMapped(
+    RegExp(r',(\s*[}\]])'),
+    (match) => match.group(1)!,
+  );
 }
 
 /// Quotes bare scalar values that appear after object keys or inside arrays.

@@ -22,11 +22,7 @@ class KBStructureBuilder {
     Directory outputDir,
     String sourceName,
   ) {
-    final merge = _areaMerger.merge(
-      analysis,
-      outputDir,
-      sourceName,
-    );
+    final merge = _areaMerger.merge(analysis, outputDir, sourceName);
 
     merge.areaDir.createSync(recursive: true);
     for (final area in merge.areaContributors.keys) {
@@ -446,7 +442,10 @@ class KBStructureBuilder {
     _appendTopicContributions(buffer, contributions.topics);
   }
 
-  void _appendQuestionContributions(StringBuffer buffer, List<ContributionItem> questions) {
+  void _appendQuestionContributions(
+    StringBuffer buffer,
+    List<ContributionItem> questions,
+  ) {
     if (questions.isEmpty) return;
     buffer.writeln('## Questions Asked');
     buffer.writeln();
@@ -456,7 +455,10 @@ class KBStructureBuilder {
     buffer.writeln();
   }
 
-  void _appendAnswerContributions(StringBuffer buffer, List<ContributionItem> answers) {
+  void _appendAnswerContributions(
+    StringBuffer buffer,
+    List<ContributionItem> answers,
+  ) {
     if (answers.isEmpty) return;
     buffer.writeln('## Answers Provided');
     buffer.writeln();
@@ -466,7 +468,10 @@ class KBStructureBuilder {
     buffer.writeln();
   }
 
-  void _appendNoteContributions(StringBuffer buffer, List<ContributionItem> notes) {
+  void _appendNoteContributions(
+    StringBuffer buffer,
+    List<ContributionItem> notes,
+  ) {
     if (notes.isEmpty) return;
     buffer.writeln('## Notes Contributed');
     buffer.writeln();
@@ -753,7 +758,9 @@ class KBStructureBuilder {
   ) {
     final answersToExclude = <String>{};
     for (final answerId in answersInTopic) {
-      final answer = analysis.answers.where((a) => a.id == answerId).firstOrNull;
+      final answer = analysis.answers
+          .where((a) => a.id == answerId)
+          .firstOrNull;
       if (_answerLinksQuestion(answer, questionsInTopic) ||
           _answerLinkedViaData(answerId, data, questionsInTopic)) {
         answersToExclude.add(answerId);
@@ -809,7 +816,11 @@ class KBStructureBuilder {
       '## Unanswered Questions',
       sections.questionsWithoutAnswers,
     );
-    _writeIdSection(buffer, '## Additional Answers', sections.standaloneAnswers);
+    _writeIdSection(
+      buffer,
+      '## Additional Answers',
+      sections.standaloneAnswers,
+    );
   }
 
   void _writeIdSection(StringBuffer buffer, String heading, Set<String> ids) {

@@ -39,23 +39,18 @@ AnalysisResult parseLineAnalysisFormat(String response) {
     }
   }
 
-  return AnalysisResult(
-    questions: questions,
-    answers: answers,
-    notes: notes,
-  );
+  return AnalysisResult(questions: questions, answers: answers, notes: notes);
 }
 
-String _cleanResponse(String response) =>
-    response
-        .replaceAll('</raw_input>', '')
-        .replaceAll(RegExp(r'</output\b[^>]*>'), '')
-        .replaceAll('</output_format>', '')
-        .replaceAll('</format>', '')
-        .replaceAll('<output>', '')
-        .replaceAll('</prompt>', '')
-        .replaceAll(RegExp(r'</(?:answer|question|note)\b[^>]*>'), '')
-        .replaceAll(RegExp(r'<(?:output|answer|question|note)>'), '');
+String _cleanResponse(String response) => response
+    .replaceAll('</raw_input>', '')
+    .replaceAll(RegExp(r'</output\b[^>]*>'), '')
+    .replaceAll('</output_format>', '')
+    .replaceAll('</format>', '')
+    .replaceAll('<output>', '')
+    .replaceAll('</prompt>', '')
+    .replaceAll(RegExp(r'</(?:answer|question|note)\b[^>]*>'), '')
+    .replaceAll(RegExp(r'<(?:output|answer|question|note)>'), '');
 
 List<int> _recordBoundaries(String response) {
   final typeMatches = RegExp(r'TYPE=[A-Za-z]\b').allMatches(response);
@@ -96,26 +91,21 @@ Question _buildQuestion(
   String id,
   Map<String, String?> fields,
   _RecordBase b,
-) =>
-    Question(
-      id: id,
-      author: b.author,
-      text: '',
-      startTextRef: b.startRef,
-      endTextRef: b.endRef,
-      date: b.date,
-      area: b.area,
-      topics: b.topics,
-      tags: b.tags,
-      answeredBy: _normalizeEmpty(fields['ANSWERED_BY']),
-      links: b.links,
-    );
+) => Question(
+  id: id,
+  author: b.author,
+  text: '',
+  startTextRef: b.startRef,
+  endTextRef: b.endRef,
+  date: b.date,
+  area: b.area,
+  topics: b.topics,
+  tags: b.tags,
+  answeredBy: _normalizeEmpty(fields['ANSWERED_BY']),
+  links: b.links,
+);
 
-Answer _buildAnswer(
-  String id,
-  Map<String, String?> fields,
-  _RecordBase b,
-) =>
+Answer _buildAnswer(String id, Map<String, String?> fields, _RecordBase b) =>
     Answer(
       id: id,
       author: b.author,
@@ -131,25 +121,20 @@ Answer _buildAnswer(
       links: b.links,
     );
 
-Note _buildNote(
-  String id,
-  Map<String, String?> fields,
-  _RecordBase b,
-) =>
-    Note(
-      id: id,
-      text: '',
-      startTextRef: b.startRef,
-      endTextRef: b.endRef,
-      area: b.area,
-      topics: b.topics,
-      tags: b.tags,
-      author: b.author,
-      date: b.date,
-      answersQuestions: const [],
-      links: b.links,
-      memoryType: fields['MEMORY_TYPE'],
-    );
+Note _buildNote(String id, Map<String, String?> fields, _RecordBase b) => Note(
+  id: id,
+  text: '',
+  startTextRef: b.startRef,
+  endTextRef: b.endRef,
+  area: b.area,
+  topics: b.topics,
+  tags: b.tags,
+  author: b.author,
+  date: b.date,
+  answersQuestions: const [],
+  links: b.links,
+  memoryType: fields['MEMORY_TYPE'],
+);
 
 class _RecordBase {
   final String author;
@@ -173,15 +158,15 @@ class _RecordBase {
   });
 
   factory _RecordBase.from(Map<String, String?> fields) => _RecordBase(
-        author: fields['AUTHOR'] ?? '',
-        date: fields['DATE'] ?? '',
-        area: fields['AREA'] ?? 'general',
-        topics: semicolonList(fields['TOPICS']),
-        tags: semicolonList(fields['TAGS']),
-        links: _parseLinks(fields['LINKS']),
-        startRef: fields['START'],
-        endRef: fields['END'],
-      );
+    author: fields['AUTHOR'] ?? '',
+    date: fields['DATE'] ?? '',
+    area: fields['AREA'] ?? 'general',
+    topics: semicolonList(fields['TOPICS']),
+    tags: semicolonList(fields['TAGS']),
+    links: _parseLinks(fields['LINKS']),
+    startRef: fields['START'],
+    endRef: fields['END'],
+  );
 }
 
 double _parseDouble(String? value) {

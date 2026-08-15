@@ -26,8 +26,7 @@ mixin KbEntityJson {
     'text': text,
     if (startTextRef != null && startTextRef!.isNotEmpty)
       'startTextRef': startTextRef,
-    if (endTextRef != null && endTextRef!.isNotEmpty)
-      'endTextRef': endTextRef,
+    if (endTextRef != null && endTextRef!.isNotEmpty) 'endTextRef': endTextRef,
     'date': date,
     'area': area,
     'topics': topics,

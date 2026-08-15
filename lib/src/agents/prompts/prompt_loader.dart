@@ -36,7 +36,8 @@ class PromptLoader {
     _cache.clear();
   }
 
-  static Future<String> Function(String name) get _defaultLoader => loadPromptFile;
+  static Future<String> Function(String name) get _defaultLoader =>
+      loadPromptFile;
 
   /// Loads and renders the prompt named [name] (e.g. `kb_analysis.xml`).
   ///

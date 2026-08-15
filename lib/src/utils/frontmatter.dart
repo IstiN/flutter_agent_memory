@@ -130,9 +130,7 @@ List<String>? _tryParseInlineList(String trimmed) {
 String _stripQuotes(String value) {
   var trimmed = value.trim();
   if (trimmed.startsWith('"') && trimmed.endsWith('"') && trimmed.length >= 2) {
-    return trimmed
-        .substring(1, trimmed.length - 1)
-        .replaceAll('\\"', '"');
+    return trimmed.substring(1, trimmed.length - 1).replaceAll('\\"', '"');
   }
   if (trimmed.startsWith("'") && trimmed.endsWith("'") && trimmed.length >= 2) {
     return trimmed.substring(1, trimmed.length - 1);

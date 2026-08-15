@@ -15,10 +15,7 @@ class KBIdMapper {
     );
   }
 
-  Map<String, String> _buildMapping(
-    AnalysisResult result,
-    KBContext context,
-  ) {
+  Map<String, String> _buildMapping(AnalysisResult result, KBContext context) {
     final mapping = <String, String>{};
     for (final q in result.questions) {
       mapping[q.id] = 'q_${_pad(context.nextQuestionId())}';
@@ -35,28 +32,24 @@ class KBIdMapper {
   List<Question> _mapQuestions(
     List<Question> questions,
     Map<String, String> mapping,
-  ) =>
-      questions
-          .map(
-            (q) => q.copyWith(
-              id: mapping[q.id]!,
-              answeredBy: q.answeredBy != null && q.answeredBy!.isNotEmpty
-                  ? mapping[q.answeredBy]
-                  : null,
-            ),
-          )
-          .toList();
+  ) => questions
+      .map(
+        (q) => q.copyWith(
+          id: mapping[q.id]!,
+          answeredBy: q.answeredBy != null && q.answeredBy!.isNotEmpty
+              ? mapping[q.answeredBy]
+              : null,
+        ),
+      )
+      .toList();
 
-  List<Answer> _mapAnswers(
-    List<Answer> answers,
-    Map<String, String> mapping,
-  ) =>
+  List<Answer> _mapAnswers(List<Answer> answers, Map<String, String> mapping) =>
       answers
           .map(
             (a) => a.copyWith(
               id: mapping[a.id]!,
-              answersQuestion: a.answersQuestion != null &&
-                      a.answersQuestion!.isNotEmpty
+              answersQuestion:
+                  a.answersQuestion != null && a.answersQuestion!.isNotEmpty
                   ? mapping[a.answersQuestion]
                   : null,
             ),

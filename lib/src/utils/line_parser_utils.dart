@@ -44,5 +44,9 @@ Map<String, String?> parseLabeledFields(String line) {
 /// Splits a semicolon-separated string into a list of non-empty trimmed items.
 List<String> semicolonList(String? value) {
   if (value == null || value.trim().isEmpty) return const [];
-  return value.split(';').map((s) => s.trim()).where((s) => s.isNotEmpty).toList();
+  return value
+      .split(';')
+      .map((s) => s.trim())
+      .where((s) => s.isNotEmpty)
+      .toList();
 }

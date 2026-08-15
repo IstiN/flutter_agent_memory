@@ -116,7 +116,8 @@ ConsolidationResult parseConsolidationLines(String response) {
   if (summaries.isNotEmpty || skills.isNotEmpty) {
     return _buildConsolidationResult(summaries, skills);
   }
-  return _tryJsonFallback(cleaned) ?? _buildConsolidationResult(summaries, skills);
+  return _tryJsonFallback(cleaned) ??
+      _buildConsolidationResult(summaries, skills);
 }
 
 void _parseConsolidationLine(
@@ -153,11 +154,10 @@ SkillCard? _parseSkillLine(String line) {
 ConsolidationResult _buildConsolidationResult(
   List<String> summaries,
   List<SkillCard> skills,
-) =>
-    ConsolidationResult(
-      summary: summaries.isEmpty ? '' : summaries.join('\n\n'),
-      skills: skills,
-    );
+) => ConsolidationResult(
+  summary: summaries.isEmpty ? '' : summaries.join('\n\n'),
+  skills: skills,
+);
 
 ConsolidationResult? _tryJsonFallback(String cleaned) {
   if (!cleaned.trim().startsWith('{')) return null;

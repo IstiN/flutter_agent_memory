@@ -174,27 +174,18 @@ class KBGraphBuilder {
     }
   }
 
-  void _ensureAreaTagNode(
-    Map<String, _GraphNode> nodes,
-    _GraphNode node,
-  ) {
+  void _ensureAreaTagNode(Map<String, _GraphNode> nodes, _GraphNode node) {
     if (node.area.isEmpty) return;
     _ensureTagNode(nodes, 'tag_${slugify(node.area)}', node.area, 'tag');
   }
 
-  void _ensureTagNodes(
-    Map<String, _GraphNode> nodes,
-    _GraphNode node,
-  ) {
+  void _ensureTagNodes(Map<String, _GraphNode> nodes, _GraphNode node) {
     for (final tag in node.tags.where((t) => !t.startsWith('#'))) {
       _ensureTagNode(nodes, 'tag_${slugify(tag)}', tag, 'tag');
     }
   }
 
-  void _ensureTopicNodes(
-    Map<String, _GraphNode> nodes,
-    _GraphNode node,
-  ) {
+  void _ensureTopicNodes(Map<String, _GraphNode> nodes, _GraphNode node) {
     for (final topic in node.topics.where((t) => t.isNotEmpty)) {
       _ensureTagNode(nodes, 'tag_${slugify(topic)}', topic, 'tag');
     }
@@ -352,7 +343,9 @@ class KBGraphBuilder {
         .toSet();
     return edgeList
         .where(
-          (e) => e.type != 'links_to' || !typedKeys.contains('${e.source}|${e.target}'),
+          (e) =>
+              e.type != 'links_to' ||
+              !typedKeys.contains('${e.source}|${e.target}'),
         )
         .toList();
   }

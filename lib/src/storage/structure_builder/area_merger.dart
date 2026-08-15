@@ -18,11 +18,7 @@ class AreaMerger {
     final areaTopics = <String, Set<String>>{};
     final areasFromCurrentAnalysis = <String>{};
 
-    void collectFromEntity(
-      String? area,
-      List<String>? topics,
-      String? author,
-    ) {
+    void collectFromEntity(String? area, List<String>? topics, String? author) {
       if (area == null || area.isEmpty) return;
       areasFromCurrentAnalysis.add(area);
       areaContributors.putIfAbsent(area, () => <String>{});
@@ -99,7 +95,9 @@ class AreaMerger {
     String content,
     Map<String, Set<String>> areaContributors,
   ) {
-    final contributors = parseFrontmatter(content).getStringList('contributors');
+    final contributors = parseFrontmatter(
+      content,
+    ).getStringList('contributors');
     if (contributors.isNotEmpty) {
       areaContributors.putIfAbsent(title, () => <String>{})
         ..addAll(contributors);

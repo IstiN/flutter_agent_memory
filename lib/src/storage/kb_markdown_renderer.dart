@@ -114,26 +114,20 @@ class KbMarkdownRenderer {
     _setStringIfNotEmpty(fm, 'validUntil', n.validUntil);
   }
 
-  void _setStringIfNotEmpty(
-    Frontmatter fm,
-    String key,
-    String? value,
-  ) {
+  void _setStringIfNotEmpty(Frontmatter fm, String key, String? value) {
     if (value != null && value.isNotEmpty) fm[key] = value;
   }
 
   void _addNoteLevelAndRelations(Frontmatter fm, Note n) {
     if (n.level != MemoryLevel.raw) fm['level'] = n.level;
     if (n.relations.isNotEmpty) {
-      fm['relations'] = n.relations.map((r) => r.toFrontmatterString()).toList();
+      fm['relations'] = n.relations
+          .map((r) => r.toFrontmatterString())
+          .toList();
     }
   }
 
-  Frontmatter _baseFrontmatter(
-    dynamic entity,
-    String type,
-    String source,
-  ) {
+  Frontmatter _baseFrontmatter(dynamic entity, String type, String source) {
     final fm = Frontmatter()
       ..['id'] = entity.id
       ..['type'] = type
@@ -151,8 +145,7 @@ class KbMarkdownRenderer {
     return fm;
   }
 
-  String _frontmatter(Frontmatter fm) =>
-      '---\n${fm.serialize()}---\n\n';
+  String _frontmatter(Frontmatter fm) => '---\n${fm.serialize()}---\n\n';
 
   void _writeAreaTopics(StringBuffer buffer, String area, List<String> topics) {
     if (area.isNotEmpty) {

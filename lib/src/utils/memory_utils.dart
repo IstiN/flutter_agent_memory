@@ -16,7 +16,10 @@ String normalizeMemoryText(String text) {
       .trim()
       .replaceAll(RegExp(r'^[\-*•]\s*'), '')
       .replaceAll(RegExp(r'^\(\d{4}-\d{2}-\d{2}\)\s*'), '')
-      .replaceAll(RegExp(r'\s+\(said in [^)]+\)\s*$', caseSensitive: false), '');
+      .replaceAll(
+        RegExp(r'\s+\(said in [^)]+\)\s*$', caseSensitive: false),
+        '',
+      );
   return cleaned.toLowerCase();
 }
 
