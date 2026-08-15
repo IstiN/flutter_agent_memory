@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.0.5
+
+- `KBSearchEngine.searchByKeywords`: public keyword-only search that works
+  without an LLM provider (used as the no-provider fallback by hosts).
+- Keyword tokenization now keeps Cyrillic (`\u0400-\u04FF`) words.
+
 ## 0.0.3
 
 - Published to pub.dev.

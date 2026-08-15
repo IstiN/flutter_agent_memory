@@ -100,6 +100,17 @@ class KBSearchEngine {
     return scored.map((e) => e.$1).toList();
   }
 
+  /// Keyword-only search over record text. Works without an LLM provider —
+  /// used as the fallback when [searchByText] cannot generate tags.
+  Future<List<KBSearchResult>> searchByKeywords(
+    String query, {
+    List<String>? entityTypes,
+  }) async {
+    if (query.trim().isEmpty) return const [];
+    final (results, hits) = await _searchByKeywords(query, entityTypes);
+    return _rankAndSort(results, keywordHits: hits);
+  }
+
   /// Generates tags from [query] using the configured LLM provider, runs a
   /// tag-based search, and augments it with a keyword search over record text.
   ///
@@ -231,7 +242,7 @@ class KBSearchEngine {
   }) {
     final words = query
         .toLowerCase()
-        .split(RegExp(r'[^a-z0-9\u00c0-\u017e]+'))
+        .split(RegExp(r'[^a-z0-9\u00c0-\u017e\u0400-\u04FF]+'))
         .where((t) => t.length > 1)
         .toSet();
     if (words.isEmpty) return allTags;
@@ -244,8 +255,7 @@ class KBSearchEngine {
         if (word.contains(lower) && lower.length > 2) score += 1;
       }
       return (tag, score);
-    }).toList()
-      ..sort((a, b) => b.$2.compareTo(a.$2));
+    }).toList()..sort((a, b) => b.$2.compareTo(a.$2));
 
     final relevant = scored
         .where((e) => e.$2 > 0)
@@ -371,7 +381,8 @@ class KBSearchEngine {
     final a = result.answer;
     final n = result.note;
     final title = q?.text ?? a?.text ?? n?.text ?? '';
-    final startRef = q?.startTextRef ?? a?.startTextRef ?? n?.startTextRef ?? '';
+    final startRef =
+        q?.startTextRef ?? a?.startTextRef ?? n?.startTextRef ?? '';
     final endRef = q?.endTextRef ?? a?.endTextRef ?? n?.endTextRef ?? '';
     final tags = (q?.tags ?? a?.tags ?? n?.tags ?? []).join(' ');
     final topics = (q?.topics ?? a?.topics ?? n?.topics ?? []).join(' ');
@@ -381,7 +392,7 @@ class KBSearchEngine {
   List<String> _tokenize(String query) {
     return query
         .toLowerCase()
-        .split(RegExp(r'[^a-z0-9\u00c0-\u017e]+'))
+        .split(RegExp(r'[^a-z0-9\u00c0-\u017e\u0400-\u04FF]+'))
         .where((t) => t.length > 2)
         .toSet()
         .toList();
