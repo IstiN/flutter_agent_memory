@@ -608,8 +608,51 @@ final top = await store.list(sortBy: 'accessCount', limit: 10);
 
 // Update / delete
 await store.updateRecord(question.id, text: 'How do I cache images?');
-await store.deleteRecord(question.id);
+final deleted = await store.deleteRecord(question.id); // true if removed
+
+// Delete by exact text (tombstoned, so it is not re-captured later)
+await store.deleteRecordByText('Outdated and wrong statement.');
+
+// Serializable overview for UI clients: record list + typed graph
+final overview = await store.overview(area: 'development');
+final json = jsonEncode(overview.toJson()); // send to your Flutter app
 ```
+
+### Safe deletion (tombstones)
+
+`deleteRecord` / `deleteRecordByText` are safe for multi-process hosts:
+
+1. The record file is removed atomically.
+2. A tombstone is appended to the `DELETIONS.md` ledger, so capture-time
+   deduplication will not re-add the same text later (`respectTombstones`,
+   default `true`).
+3. The MEMORY.md revision generation is bumped — an in-flight consolidation
+   fails its conditional write instead of resurrecting the deleted record.
+4. The next `consolidate()` receives cleanup notices for pending deletions,
+   so stale statements are removed from the summary.
+5. `GRAPH.md` is regenerated (disable with `rebuildGraph: false` / `--no-graph`).
+
+### Memory overview data API
+
+```dart
+final service = MemoryOverviewService(store.storage);
+final overview = await service.build(
+  types: ['note', 'question', 'answer'],
+  area: 'development',           // scope filter
+  tags: ['flutter'],             // any-match tag filter
+  limit: 200,
+);
+
+overview.records;      // List<MemoryOverviewEntry> — id, type, text, author,
+                       // area, source, level, importance, timestamps
+overview.graph.nodes;  // List<MemoryGraphNode> — record nodes with metadata
+overview.graph.edges;  // List<MemoryGraphEdge>  — supports/contradicts/
+                       // related_to/answers/links_to + weight
+overview.toJson();     // serializable → MemoryOverview.fromJson(...)
+```
+
+The API is pure data (no LLM, no widgets): a Flutter/macOS/iOS client can
+render the graph and list itself and transport snapshots as JSON.
 
 ### CLI
 
@@ -629,8 +672,16 @@ dart run bin/agent_memory.dart memory list -o kb --limit 10
 # Show most frequently used records
 dart run bin/agent_memory.dart memory rank -o kb --sort accessCount --limit 5
 
-# Delete a record
+# Delete a record by id
 dart run bin/agent_memory.dart memory delete -o kb -i n_0001
+
+# Delete by exact text (normalized match, tombstoned)
+dart run bin/agent_memory.dart memory delete -o kb \
+  --text "Always pin dependency versions."
+
+# Delete by text, restricted to notes, without regenerating GRAPH.md
+dart run bin/agent_memory.dart memory delete -o kb \
+  --text "Always pin dependency versions." --type note --no-graph
 
 # Update a record
 dart run bin/agent_memory.dart memory update -o kb -i n_0001 \

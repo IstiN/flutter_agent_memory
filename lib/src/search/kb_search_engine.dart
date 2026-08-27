@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import '../agents/kb_reranker_agent.dart';
 import '../agents/kb_tag_generator_agent.dart';
 import '../llm/llm_provider.dart';
@@ -9,17 +11,42 @@ import '../storage/kb_storage.dart';
 import 'kb_search_result.dart';
 import 'kb_text_search_result.dart';
 
+/// Default timeout for the optional LLM calls in [KBSearchEngine.searchByText]
+/// (tag generation and reranking).
+const Duration defaultSearchLlmTimeout = Duration(seconds: 30);
+
 /// Searches the knowledge base by tags, text, or entity type.
 class KBSearchEngine {
   final KbStorage storage;
   final LlmProvider? provider;
+
+  /// Timeout applied to each optional LLM call (tag generation, rerank).
+  ///
+  /// The LLM round-trips have no timeout of their own in most providers, so
+  /// an unresponsive endpoint would otherwise hang [searchByText] forever.
+  /// On timeout the search degrades gracefully: it falls back to keyword-only
+  /// matching (skipping generated tags) and/or keeps the pre-rerank ranking,
+  /// and records a message in [KBTextSearchResult.warnings].
+  final Duration llmTimeout;
   final KBFileParser _parser;
 
-  KBSearchEngine(this.storage, {this.provider}) : _parser = KBFileParser();
+  KBSearchEngine(
+    this.storage, {
+    this.provider,
+    this.llmTimeout = defaultSearchLlmTimeout,
+  }) : _parser = KBFileParser();
 
   /// Creates a search engine for the classic Markdown file backend.
-  factory KBSearchEngine.file(dynamic kbDir, {LlmProvider? provider}) {
-    return KBSearchEngine(createFileKbStorage(kbDir), provider: provider);
+  factory KBSearchEngine.file(
+    dynamic kbDir, {
+    LlmProvider? provider,
+    Duration llmTimeout = defaultSearchLlmTimeout,
+  }) {
+    return KBSearchEngine(
+      createFileKbStorage(kbDir),
+      provider: provider,
+      llmTimeout: llmTimeout,
+    );
   }
 
   /// Returns records whose tags contain all (matchAll=true) or any
@@ -115,13 +142,19 @@ class KBSearchEngine {
   /// tag-based search, and augments it with a keyword search over record text.
   ///
   /// Throws [StateError] if no [provider] was supplied to the engine.
+  ///
+  /// Optional LLM stages (tag generation, reranking) are bounded by
+  /// [llmTimeout]; on timeout the search degrades to keyword-only matching
+  /// and the degradation is reported in [KBTextSearchResult.warnings].
   Future<KBTextSearchResult> searchByText(
     String query, {
     bool matchAll = false,
     List<String>? entityTypes,
     int maxGeneratedTags = 5,
     int rerankTopN = 10,
+    Duration? llmTimeout,
   }) async {
+    final timeout = llmTimeout ?? this.llmTimeout;
     if (query.trim().isEmpty) {
       return const KBTextSearchResult(generatedTags: [], results: []);
     }
@@ -131,7 +164,13 @@ class KBSearchEngine {
       );
     }
 
-    final generatedTags = await _generateTags(query, maxGeneratedTags);
+    final warnings = <String>[];
+    final generatedTags = await _generateTags(
+      query,
+      maxGeneratedTags,
+      timeout: timeout,
+      warnings: warnings,
+    );
     final tagResults = await _searchByGeneratedTags(
       generatedTags,
       matchAll: matchAll,
@@ -144,20 +183,42 @@ class KBSearchEngine {
     );
     var merged = _mergeResults(tagResults, keywordResults);
     merged = _rankAndSort(merged, keywordHits: keywordHits);
-    merged = await _rerankIfNeeded(query, merged, rerankTopN);
+    merged = await _rerankIfNeeded(
+      query,
+      merged,
+      rerankTopN,
+      timeout: timeout,
+      warnings: warnings,
+    );
 
-    return KBTextSearchResult(generatedTags: generatedTags, results: merged);
+    return KBTextSearchResult(
+      generatedTags: generatedTags,
+      results: merged,
+      warnings: warnings,
+    );
   }
 
-  Future<List<String>> _generateTags(String query, int maxTags) async {
+  Future<List<String>> _generateTags(
+    String query,
+    int maxTags, {
+    required Duration timeout,
+    required List<String> warnings,
+  }) async {
     final allExistingTags = await _collectExistingTags();
     final relevantTags = _selectRelevantTags(query, allExistingTags, max: 30);
     final generator = KBTagGeneratorAgent(provider!);
-    final tags = await generator.generateTags(
-      query,
-      existingTags: relevantTags,
-      maxTags: maxTags,
-    );
+    List<String> tags;
+    try {
+      tags = await generator
+          .generateTags(query, existingTags: relevantTags, maxTags: maxTags)
+          .timeout(timeout);
+    } on TimeoutException {
+      warnings.add(
+        'Tag generation timed out after ${timeout.inSeconds}s; '
+        'fell back to keyword-only search.',
+      );
+      return const [];
+    }
     // ignore: avoid_print
     print('[KBSearchEngine] searchByText "$query" generated tags: $tags');
     return tags;
@@ -179,8 +240,10 @@ class KBSearchEngine {
   Future<List<KBSearchResult>> _rerankIfNeeded(
     String query,
     List<KBSearchResult> merged,
-    int rerankTopN,
-  ) async {
+    int rerankTopN, {
+    required Duration timeout,
+    required List<String> warnings,
+  }) async {
     if (rerankTopN <= 0 || merged.length <= 1 || provider == null) {
       return merged;
     }
@@ -199,7 +262,16 @@ class KBSearchEngine {
         )
         .toList();
     final agent = KBRerankerAgent(provider!);
-    final rankedIds = await agent.rerank(query, candidates);
+    List<String> rankedIds;
+    try {
+      rankedIds = await agent.rerank(query, candidates).timeout(timeout);
+    } on TimeoutException {
+      warnings.add(
+        'Reranking timed out after ${timeout.inSeconds}s; '
+        'kept the pre-rerank ranking.',
+      );
+      return merged;
+    }
     final byId = {for (final r in top) r.id!: r};
     final reranked = rankedIds
         .map((id) => byId[id])

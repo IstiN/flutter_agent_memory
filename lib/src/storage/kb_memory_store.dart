@@ -1,6 +1,5 @@
 import '../agents/kb_consolidation_agent.dart';
 import '../agents/kb_secret_redaction_agent.dart';
-import '../agents/kb_tag_generator_agent.dart';
 import '../llm/llm_provider.dart';
 import '../models/answer.dart';
 import '../models/consolidation_result.dart';
@@ -11,7 +10,6 @@ import '../models/question.dart';
 import '../models/relation.dart';
 import '../utils/date_utils.dart';
 import '../utils/memory_utils.dart';
-import '../utils/slugify.dart';
 import 'file_kb_storage_factory.dart'
     if (dart.library.html) 'file_kb_storage_factory_stub.dart';
 
@@ -22,16 +20,23 @@ export 'memory/memory_dedup_service.dart';
 export 'memory/memory_level_service.dart';
 export 'memory/memory_provenance_service.dart';
 export 'memory/memory_revision_service.dart';
+export 'memory_deletion_service.dart';
+export 'kb_memory_enrichment.dart';
+export 'kb_memory_record.dart';
 
 import 'kb_file_parser.dart';
 import 'kb_graph_builder.dart';
 import 'kb_markdown_renderer.dart';
+import 'kb_memory_enrichment.dart';
+import 'kb_memory_record.dart';
 import 'kb_storage.dart';
 import 'memory/memory_consolidation_writer.dart';
 import 'memory/memory_dedup_service.dart';
 import 'memory/memory_level_service.dart';
 import 'memory/memory_provenance_service.dart';
 import 'memory/memory_revision_service.dart';
+import 'memory_deletion_service.dart';
+import '../overview/memory_overview.dart';
 
 part 'kb_memory_store_helpers.dart';
 
@@ -54,28 +59,42 @@ class KBMemoryStore {
   /// Optional configuration for automatic memory-level promotion.
   final MemoryPromotionPolicy promotionPolicy;
 
+  /// If true, capture methods skip texts whose fingerprint is in the deletion
+  /// ledger (`DELETIONS.md`) — deleted garbage stays deleted even when another
+  /// process re-captures the same text from a transcript. Defaults to true.
+  final bool respectTombstones;
+
   final KBFileParser _parser;
   final KbMarkdownRenderer _renderer;
   late final MemoryDedupService _dedup;
   late final MemoryRevisionService _revision;
   late final MemoryLevelService _levels;
   late final MemoryConsolidationWriter _consolidationWriter;
+  late final MemoryDeletionService _deletions;
+  late final KBMemoryEnrichment _enrichment;
 
   KBMemoryStore(
     this.storage, {
     this.provider,
     this.source = 'agent',
     this.deduplicateOnCapture = true,
+    this.respectTombstones = true,
     this.promotionPolicy = const MemoryPromotionPolicy(),
   }) : _parser = KBFileParser(),
        _renderer = const KbMarkdownRenderer() {
     _dedup = MemoryDedupService(storage, _parser);
     _revision = MemoryRevisionService(storage);
+    _deletions = MemoryDeletionService(
+      storage,
+      parser: _parser,
+      revision: _revision,
+    );
     _consolidationWriter = MemoryConsolidationWriter(storage, _revision);
+    _enrichment = KBMemoryEnrichment(provider);
     _levels = MemoryLevelService(
       storage: storage,
       policy: promotionPolicy,
-      deleteRecord: deleteRecord,
+      deleteRecord: (id) => _deletions.deleteById(id, rebuildGraph: false),
       writeNote: _writeNote,
       listNotes: () async {
         final records = await list(type: 'note', limit: null);
@@ -138,6 +157,9 @@ class KBMemoryStore {
         await _dedup.hasDuplicateQuestion(question.text)) {
       return _toRecord(question: question);
     }
+    if (respectTombstones && await _deletions.hasDeletedText(question.text)) {
+      return _toRecord(question: question);
+    }
 
     await _writeQuestion(question);
     return _toRecord(question: question);
@@ -179,6 +201,9 @@ class KBMemoryStore {
     );
 
     if (deduplicateOnCapture && await _dedup.hasDuplicateAnswer(answer.text)) {
+      return _toRecord(answer: answer);
+    }
+    if (respectTombstones && await _deletions.hasDeletedText(answer.text)) {
       return _toRecord(answer: answer);
     }
 
@@ -232,17 +257,52 @@ class KBMemoryStore {
     if (deduplicateOnCapture && await _dedup.hasDuplicateNote(note)) {
       return _toRecord(note: note);
     }
+    if (respectTombstones && await _deletions.hasDeletedText(note.text)) {
+      return _toRecord(note: note);
+    }
 
     await _writeNote(note);
     return _toRecord(note: note);
   }
 
   /// Deletes a record by id.
-  Future<void> deleteRecord(String id) async {
-    final type = _typeFromId(id);
-    if (type == null) return;
-    await storage.deleteEntity(type, id);
+  ///
+  /// Safe by design: the entity file is removed atomically, a tombstone entry
+  /// is appended to `DELETIONS.md`, and the MEMORY.md revision generation is
+  /// bumped so an in-flight consolidation cannot write the deleted record back
+  /// into the summary. Returns true when a record was actually removed —
+  /// repeated calls are idempotent.
+  ///
+  /// With [rebuildGraph] (default true) GRAPH.md is regenerated afterwards so
+  /// it no longer references the deleted node.
+  Future<bool> deleteRecord(String id, {bool rebuildGraph = true}) async {
+    final result = await _deletions.deleteById(id, rebuildGraph: rebuildGraph);
+    return result.deleted;
   }
+
+  /// Deletes every record whose normalized text matches [text] exactly.
+  ///
+  /// [type] optionally restricts deletion to `question`, `answer` or `note`;
+  /// by default all record types are scanned. Tombstone and revision semantics
+  /// match [deleteRecord]. Returns the ids that were removed (empty when
+  /// nothing matched).
+  Future<MemoryDeleteResult> deleteRecordByText(
+    String text, {
+    String? type,
+    bool rebuildGraph = true,
+  }) {
+    return _deletions.deleteByText(
+      text,
+      type: type,
+      rebuildGraph: rebuildGraph,
+    );
+  }
+
+  /// True when [id] was deleted through [deleteRecord]/[deleteRecordByText].
+  Future<bool> isDeleted(String id) => _deletions.isDeleted(id);
+
+  /// True when text with the same normalized content was deleted before.
+  Future<bool> hasDeletedText(String text) => _deletions.hasDeletedText(text);
 
   /// Updates the text and/or tags of an existing record.
   Future<MemoryRecord> updateRecord(
@@ -395,7 +455,7 @@ class KBMemoryStore {
   ) async {
     final updatedText = KBSecretRedactionAgent.redact(originalText);
     final mergedTags = _renderer.buildEntityTags(tags, source, entityTag);
-    final enriched = await _enrich(
+    final enriched = await _enrichment.enrich(
       updatedText,
       area: area.isNotEmpty ? area : null,
       topics: topics,
@@ -526,7 +586,7 @@ class KBMemoryStore {
     return records;
   }
 
-  Future<({String id, String text, String now, _Enriched enriched})>
+  Future<({String id, String text, String now, EnrichedMemory enriched})>
   _prepareAdd(
     String text, {
     String? area,
@@ -536,7 +596,7 @@ class KBMemoryStore {
     required int nextId,
   }) async {
     final safeText = KBSecretRedactionAgent.redact(text);
-    final enriched = await _enrich(
+    final enriched = await _enrichment.enrich(
       safeText,
       area: area,
       topics: topics ?? const [],
@@ -545,92 +605,6 @@ class KBMemoryStore {
     final id = '${prefix}_${_pad(nextId)}';
     final now = currentUtcTimestamp();
     return (id: id, text: safeText, now: now, enriched: enriched);
-  }
-
-  Future<_Enriched> _enrich(
-    String text, {
-    String? area,
-    List<String>? topics,
-    List<String>? tags,
-  }) async {
-    var resolvedArea = _nonEmpty(area) ?? 'general';
-    var resolvedTopics = topics ?? const <String>[];
-    var resolvedTags = tags ?? const <String>[];
-
-    if (provider != null &&
-        (resolvedArea == 'general' || resolvedTags.isEmpty)) {
-      final enriched = await _enrichFromProvider(
-        text,
-        resolvedArea,
-        resolvedTopics,
-        resolvedTags,
-      );
-      resolvedArea = enriched.area;
-      resolvedTopics = enriched.topics;
-      resolvedTags = enriched.tags;
-    }
-
-    return _Enriched(
-      area: resolvedArea,
-      topics: resolvedTopics,
-      tags: resolvedTags,
-    );
-  }
-
-  Future<_Enriched> _enrichFromProvider(
-    String text,
-    String area,
-    List<String> topics,
-    List<String> tags,
-  ) async {
-    final generated = await KBTagGeneratorAgent(
-      provider!,
-    ).generateTags(text, maxTags: 5);
-    final resolvedTags = tags.isEmpty ? generated : tags;
-    final resolvedTopics = topics.isEmpty && generated.isNotEmpty
-        ? [slugify(generated.first)]
-        : topics;
-    final resolvedArea = area == 'general' && generated.isNotEmpty
-        ? _guessArea(generated)
-        : area;
-    return _Enriched(
-      area: resolvedArea,
-      topics: resolvedTopics,
-      tags: resolvedTags,
-    );
-  }
-
-  String? _nonEmpty(String? value) {
-    if (value == null || value.isEmpty) return null;
-    return value;
-  }
-
-  String _guessArea(List<String> tags) {
-    final lowered = tags.map((t) => t.toLowerCase()).toSet();
-    final areaHints = <String, List<String>>{
-      'development': [
-        'dart',
-        'flutter',
-        'test',
-        'testing',
-        'unit-tests',
-        'riverpod',
-        'bloc',
-      ],
-      'infrastructure': [
-        'docker',
-        'kubernetes',
-        'ci/cd',
-        'github-actions',
-        'deploy',
-      ],
-      'security': ['auth', 'security', 'oauth', 'jwt'],
-      'business': ['product', 'requirements', 'meeting'],
-    };
-    for (final entry in areaHints.entries) {
-      if (entry.value.any(lowered.contains)) return entry.key;
-    }
-    return 'general';
   }
 
   MemoryRecord _parseContent(String type, String content) {
@@ -703,13 +677,7 @@ class KBMemoryStore {
     await storage.writeEntity('note', n.id, _renderer.renderNote(n, source));
   }
 
-  String? _typeFromId(String id) {
-    final lower = id.toLowerCase();
-    if (lower.startsWith('q_')) return 'question';
-    if (lower.startsWith('a_')) return 'answer';
-    if (lower.startsWith('n_')) return 'note';
-    return null;
-  }
+  String? _typeFromId(String id) => typeFromId(id);
 
   /// Adds a typed relation from [sourceId] to [targetId].
   ///
@@ -775,6 +743,24 @@ class KBMemoryStore {
     await KBGraphBuilder(storage).build();
   }
 
+  /// Builds a serializable overview of the memory store: record list plus a
+  /// typed graph (nodes = records, edges = relations/answers/wiki-links).
+  ///
+  /// Pure data, no LLM calls — safe for UI snapshots in a Flutter app. See
+  /// [MemoryOverviewService] for the filter parameters.
+  Future<MemoryOverview> overview({
+    List<String>? types,
+    String? area,
+    String? author,
+    List<String>? tags,
+    int? limit,
+  }) {
+    return MemoryOverviewService(
+      storage,
+      parser: _parser,
+    ).build(types: types, area: area, author: author, tags: tags, limit: limit);
+  }
+
   /// Reads the current [MEMORY.md] file and returns its revision hash along
   /// with the content.
   Future<MemoryRevision> readMemoryRevision() => _revision.read();
@@ -789,7 +775,13 @@ class KBMemoryStore {
   /// reusable skill cards using an LLM.
   ///
   /// If [expectedRevisionHash] is provided, the write is conditional on the
-  /// existing MEMORY.md still matching that hash.
+  /// existing MEMORY.md still matching that hash — any [deleteRecord] that
+  /// happened in the meantime bumps the revision, so a stale consolidation
+  /// fails instead of resurrecting deleted records.
+  ///
+  /// Records deleted since the previous consolidation are passed to the agent
+  /// as cleanup instructions, so statements sourced from them are removed from
+  /// MEMORY.md rather than merged forward.
   Future<ConsolidationResult> consolidate({
     String extraInstructions = '',
     int limit = 100,
@@ -802,17 +794,25 @@ class KBMemoryStore {
     final agent = KBConsolidationAgent(provider!);
     final records = await list(limit: limit);
     final existingSummary = await _readExistingSummary(this);
+    final pendingDeletions = await _deletions.pendingDeletions();
+    final instructions = MemoryDeletionService.buildCleanupNotices(
+      extraInstructions,
+      pendingDeletions,
+    );
 
     final result = await agent.consolidate(
       records,
       existingSummary: existingSummary,
-      extraInstructions: extraInstructions,
+      extraInstructions: instructions,
     );
 
     await _consolidationWriter.write(
       result,
       expectedRevisionHash: expectedRevisionHash,
     );
+    if (pendingDeletions.isNotEmpty) {
+      await _deletions.markConsolidated(pendingDeletions.last.seq);
+    }
     return result;
   }
 
@@ -859,48 +859,4 @@ class KBMemoryStore {
       level: MemoryLevel.raw,
     );
   }
-}
-
-/// A unified view of a knowledge-base record used by the memory store.
-class MemoryRecord {
-  final String entityType;
-  final String path;
-  final Question? question;
-  final Answer? answer;
-  final Note? note;
-  final int accessCount;
-  final String? lastAccessedAt;
-  final double importance;
-
-  const MemoryRecord({
-    required this.entityType,
-    required this.path,
-    this.question,
-    this.answer,
-    this.note,
-    this.accessCount = 0,
-    this.lastAccessedAt,
-    this.importance = 0.5,
-  });
-
-  String get id => question?.id ?? answer?.id ?? note?.id ?? '';
-
-  String get title => question?.text ?? answer?.text ?? note?.text ?? '';
-
-  String get text => title;
-
-  String get author => question?.author ?? answer?.author ?? note?.author ?? '';
-
-  String get date => question?.date ?? answer?.date ?? note?.date ?? '';
-
-  List<String> get tags =>
-      question?.tags ?? answer?.tags ?? note?.tags ?? const [];
-
-  String get area => question?.area ?? answer?.area ?? note?.area ?? '';
-
-  String? get memoryType => note?.memoryType;
-
-  String? get validFrom => note?.validFrom;
-
-  String? get validUntil => note?.validUntil;
 }

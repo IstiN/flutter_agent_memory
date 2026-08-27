@@ -29,6 +29,13 @@ String revisionHash(String content) {
   return sha256.convert(bytes).toString();
 }
 
+/// Computes a stable fingerprint of a record text for tombstone bookkeeping.
+///
+/// Normalizes the text first, so a deleted record blocks re-capture of the
+/// same content regardless of whitespace, casing, or bullet prefixes.
+String memoryTextFingerprint(String text) =>
+    revisionHash(normalizeMemoryText(text));
+
 /// Builds a stable fingerprint for a note based on content and level.
 ///
 /// Used for capture-time deduplication. Two notes with the same normalized

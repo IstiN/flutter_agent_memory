@@ -84,7 +84,8 @@ final List<CliCommand> agentMemoryCommands = [
       ),
       CliCommand(
         name: 'delete',
-        description: 'Delete a memory record by its id.',
+        description:
+            'Delete a memory record by id or by exact text (tombstoned, so it will not be re-captured).',
         buildParser: _memoryDeleteCommandParser,
       ),
       CliCommand(

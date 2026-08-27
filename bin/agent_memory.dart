@@ -420,11 +420,39 @@ bool _recordKnownAt(KBSearchResult result, DateTime asOf) {
 
 Future<void> _memoryDelete(ArgResults args) async {
   final outputPath = args['output'] as String;
-  final id = args['id'] as String;
+  final id = args['id'] as String?;
+  final text = args['text'] as String?;
+  final type = args['type'] as String?;
+  final rebuildGraph = !(args['no-graph'] as bool);
+
+  if ((id == null || id.isEmpty) == (text == null || text.isEmpty)) {
+    throw ArgumentError('Provide exactly one of --id or --text');
+  }
 
   final store = KBMemoryStore.file(outputPath, source: 'agent');
-  await store.deleteRecord(id);
-  stdout.writeln('Deleted $id');
+  if (id != null && id.isNotEmpty) {
+    final deleted = await store.deleteRecord(id, rebuildGraph: rebuildGraph);
+    if (deleted) {
+      stdout.writeln('Deleted $id');
+    } else {
+      stdout.writeln('Nothing to delete: $id not found');
+    }
+    return;
+  }
+
+  final result = await store.deleteRecordByText(
+    text!,
+    type: type,
+    rebuildGraph: rebuildGraph,
+  );
+  if (result.deleted) {
+    stdout.writeln('Deleted ${result.deletedIds.length} record(s):');
+    for (final deletedId in result.deletedIds) {
+      stdout.writeln('  - $deletedId');
+    }
+  } else {
+    stdout.writeln('No records matched the given text');
+  }
 }
 
 Future<void> _memoryRank(ArgResults args) async {
@@ -596,8 +624,11 @@ class _NoOpProvider implements LlmProvider {
   String get defaultModel => '';
 
   @override
-  Future<String> chat(String prompt, {String? model, void Function()? onCancel}) async =>
-      throw UnsupportedError('Regeneration does not use LLM calls');
+  Future<String> chat(
+    String prompt, {
+    String? model,
+    void Function()? onCancel,
+  }) async => throw UnsupportedError('Regeneration does not use LLM calls');
 
   @override
   Future<String> chatMessages(

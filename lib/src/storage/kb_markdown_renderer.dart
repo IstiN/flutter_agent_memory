@@ -178,12 +178,12 @@ class KbMarkdownRenderer {
     List<String> originalTags,
     String source,
     String entityTag,
-  ) => <String>[
-    if (!originalTags.any((t) => t == entityTag)) entityTag,
-    if (!originalTags.any((t) => t.startsWith('#source_')))
-      _formatSourceTag(source),
-    ...originalTags.where((t) => t != entityTag && !t.startsWith('#source_')),
-  ];
+  ) {
+    // `#`-prefixed tags are system tags (entity type, source scope). They are
+    // always emitted exactly once and never duplicated across re-renders.
+    final userTags = originalTags.where((t) => !t.startsWith('#')).toList();
+    return [entityTag, _formatSourceTag(source), ...userTags];
+  }
 
   String _formatSourceTag(String source) =>
       source.startsWith('source_') ? '#$source' : '#source_$source';

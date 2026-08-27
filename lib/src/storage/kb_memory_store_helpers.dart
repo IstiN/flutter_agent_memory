@@ -46,11 +46,3 @@ DateTime? _parseDate(String? date) {
 }
 
 String _pad(int value) => value.toString().padLeft(4, '0');
-
-class _Enriched {
-  final String area;
-  final List<String> topics;
-  final List<String> tags;
-
-  _Enriched({required this.area, required this.topics, required this.tags});
-}
