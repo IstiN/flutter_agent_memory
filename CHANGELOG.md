@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.1.1
+
+- Export `MemoryDeletionService` (+ `MemoryDeletion`, `MemoryDeleteResult`)
+  and `MemoryRevisionService` (+ `MemoryRevision`,
+  `ConcurrentRevisionException`) from the public barrels
+  (`lib/flutter_agent_memory.dart` / `lib/storage.dart`) so consumers can use
+  the deletion ledger (`pendingDeletions` / `markConsolidated`) and the
+  consolidate revision contract directly.
+
 ## 0.1.0
 
 - **`memory_delete` (safe tombstone deletion).**

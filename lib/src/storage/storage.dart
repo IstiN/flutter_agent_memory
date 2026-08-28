@@ -12,5 +12,7 @@ export 'kb_storage.dart';
 export 'kb_storage_context_mixin.dart';
 export 'kb_structure_builder.dart';
 export 'kb_structure_manager.dart';
+export 'memory/memory_revision_service.dart';
+export 'memory_deletion_service.dart';
 export 'source_config_manager.dart';
 export 'web/web_kb_storage.dart';
