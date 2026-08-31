@@ -26,6 +26,7 @@ export 'kb_memory_record.dart';
 
 import 'kb_file_parser.dart';
 import 'kb_graph_builder.dart';
+import 'kb_id_scheme.dart';
 import 'kb_markdown_renderer.dart';
 import 'kb_memory_enrichment.dart';
 import 'kb_memory_record.dart';
@@ -184,6 +185,7 @@ class KBMemoryStore {
       tags: tags,
       prefix: 'a',
       nextId: context.nextAnswerId(),
+      idDiscriminator: answersQuestion,
     );
 
     final answer = Answer(
@@ -594,6 +596,7 @@ class KBMemoryStore {
     List<String>? tags,
     required String prefix,
     required int nextId,
+    String? idDiscriminator,
   }) async {
     final safeText = KBSecretRedactionAgent.redact(text);
     final enriched = await _enrichment.enrich(
@@ -602,7 +605,12 @@ class KBMemoryStore {
       topics: topics ?? const [],
       tags: tags ?? const [],
     );
-    final id = '${prefix}_${_pad(nextId)}';
+    final id = MemoryIdScheme.allocate(
+      prefix,
+      nextId,
+      safeText,
+      answersQuestion: idDiscriminator,
+    );
     final now = currentUtcTimestamp();
     return (id: id, text: safeText, now: now, enriched: enriched);
   }

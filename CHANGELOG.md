@@ -1,5 +1,42 @@
 # Changelog
 
+## 0.2.0
+
+- **Git-backed memory.** Memory stores are now designed to live inside a
+  git repository: cloning the repo gives every agent the full memory.
+  - **Merge-friendly record ids.** New records get
+    `<prefix>_<index>_<hash>` ids (`n_0447_a1b2`): the sequential index
+    stays, plus a 4-char md5 suffix of the normalized record text (with an
+    `answersQuestion` discriminator for answers). Parallel branches that
+    allocate the same index produce distinct files that merge by union;
+    branches that capture the same text produce the same id and merge
+    cleanly. Legacy ids (`n_0001`) remain valid forever — no migration,
+    existing stores keep working unchanged.
+  - **Deterministic derivatives.** `GRAPH.md` is rebuilt with sorted
+    nodes/edges and no wall-clock timestamps — rebuilding from the same
+    records yields byte-identical output, so it can stay uncommitted.
+    `MEMORY.revision` is strictly local (absent on a fresh clone = legacy
+    content-hash path).
+  - **Union-mergeable deletion ledger.** `DELETIONS.md` is a formalized
+    append-only line log (the conflicting `count:` header line is gone);
+    the parser tolerates git `merge=union` output: duplicate lines are
+    collapsed by (seq, id), entries are sorted by seq, and the
+    consolidation cursor is the max over all headers.
+  - **`MemoryRepoInit` + `agent_memory memory init-git`** write
+    `.gitignore` (derivatives: `GRAPH.md`, `MEMORY.revision`, `INDEX.md`,
+    `.last_maintenance`) and `.gitattributes`
+    (`DELETIONS.md merge=union`) into the store directory, idempotently
+    and preserving user content.
+- **Memory policy documents** in `docs/memory/` — `memory_add_policy.md`
+  (durable facts only, the supersede rule: solved problems are deleted and
+  re-added, project scope is public), `tag_taxonomy.md`,
+  `consolidation_rules.md` — mirrored as Dart string constants in the new
+  public `MemoryPolicy` class (sync enforced by tests) so hosted consumers
+  can embed them in prompts without file access.
+- New public API: `MemoryIdScheme` (allocate/hashSuffix/parseIndex/
+  isLegacy/isValid), `MemoryRepoInit` (+ `MemoryRepoInitResult`),
+  `MemoryPolicy`.
+
 ## 0.1.1
 
 - Export `MemoryDeletionService` (+ `MemoryDeletion`, `MemoryDeleteResult`)

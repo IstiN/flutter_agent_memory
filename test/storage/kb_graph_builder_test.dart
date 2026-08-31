@@ -20,22 +20,22 @@ void main() {
   });
 
   test('GRAPH.md is generated with nodes, edges and mermaid block', () async {
-    await store.addQuestion(
+    final question = await store.addQuestion(
       text: 'What is Dart?',
       area: 'development',
       tags: ['dart'],
     );
-    await store.addAnswer(
+    final answer = await store.addAnswer(
       text: 'Dart is a programming language.',
       area: 'development',
       tags: ['dart'],
-      answersQuestion: 'q_0001',
+      answersQuestion: question.id,
     );
-    await store.addNote(
+    final note = await store.addNote(
       text: 'Use strong mode.',
       area: 'development',
       tags: ['dart'],
-      answersQuestions: ['q_0001'],
+      answersQuestions: [question.id],
     );
 
     await KBGraphBuilder.file(tmpDir).build();
@@ -52,9 +52,9 @@ void main() {
     expect(content, contains('## Typed Relations'));
 
     // Edges: answer -> question and note -> question.
-    expect(content, contains('[[a_0001]]'));
-    expect(content, contains('[[q_0001]]'));
-    expect(content, contains('[[n_0001]]'));
+    expect(content, contains('[[${answer.id}]]'));
+    expect(content, contains('[[${question.id}]]'));
+    expect(content, contains('[[${note.id}]]'));
   });
 
   test('parses level as string and includes area/topic file nodes', () async {
@@ -74,7 +74,7 @@ title: Dart
 ---
 # Dart
 ''');
-    await store.addNote(
+    final note = await store.addNote(
       text: 'Note with string level.',
       area: 'development',
       tags: ['dart'],
@@ -82,7 +82,7 @@ title: Dart
     );
 
     // Rewrite note frontmatter with level as a string to cover that branch.
-    final noteFile = File('${tmpDir.path}/notes/n_0001.md');
+    final noteFile = File('${tmpDir.path}/notes/${note.id}.md');
     final noteContent = noteFile.readAsStringSync().replaceFirst(
       'level: 3',
       'level: "3"',
@@ -97,15 +97,15 @@ title: Dart
   });
 
   test('skips entity files with mismatched frontmatter id', () async {
-    await store.addNote(text: 'Note', area: 'dev', tags: ['x']);
-    final file = File('${tmpDir.path}/notes/n_0001.md');
-    final content = file.readAsStringSync().replaceFirst('id: "n_0001"', 'id: "n_9999"');
+    final note = await store.addNote(text: 'Note', area: 'dev', tags: ['x']);
+    final file = File('${tmpDir.path}/notes/${note.id}.md');
+    final content = file.readAsStringSync().replaceFirst('id: "${note.id}"', 'id: "n_9999"');
     file.writeAsStringSync(content);
 
     await KBGraphBuilder.file(tmpDir).build();
 
     final graphContent = File('${tmpDir.path}/GRAPH.md').readAsStringSync();
-    expect(graphContent, isNot(contains('n_0001')));
+    expect(graphContent, isNot(contains(note.id)));
   });
 
   test('adds authored_by edge when person node exists', () async {
@@ -176,13 +176,13 @@ title: Alice
   });
 
   test('high-level nodes are preferred when the diagram is truncated', () async {
-    await store.addNote(
+    final raw = await store.addNote(
       text: 'Low level raw note.',
       area: 'dev',
       tags: ['x'],
       level: MemoryLevel.raw,
     );
-    await store.addNote(
+    final concept = await store.addNote(
       text: 'High level concept note.',
       area: 'dev',
       tags: ['x'],
@@ -195,8 +195,11 @@ title: Alice
 
     final content = File('${tmpDir.path}/GRAPH.md').readAsStringSync();
     // The concept-level note should be included in the mermaid diagram.
-    expect(content, contains('n_n_0002_id["High level concept note."]'));
+    expect(
+      content,
+      contains('n_${concept.id}_id["High level concept note."]'),
+    );
     // The raw note is below the threshold and should be omitted.
-    expect(content, isNot(contains('n_n_0001_id')));
+    expect(content, isNot(contains('n_${raw.id}_id')));
   });
 }

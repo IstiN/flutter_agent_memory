@@ -39,10 +39,20 @@ TYPE=A | ID=a_1 | AUTHOR=Bob | DATE=2024-01-01T10:05:00Z | AREA=development | TO
     expect(result.answersCount, 1);
     expect(result.peopleCount, 2);
 
-    final qFile = File('${tmpDir.path}/questions/q_0001.md');
-    final aFile = File('${tmpDir.path}/answers/a_0001.md');
-    expect(qFile.existsSync(), isTrue);
-    expect(aFile.existsSync(), isTrue);
+    final qFiles = Directory('${tmpDir.path}/questions')
+        .listSync()
+        .whereType<File>()
+        .map((f) => f.uri.pathSegments.last)
+        .toList();
+    final aFiles = Directory('${tmpDir.path}/answers')
+        .listSync()
+        .whereType<File>()
+        .map((f) => f.uri.pathSegments.last)
+        .toList();
+    expect(qFiles, hasLength(1));
+    expect(qFiles.single, matches(r'^q_0001_[0-9a-f]{4}\.md$'));
+    expect(aFiles, hasLength(1));
+    expect(aFiles.single, matches(r'^a_0001_[0-9a-f]{4}\.md$'));
   });
 
   test('regenerateStructureFromExistingFiles counts topics correctly', () async {

@@ -71,7 +71,7 @@ mixin KbStorageContextMixin {
   Future<int> _findMaxId(String type) async {
     final prefix = _entityPrefix[type];
     if (prefix == null) return 0;
-    final regex = RegExp('^${prefix}_(\\d+)\$');
+    final regex = RegExp('^${prefix}_(\\d+)(?:_[0-9a-f]{3,8})?\$');
     var max = 0;
     for (final id in await listEntityIds(type)) {
       final match = regex.firstMatch(id);

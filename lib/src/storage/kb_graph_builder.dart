@@ -79,7 +79,10 @@ class KBGraphBuilder {
     Map<String, _GraphNode> nodes,
     String type,
   ) async {
-    for (final id in await storage.listEntityIds(type)) {
+    // Sorted so the rendered GRAPH.md is byte-identical across rebuilds and
+    // git clones regardless of directory-listing order.
+    final ids = [...await storage.listEntityIds(type)]..sort();
+    for (final id in ids) {
       try {
         final content = await storage.readEntity(type, id);
         if (content == null) continue;
@@ -434,13 +437,15 @@ class KBGraphBuilder {
       )
       .toList();
 
+  // Deliberately free of wall-clock timestamps: the file is a deterministic
+  // derivative — rebuilding from the same records must yield identical bytes
+  // so a committed GRAPH.md never produces noise diffs.
   String _graphFrontmatter(int nodeCount, int edgeCount) =>
       '---\n'
       'id: graph\n'
       'type: graph\n'
       'nodes: $nodeCount\n'
       'edges: $edgeCount\n'
-      'generated: ${DateTime.now().toUtc().toIso8601String()}\n'
       '---\n\n';
 
   String _graphStats(

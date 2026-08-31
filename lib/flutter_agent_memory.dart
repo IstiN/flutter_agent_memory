@@ -7,6 +7,7 @@ export 'src/core/core.dart';
 export 'src/llm/llm.dart';
 export 'src/models/models.dart';
 export 'src/overview/memory_overview.dart';
+export 'src/policy/memory_policy.dart';
 export 'src/search/search.dart';
 export 'src/storage/storage.dart';
 export 'src/cli/command_registry.dart';

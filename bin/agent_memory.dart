@@ -218,6 +218,8 @@ Future<void> _memory(ArgResults args) async {
       await _memoryPromote(sub);
     case 'graph':
       await _memoryGraph(sub);
+    case 'init-git':
+      await _memoryInitGit(sub);
   }
 }
 
@@ -250,6 +252,21 @@ Future<void> _memoryGraph(ArgResults args) async {
   final store = KBMemoryStore.file(outputPath, source: 'agent');
   await store.buildGraph();
   stdout.writeln('Regenerated $outputPath/GRAPH.md');
+}
+
+Future<void> _memoryInitGit(ArgResults args) async {
+  final outputPath = args['output'] as String;
+  final store = KBMemoryStore.file(outputPath, source: 'agent');
+  final result = await MemoryRepoInit(store.storage).ensureGitSupport();
+  if (result.alreadyConfigured) {
+    stdout.writeln('$outputPath is already configured for git.');
+    return;
+  }
+  stdout.writeln(
+    'Configured $outputPath for git-backed memory: '
+    '${result.gitignoreUpdated ? '.gitignore written' : '.gitignore ok'}, '
+    '${result.gitattributesUpdated ? '.gitattributes written' : '.gitattributes ok'}',
+  );
 }
 
 Future<void> _memoryConsolidate(ArgResults args) async {

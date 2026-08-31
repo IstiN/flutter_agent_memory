@@ -164,7 +164,7 @@ void main() {
 
     test('matches normalized text across types', () async {
       final note = await store.addNote(text: 'Release is frozen on Friday.');
-      await store.addQuestion(
+      final question = await store.addQuestion(
         text: 'Release is frozen on Friday.',
         area: 'dev',
       );
@@ -177,11 +177,11 @@ void main() {
       expect(result.deletedIds, containsAll([note.id]));
       expect(await store.findById(note.id), isNull);
       // The question with the same text is removed too.
-      expect((await store.list()).where((r) => r.id == 'q_0001'), isEmpty);
+      expect((await store.list()).where((r) => r.id == question.id), isEmpty);
     });
 
     test('type filter restricts the deletion', () async {
-      await store.addNote(text: 'Shared sentence.');
+      final note = await store.addNote(text: 'Shared sentence.');
       final question = await store.addQuestion(
         text: 'Shared sentence.',
         area: 'dev',
@@ -192,7 +192,7 @@ void main() {
         type: 'note',
       );
 
-      expect(result.deletedIds, ['n_0001']);
+      expect(result.deletedIds, [note.id]);
       expect(await store.findById(question.id), isNotNull);
     });
 

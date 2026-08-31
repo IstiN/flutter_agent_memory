@@ -123,6 +123,12 @@ final List<CliCommand> agentMemoryCommands = [
             'Regenerate the Obsidian-compatible GRAPH.md from the knowledge base.',
         buildParser: _memoryGraphCommandParser,
       ),
+      CliCommand(
+        name: 'init-git',
+        description:
+            'Prepare the memory store for git: write .gitignore (derivatives) and .gitattributes (union merge for DELETIONS.md).',
+        buildParser: _memoryInitGitCommandParser,
+      ),
     ],
   ),
 ];
@@ -479,6 +485,14 @@ ArgParser _memoryPromoteCommandParser() => ArgParser()
   );
 
 ArgParser _memoryGraphCommandParser() => ArgParser()
+  ..addOption(
+    'output',
+    abbr: 'o',
+    defaultsTo: 'kb',
+    help: 'Knowledge-base directory',
+  );
+
+ArgParser _memoryInitGitCommandParser() => ArgParser()
   ..addOption(
     'output',
     abbr: 'o',

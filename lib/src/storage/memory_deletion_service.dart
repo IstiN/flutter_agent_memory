@@ -271,7 +271,6 @@ class MemoryDeletionService {
   }) async {
     final buffer = StringBuffer()
       ..writeln('---')
-      ..writeln('count: ${entries.length}')
       ..writeln('consolidatedUpTo: $consolidatedUpTo')
       ..writeln('---');
     for (final e in entries) {
@@ -287,22 +286,38 @@ class MemoryDeletionService {
   List<MemoryDeletion> _parseLedger(String? content) =>
       _parseLedgerWithCursor(content).$1;
 
+  /// Parses the append-only line ledger, tolerating git union-merge output:
+  /// duplicate entry lines are collapsed by (seq, id), entries are sorted by
+  /// seq, and the consolidation cursor is the max over every
+  /// `consolidatedUpTo:` line (a union merge may contain several headers).
   (List<MemoryDeletion>, int) _parseLedgerWithCursor(String? content) {
     if (content == null || content.isEmpty) return (const [], 0);
     var cursor = 0;
     final entries = <MemoryDeletion>[];
+    final seen = <String>{};
     for (final line in content.split('\n')) {
       final trimmed = line.trim();
-      if (trimmed.startsWith('consolidatedUpTo:')) {
-        cursor = int.tryParse(trimmed.split(':')[1].trim()) ?? 0;
+      final cursorValue = _parseCursorLine(trimmed);
+      if (cursorValue != null) {
+        if (cursorValue > cursor) cursor = cursorValue;
         continue;
       }
-      if (!trimmed.startsWith('- seq:')) continue;
-      final entry = _parseEntry(trimmed);
-      if (entry != null) entries.add(entry);
+      final entry = _parseEntryLine(trimmed);
+      if (entry != null && seen.add('${entry.seq}|${entry.id}')) {
+        entries.add(entry);
+      }
     }
+    entries.sort((a, b) => a.seq.compareTo(b.seq));
     return (entries, cursor);
   }
+
+  int? _parseCursorLine(String line) {
+    if (!line.startsWith('consolidatedUpTo:')) return null;
+    return int.tryParse(line.split(':')[1].trim()) ?? 0;
+  }
+
+  MemoryDeletion? _parseEntryLine(String line) =>
+      line.startsWith('- seq:') ? _parseEntry(line) : null;
 
   MemoryDeletion? _parseEntry(String line) {
     final fields = _parseLedgerFields(line);

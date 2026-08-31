@@ -632,6 +632,36 @@ final json = jsonEncode(overview.toJson()); // send to your Flutter app
    so stale statements are removed from the summary.
 5. `GRAPH.md` is regenerated (disable with `rebuildGraph: false` / `--no-graph`).
 
+### Git-backed memory
+
+A memory store is designed to live inside a git repository — cloning the
+repo gives every agent the full memory:
+
+- **Merge-friendly ids.** New records get `n_0447_a1b2`-style ids:
+  sequential index + a 4-char md5 suffix of the normalized text. Two
+  branches allocating the same index produce distinct files that merge by
+  union; the same text captured twice yields the same id. Legacy ids
+  (`n_0001`) stay valid forever — no migration.
+- **Deterministic derivatives.** `GRAPH.md` rebuilds byte-identically from
+  the records (sorted, timestamp-free); `MEMORY.revision` is strictly
+  local. Both are safe to keep uncommitted.
+- **Union-mergeable ledger.** `DELETIONS.md` is append-only line-based and
+  parses git `merge=union` output (duplicates collapsed, max cursor).
+- **One-command setup:**
+
+```bash
+agent_memory memory init-git -o kb   # writes .gitignore + .gitattributes
+```
+
+```dart
+await MemoryRepoInit(store.storage).ensureGitSupport();
+```
+
+- **Agent policies** live in [`docs/memory/`](docs/memory/README.md)
+  (memory_add policy with the supersede rule, tag taxonomy, consolidation
+  rules) and are mirrored as `MemoryPolicy` string constants for hosted
+  consumers.
+
 ### Memory overview data API
 
 ```dart

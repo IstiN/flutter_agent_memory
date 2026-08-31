@@ -44,5 +44,3 @@ DateTime? _parseDate(String? date) {
     return null;
   }
 }
-
-String _pad(int value) => value.toString().padLeft(4, '0');

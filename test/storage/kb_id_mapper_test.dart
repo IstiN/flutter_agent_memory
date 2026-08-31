@@ -55,12 +55,15 @@ void main() {
     final mapper = KBIdMapper();
     final result = mapper.mapAndUpdateIds(analysis, context);
 
-    expect(result.questions.first.id, 'q_0006');
-    expect(result.answers.first.id, 'a_0004');
-    expect(result.notes.first.id, 'n_0001');
+    final qId = result.questions.first.id;
+    final aId = result.answers.first.id;
+    final nId = result.notes.first.id;
+    expect(qId, matches(r'^q_0006_[0-9a-f]{4}$'));
+    expect(aId, matches(r'^a_0004_[0-9a-f]{4}$'));
+    expect(nId, matches(r'^n_0001_[0-9a-f]{4}$'));
 
-    expect(result.questions.first.answeredBy, 'a_0004');
-    expect(result.answers.first.answersQuestion, 'q_0006');
-    expect(result.notes.first.answersQuestions, ['q_0006']);
+    expect(result.questions.first.answeredBy, aId);
+    expect(result.answers.first.answersQuestion, qId);
+    expect(result.notes.first.answersQuestions, [qId]);
   });
 }

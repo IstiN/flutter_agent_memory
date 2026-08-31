@@ -132,8 +132,11 @@ void main() {
       tags: ['dart', 'testing'],
     );
     expect(record.entityType, 'question');
-    expect(record.id, 'q_0001');
-    expect(File('${tmpDir.path}/questions/q_0001.md').existsSync(), isTrue);
+    expect(record.id, matches(r'^q_0001_[0-9a-f]{4}$'));
+    expect(
+      File('${tmpDir.path}/questions/${record.id}.md').existsSync(),
+      isTrue,
+    );
   });
 
   test('adds an answer and a note', () async {
@@ -149,8 +152,8 @@ void main() {
       tags: ['workflow'],
     );
 
-    expect(answer.id, 'a_0001');
-    expect(note.id, 'n_0001');
+    expect(answer.id, matches(r'^a_0001_[0-9a-f]{4}$'));
+    expect(note.id, matches(r'^n_0001_[0-9a-f]{4}$'));
   });
 
   test('recordAccess increments counter and sets lastAccessedAt for question',

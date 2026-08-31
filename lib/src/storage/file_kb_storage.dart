@@ -75,7 +75,7 @@ class FileKbStorage implements KbStorage {
     if (!dir.existsSync()) return const [];
     final prefix = _entityPrefix[type];
     if (prefix == null) return const [];
-    final regex = RegExp('^${prefix}_(\\d+)\\.md\$');
+    final regex = RegExp('^${prefix}_(\\d+)(?:_[0-9a-f]{3,8})?\\.md\$');
     return dir
         .listSync()
         .whereType<File>()

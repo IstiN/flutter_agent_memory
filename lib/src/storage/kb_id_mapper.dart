@@ -3,6 +3,7 @@ import '../models/answer.dart';
 import '../models/kb_context.dart';
 import '../models/note.dart';
 import '../models/question.dart';
+import 'kb_id_scheme.dart';
 
 /// Maps temporary AI IDs (q_1, a_1, n_1) to permanent IDs (q_0001, ...).
 class KBIdMapper {
@@ -18,13 +19,26 @@ class KBIdMapper {
   Map<String, String> _buildMapping(AnalysisResult result, KBContext context) {
     final mapping = <String, String>{};
     for (final q in result.questions) {
-      mapping[q.id] = 'q_${_pad(context.nextQuestionId())}';
+      mapping[q.id] = MemoryIdScheme.allocate(
+        'q',
+        context.nextQuestionId(),
+        q.text,
+      );
     }
     for (final a in result.answers) {
-      mapping[a.id] = 'a_${_pad(context.nextAnswerId())}';
+      final answersQuestion =
+          a.answersQuestion != null && a.answersQuestion!.isNotEmpty
+          ? mapping[a.answersQuestion]
+          : null;
+      mapping[a.id] = MemoryIdScheme.allocate(
+        'a',
+        context.nextAnswerId(),
+        a.text,
+        answersQuestion: answersQuestion,
+      );
     }
     for (final n in result.notes) {
-      mapping[n.id] = 'n_${_pad(context.nextNoteId())}';
+      mapping[n.id] = MemoryIdScheme.allocate('n', context.nextNoteId(), n.text);
     }
     return mapping;
   }
@@ -67,6 +81,4 @@ class KBIdMapper {
         ),
       )
       .toList();
-
-  String _pad(int value) => value.toString().padLeft(4, '0');
 }

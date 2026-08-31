@@ -45,7 +45,7 @@ class InMemoryKbStorage with KbStorageContextMixin implements KbStorage {
   List<String> listEntityIds(String type) {
     final prefix = _entityPrefix[type];
     if (prefix == null) return const [];
-    final regex = RegExp('^${prefix}_(\\d+)\$');
+    final regex = RegExp('^${prefix}_(\\d+)(?:_[0-9a-f]{3,8})?\$');
     final ids =
         _entities[type]?.keys.where((id) => regex.hasMatch(id)).toList() ?? [];
     ids.sort();

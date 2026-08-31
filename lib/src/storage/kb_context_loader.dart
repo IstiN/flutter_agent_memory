@@ -100,7 +100,7 @@ class KBContextLoader {
     final dir = Directory(_path(outputDir, dirName));
     if (!dir.existsSync()) return 0;
     var max = 0;
-    final regex = RegExp('^${prefix}_(\\d+)\\.md\$');
+    final regex = RegExp('^${prefix}_(\\d+)(?:_[0-9a-f]{3,8})?\\.md\$');
     for (final file in dir.listSync().whereType<File>()) {
       final name = file.uri.pathSegments.last;
       final match = regex.firstMatch(name);

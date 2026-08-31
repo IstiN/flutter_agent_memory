@@ -56,7 +56,7 @@ class WebKbStorage with KbStorageContextMixin implements KbStorage {
     final prefix = _entityPrefix[type];
     if (prefix == null) return const [];
     final keyPrefix = '$_prefix$type:';
-    final regex = RegExp('^$keyPrefix(${prefix}_(\\d+))\$');
+    final regex = RegExp('^$keyPrefix(${prefix}_(\\d+)(?:_[0-9a-f]{3,8})?)\$');
     return _backend
         .keys()
         .where((key) => key.startsWith(keyPrefix))
