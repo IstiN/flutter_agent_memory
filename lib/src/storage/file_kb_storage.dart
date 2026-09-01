@@ -23,7 +23,7 @@ import 'kb_storage.dart';
 ///   GRAPH.md
 ///   MEMORY.md
 /// ```
-class FileKbStorage implements KbStorage {
+class FileKbStorage implements KbStorage, KbAppendCapable {
   final Directory kbDir;
   final KBContextLoader _contextLoader;
 
@@ -99,6 +99,13 @@ class FileKbStorage implements KbStorage {
     final file = File('${_path(kbDir)}/$path');
     file.parent.createSync(recursive: true);
     file.writeAsStringSync(content);
+  }
+
+  @override
+  void appendFile(String path, String content) {
+    final file = File('${_path(kbDir)}/$path');
+    file.parent.createSync(recursive: true);
+    file.writeAsStringSync(content, mode: FileMode.append);
   }
 
   @override

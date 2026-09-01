@@ -59,3 +59,32 @@ abstract interface class KbStorage {
   /// can be a URI, key, or table primary key.
   String describeLocation(String type, String id);
 }
+
+/// Optional capability for storages that can append to a file natively.
+///
+/// Implementing this makes append-only files (the `DELETIONS.md` tombstone
+/// ledger) safe against concurrent writers: on a filesystem backend an
+/// append is a single operation, so two racing deletes both land instead of
+/// the classic read-modify-write last-writer-wins data loss.
+abstract interface class KbAppendCapable {
+  /// Appends [content] to the file at [path], creating it if needed.
+  FutureOr<void> appendFile(String path, String content);
+}
+
+/// Uniform append access for any [KbStorage].
+///
+/// Storages implementing [KbAppendCapable] get their native append;
+/// everything else falls back to read-modify-write (documented best-effort
+/// under concurrent writes).
+extension KbStorageAppend on KbStorage {
+  /// Appends [content] to the file at [path].
+  Future<void> appendToFile(String path, String content) async {
+    final storage = this;
+    if (storage is KbAppendCapable) {
+      await (storage as KbAppendCapable).appendFile(path, content);
+      return;
+    }
+    final existing = await readFile(path) ?? '';
+    await writeFile(path, '$existing$content');
+  }
+}

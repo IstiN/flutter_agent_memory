@@ -1,5 +1,28 @@
 # Changelog
 
+## 0.2.1
+
+- **Fix: append-only deletion ledger (critical).** `DELETIONS.md` writes
+  are now strictly append-only — a delete or a consolidation-cursor update
+  adds lines without rewriting existing content. Previously a
+  read-modify-write cycle could (a) clobber the whole ledger when its
+  content failed to parse (e.g. an older or foreign format after a
+  0.1.x → 0.2.0 upgrade) and (b) lose tombstones under concurrent deletes
+  (last writer wins). The ledger is compacted only after growing past
+  twice `maxLedgerEntries`, and compaction refuses to touch content it
+  cannot parse.
+- **`markConsolidated(seq)` is append-only too**: it appends a new
+  `consolidatedUpTo:` line (the parser takes the max over all of them, and
+  git merges them by union) instead of rewriting the file.
+- **New `KbAppendCapable` interface + `KbStorageAppend` extension.**
+  Storages with native append (implemented by `FileKbStorage` via
+  `FileMode.append`) get atomic-enough appends so concurrent deletes both
+  land; other backends fall back to documented best-effort
+  read-modify-write. Custom `KbStorage` implementations should implement
+  `KbAppendCapable` for the same guarantee.
+- **Tolerant ledger parsing**: entries without a `type:` field derive it
+  from the id prefix; missing fingerprints are recomputed from the text.
+
 ## 0.2.0
 
 - **Git-backed memory.** Memory stores are now designed to live inside a

@@ -67,11 +67,16 @@ class MemoryDeleteResult {
 ///    concurrently in another process fails its conditional write instead of
 ///    resurrecting the deleted record in the summary.
 ///
-/// The ledger write itself is a read-modify-write of a single file and is
-/// therefore best-effort under concurrent writers: the entity deletion is
-/// always atomic, but two simultaneous deletes may lose one tombstone entry.
-/// Entries are capped at [maxLedgerEntries] (oldest dropped) to keep the
-/// ledger file bounded.
+/// The ledger is strictly append-only: deletions and consolidation-cursor
+/// updates add lines without rewriting existing content, so a delete can
+/// never clobber tombstones written by another process, merged from another
+/// git branch, or recorded by an older/foreign format version. On storages
+/// implementing [KbAppendCapable] (the file backend does) appends are
+/// atomic enough for concurrent writers to both land; other backends fall
+/// back to best-effort read-modify-write. The ledger is compacted
+/// (rewritten, deduplicated) only after it grows past twice
+/// [maxLedgerEntries], and compaction refuses to touch content it cannot
+/// parse.
 class MemoryDeletionService {
   final KbStorage storage;
   final KBFileParser parser;
@@ -180,15 +185,19 @@ class MemoryDeletionService {
 
   /// Advances the consolidation cursor so processed deletions are not fed to
   /// the consolidation agent again.
+  ///
+  /// Append-only: writes a new `consolidatedUpTo:` line instead of
+  /// rewriting the file — the parser takes the max over all cursor lines,
+  /// and git merges cursor lines by union.
   Future<void> markConsolidated(int seq) async {
-    final (_, cursor) = _parseLedgerWithCursor(
-      await storage.readFile(ledgerFile),
-    );
+    final existing = await storage.readFile(ledgerFile);
+    final (_, cursor) = _parseLedgerWithCursor(existing);
     if (seq <= cursor) return;
-    final (entries, _) = _parseLedgerWithCursor(
-      await storage.readFile(ledgerFile),
-    );
-    await _writeLedger(entries, consolidatedUpTo: seq);
+    if (existing == null) {
+      await storage.writeFile(ledgerFile, _ledgerHeader(seq));
+      return;
+    }
+    await storage.appendToFile(ledgerFile, 'consolidatedUpTo: $seq\n');
   }
 
   /// Renders cleanup instructions for [deletions] so the consolidation agent
@@ -229,24 +238,49 @@ class MemoryDeletionService {
   }
 
   Future<void> _recordDeletion(String id, String type, String? text) async {
-    final (entries, cursor) = _parseLedgerWithCursor(
-      await storage.readFile(ledgerFile),
-    );
-    final nextSeq = (entries.isEmpty ? 0 : entries.last.seq) + 1;
+    final existing = await storage.readFile(ledgerFile);
+    final (entries, _) = _parseLedgerWithCursor(existing);
+    final maxSeq = entries.isEmpty
+        ? 0
+        : entries.map((e) => e.seq).reduce((a, b) => a > b ? a : b);
     final entry = MemoryDeletion(
-      seq: nextSeq,
+      seq: maxSeq + 1,
       id: id,
       type: type,
       fingerprint: memoryTextFingerprint(text ?? id),
       deletedAt: currentUtcTimestamp(),
       text: _sanitizeLedgerText(text ?? ''),
     );
-    final trimmed = entries.length >= maxLedgerEntries
-        ? entries.sublist(entries.length - maxLedgerEntries + 1)
-        : entries;
-    await _writeLedger([...trimmed, entry], consolidatedUpTo: cursor);
+    if (existing == null) {
+      await storage.writeFile(ledgerFile, _ledgerHeader(0));
+    }
+    // Append-only: the previous ledger content is never rewritten, so a
+    // delete can never destroy tombstones written by another process,
+    // another branch, or an older/foreign format version.
+    await storage.appendToFile(ledgerFile, _formatEntry(entry));
     await revision.bump();
+    await _maybeCompact(entries);
   }
+
+  /// Rewrites the ledger only when it grew past twice [maxLedgerEntries] —
+  /// the single rare read-modify-write path. Refuses to run on a ledger it
+  /// could not parse at all, so unrecognized content is never clobbered.
+  Future<void> _maybeCompact(List<MemoryDeletion> entries) async {
+    if (entries.isEmpty || entries.length < maxLedgerEntries * 2) return;
+    final (_, cursor) = _parseLedgerWithCursor(
+      await storage.readFile(ledgerFile),
+    );
+    final kept = entries.sublist(entries.length - maxLedgerEntries);
+    await _writeLedger(kept, consolidatedUpTo: cursor);
+  }
+
+  static String _ledgerHeader(int consolidatedUpTo) =>
+      '---\nconsolidatedUpTo: $consolidatedUpTo\n---\n';
+
+  static String _formatEntry(MemoryDeletion e) =>
+      '- seq: ${e.seq} | id: ${e.id} | type: ${e.type} | '
+      'fingerprint: ${e.fingerprint} | deletedAt: ${e.deletedAt} | '
+      'text: ${e.text}\n';
 
   String _sanitizeLedgerText(String text) {
     final oneLine = text.replaceAll(RegExp(r'\s+'), ' ').trim();
@@ -269,16 +303,9 @@ class MemoryDeletionService {
     List<MemoryDeletion> entries, {
     required int consolidatedUpTo,
   }) async {
-    final buffer = StringBuffer()
-      ..writeln('---')
-      ..writeln('consolidatedUpTo: $consolidatedUpTo')
-      ..writeln('---');
+    final buffer = StringBuffer(_ledgerHeader(consolidatedUpTo));
     for (final e in entries) {
-      buffer.writeln(
-        '- seq: ${e.seq} | id: ${e.id} | type: ${e.type} | '
-        'fingerprint: ${e.fingerprint} | deletedAt: ${e.deletedAt} | '
-        'text: ${e.text}',
-      );
+      buffer.write(_formatEntry(e));
     }
     await storage.writeFile(ledgerFile, buffer.toString());
   }
@@ -323,15 +350,23 @@ class MemoryDeletionService {
     final fields = _parseLedgerFields(line);
     final seq = int.tryParse(fields['seq'] ?? '');
     final id = fields['id'] ?? '';
-    final type = fields['type'] ?? '';
+    // Tolerate entries written by older/foreign formats: the type can be
+    // derived from the id prefix, the fingerprint recomputed from the text.
+    var type = fields['type'] ?? '';
+    if (type.isEmpty && id.isNotEmpty) type = typeFromId(id) ?? '';
+    final text = fields['text'] ?? '';
+    var fingerprint = fields['fingerprint'] ?? '';
+    if (fingerprint.isEmpty && text.isNotEmpty) {
+      fingerprint = memoryTextFingerprint(text);
+    }
     if (seq == null || id.isEmpty || type.isEmpty) return null;
     return MemoryDeletion(
       seq: seq,
       id: id,
       type: type,
-      fingerprint: fields['fingerprint'] ?? '',
+      fingerprint: fingerprint,
       deletedAt: fields['deletedAt'] ?? '',
-      text: fields['text'] ?? '',
+      text: text,
     );
   }
 
