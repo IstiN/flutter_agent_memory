@@ -661,6 +661,14 @@ repo gives every agent the full memory:
   get `merge=union` drivers (alongside `DELETIONS.md`) — delete/modify
   conflicts are impossible by construction and modify/modify merges resolve
   line-wise with delete winning deterministically.
+- **Per-record `deleted/` directory.** Every deletion also creates one
+  deterministic file (`deleted/<id>_<fingerprint8>.md`) — recording a
+  deletion is only ever a file creation, so concurrent agents on
+  different branches never conflict. Capture-time dedup and
+  `isDeleted`/`hasDeletedText` read it (legacy ledger stays as fallback),
+  and consolidation progress is a local set difference against the
+  gitignored `.last_deletions` marker — cleanup notices can never be
+  lost across branches.
 - **One-command setup:**
 
 ```bash

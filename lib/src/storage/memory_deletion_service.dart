@@ -84,8 +84,18 @@ class MemoryDeleteResult {
 /// parse.
 ///
 /// Tombstone files accumulate until [purgeTombstones] runs during a
-/// maintenance window; the deletion ledger keeps the history, so purging
-/// never loses the fact that a record was deleted.
+/// maintenance window; the `deleted/` record files (and the legacy ledger)
+/// keep the history, so purging never loses the fact that a record was
+/// deleted.
+///
+/// The authoritative, conflict-free deletion record lives in the
+/// [deletedDir] directory: one small deterministic file per deleted record
+/// (`<id>_<fingerprint8>.md`). Recording a deletion is only ever a file
+/// creation — two branches deleting the same record produce the identical
+/// file, and different deletions are independent files — so concurrent
+/// agents in different git branches can never conflict, and consolidation
+/// progress is a local set difference against [processedMarkerFile] rather
+/// than a shared cursor.
 class MemoryDeletionService {
   final KbStorage storage;
   final KBFileParser parser;
@@ -93,6 +103,22 @@ class MemoryDeletionService {
   final int maxLedgerEntries;
 
   static const String ledgerFile = 'DELETIONS.md';
+
+  /// Per-record deletion directory: one small file per deleted record,
+  /// named `<id>_<fingerprint8>.md` with deterministic content.
+  ///
+  /// This is the conflict-free deletion record: adding a deletion is only
+  /// ever a file *creation* (two branches deleting the same record produce
+  /// the identical file — same name, same bytes — which git merges
+  /// trivially; different deletions are different files and never interact).
+  /// There is no shared mutable file, no global counter, and no cursor that
+  /// could lose entries across branches.
+  static const String deletedDir = 'deleted';
+
+  /// Local, gitignored marker listing the fingerprints whose deletions the
+  /// local consolidation has already been warned about (set difference for
+  /// [unprocessedDeletions]). A derivative like `.last_maintenance`.
+  static const String processedMarkerFile = '.last_deletions';
 
   MemoryDeletionService(
     this.storage, {
@@ -167,8 +193,16 @@ class MemoryDeletionService {
     return id;
   }
 
-  /// True when [id] is present in the deletion ledger.
+  /// True when [id] is present among the deleted records.
+  ///
+  /// Checks the per-record `deleted/` directory first (current mechanism),
+  /// then the legacy `DELETIONS.md` ledger (records deleted before the
+  /// `deleted/` mechanism existed, or on storages without tombstone files).
   Future<bool> isDeleted(String id) async {
+    final prefix = '${id}_';
+    for (final path in await storage.listFilePaths(deletedDir)) {
+      if (_baseName(path).startsWith(prefix)) return true;
+    }
     final ledger = _parseLedger(await storage.readFile(ledgerFile));
     return ledger.any((d) => d.id == id);
   }
@@ -176,12 +210,60 @@ class MemoryDeletionService {
   /// True when text with the same normalized fingerprint was deleted.
   Future<bool> hasDeletedText(String text) async {
     final fingerprint = memoryTextFingerprint(text);
+    if (await _deletedFileForFingerprint(fingerprint) != null) return true;
     final ledger = _parseLedger(await storage.readFile(ledgerFile));
     return ledger.any((d) => d.fingerprint == fingerprint);
   }
 
+  /// Deletions a consolidation run has not been warned about yet — the
+  /// per-record files in `deleted/` whose fingerprint is not in the local,
+  /// gitignored [processedMarkerFile] marker.
+  ///
+  /// Unlike the legacy [pendingDeletions] cursor (a shared global `seq`
+  /// counter), this is a set difference: it survives branching and merging
+  /// — deletions that arrive from another branch after the marker was
+  /// written are still reported, so cleanup notices can never be lost.
+  Future<List<MemoryDeletion>> unprocessedDeletions({int limit = 50}) async {
+    final processed = _parseMarker(await storage.readFile(processedMarkerFile));
+    final pending = <MemoryDeletion>[];
+    for (final path in await storage.listFilePaths(deletedDir)) {
+      final deletion = _parseDeletedFile(
+        _baseName(path),
+        await storage.readFile(path) ?? '',
+      );
+      if (deletion == null || processed.contains(deletion.fingerprint)) {
+        continue;
+      }
+      pending.add(deletion);
+    }
+    pending.sort((a, b) => a.id.compareTo(b.id));
+    if (pending.length > limit) pending.removeRange(0, pending.length - limit);
+    return pending;
+  }
+
+  /// Marks [deletions] as processed: adds their fingerprints to the local
+  /// [processedMarkerFile] marker, so [unprocessedDeletions] stops
+  /// reporting them.
+  ///
+  /// The marker is a derivative file (kept out of git by
+  /// [MemoryRepoInit]), so it is never involved in merges — each clone
+  /// tracks its own consolidation progress independently.
+  Future<void> markDeletionsProcessed(List<MemoryDeletion> deletions) async {
+    if (deletions.isEmpty) return;
+    final processed = _parseMarker(await storage.readFile(processedMarkerFile));
+    processed.addAll(deletions.map((d) => d.fingerprint));
+    final lines = processed.toList()..sort();
+    await storage.writeFile(processedMarkerFile, '${lines.join('\n')}\n');
+  }
+
   /// Ledger entries with [seq] greater than the consolidation cursor — the
   /// deletions a consolidation run has not yet been warned about.
+  ///
+  /// Legacy API kept for backward compatibility; new code should use
+  /// [unprocessedDeletions], which cannot lose deletions across git
+  /// branches (the `seq` cursor is a global counter that does not survive
+  /// branching: deletions merged in after the cursor was written are never
+  /// reported again).
   Future<List<MemoryDeletion>> pendingDeletions({int limit = 50}) async {
     final (ledger, cursor) = _parseLedgerWithCursor(
       await storage.readFile(ledgerFile),
@@ -294,6 +376,14 @@ class MemoryDeletionService {
     // delete can never destroy tombstones written by another process,
     // another branch, or an older/foreign format version.
     await storage.appendToFile(ledgerFile, _formatEntry(entry));
+    // The per-record deletion file is the durable, conflict-free record
+    // used by isDeleted/hasDeletedText/unprocessedDeletions. Content is
+    // deterministic (no wall clock, no volatile fields) so concurrent
+    // branches produce byte-identical files for the same deletion.
+    await storage.writeFile(
+      _deletedFileName(entry.id, entry.fingerprint),
+      _formatDeletedFile(entry),
+    );
     await revision.bump();
     await _maybeCompact(entries);
   }
@@ -317,6 +407,80 @@ class MemoryDeletionService {
       '- seq: ${e.seq} | id: ${e.id} | type: ${e.type} | '
       'fingerprint: ${e.fingerprint} | deletedAt: ${e.deletedAt} | '
       'text: ${e.text}\n';
+
+  // --- per-record deleted/ files -------------------------------------------
+
+  static String _deletedFileName(String id, String fingerprint) =>
+      '$deletedDir/${id}_${fingerprint.substring(0, 8)}.md';
+
+  /// Deterministic content: identical for the same (id, fingerprint, text)
+  /// on every branch and every machine, so git add/add merges of the same
+  /// deletion are trivial. `deletedAt` lives in the legacy ledger and the
+  /// tombstone entity file, not here.
+  static String _formatDeletedFile(MemoryDeletion e) =>
+      '''
+---
+id: ${e.id}
+fingerprint: ${e.fingerprint}
+type: ${e.type}
+---
+
+${e.text}
+''';
+
+  static MemoryDeletion? _parseDeletedFile(String baseName, String content) {
+    String? field(String key) {
+      final match = RegExp(
+        '^$key:[ \\t]*(.*)\$',
+        multiLine: true,
+      ).firstMatch(content);
+      return match?.group(1)?.trim();
+    }
+
+    final id = field('id') ?? '';
+    if (id.isEmpty) return null;
+    var fingerprint = field('fingerprint') ?? '';
+    var type = field('type') ?? '';
+    if (type.isEmpty) type = typeFromId(id) ?? '';
+    if (fingerprint.isEmpty) fingerprint = memoryTextFingerprint(id);
+    // Body after the frontmatter block is the text excerpt.
+    final body = content.split('\n---\n').last.trim();
+    return MemoryDeletion(
+      seq: 0,
+      id: id,
+      type: type,
+      fingerprint: fingerprint,
+      deletedAt: '',
+      text: body,
+    );
+  }
+
+  /// The `deleted/` file for [fingerprint] when it exists.
+  Future<MemoryDeletion?> _deletedFileForFingerprint(String fingerprint) async {
+    final suffix = '_${fingerprint.substring(0, 8)}.md';
+    for (final path in await storage.listFilePaths(deletedDir)) {
+      if (_baseName(path).endsWith(suffix)) {
+        return _parseDeletedFile(
+          _baseName(path),
+          await storage.readFile(path) ?? '',
+        );
+      }
+    }
+    return null;
+  }
+
+  static String _baseName(String path) =>
+      path.replaceAll('\\', '/').split('/').last;
+
+  // --- processed marker -----------------------------------------------------
+
+  static Set<String> _parseMarker(String? content) => content == null
+      ? <String>{}
+      : content
+            .split('\n')
+            .map((l) => l.trim())
+            .where((l) => l.isNotEmpty)
+            .toSet();
 
   String _sanitizeLedgerText(String text) {
     final oneLine = text.replaceAll(RegExp(r'\s+'), ' ').trim();

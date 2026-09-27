@@ -239,15 +239,18 @@ void main() {
     });
 
     test(
-      'deleted text can be re-captured after ledger entry is gone',
+      'deleted text can be re-captured after all deletion records are gone',
       () async {
         final tmpDir = Directory.systemTemp.createTempSync('memory_tombstone_');
         addTearDown(() => tmpDir.deleteSync(recursive: true));
         final store = KBMemoryStore.file(tmpDir, source: 'agent');
         final doomed = await store.addNote(text: 'Recyclable fact.');
         await store.deleteRecord(doomed.id, rebuildGraph: false);
-        // Simulate ledger cleanup (entries are capped/rotated in production).
+        // Simulate history cleanup (ledger rotation + deleted/ purge).
         await store.storage.writeFile('DELETIONS.md', '');
+        for (final path in await store.storage.listFilePaths('deleted')) {
+          File('${tmpDir.path}/$path').deleteSync();
+        }
 
         await store.addNote(text: 'Recyclable fact.');
 

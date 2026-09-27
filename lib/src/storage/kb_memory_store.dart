@@ -813,7 +813,7 @@ class KBMemoryStore {
     final agent = KBConsolidationAgent(provider!);
     final records = await list(limit: limit);
     final existingSummary = await _readExistingSummary(this);
-    final pendingDeletions = await _deletions.pendingDeletions();
+    final pendingDeletions = await _deletions.unprocessedDeletions();
     final instructions = MemoryDeletionService.buildCleanupNotices(
       extraInstructions,
       pendingDeletions,
@@ -830,7 +830,9 @@ class KBMemoryStore {
       expectedRevisionHash: expectedRevisionHash,
     );
     if (pendingDeletions.isNotEmpty) {
-      await _deletions.markConsolidated(pendingDeletions.last.seq);
+      // Set-difference marker, local to this clone: deletions that merge
+      // in from other branches later are still reported on the next run.
+      await _deletions.markDeletionsProcessed(pendingDeletions);
     }
     return result;
   }

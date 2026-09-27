@@ -132,6 +132,73 @@ void main() {
     );
 
     test(
+      'independent deletions from two branches merge cleanly and none are lost',
+      () async {
+        final s = store(repo.path);
+        final noteA = await s.addNote(text: 'Fact deleted by agent A.');
+        final noteB = await s.addNote(text: 'Fact deleted by agent B.');
+        await MemoryRepoInit(s.storage).ensureGitSupport();
+        await gitRun(repo.path, ['init', '-q']);
+        await gitRun(repo.path, ['symbolic-ref', 'HEAD', 'refs/heads/main']);
+        await gitRun(repo.path, ['add', '-A']);
+        await gitRun(repo.path, ['commit', '-q', '-m', 'base']);
+
+        // Agent A deletes noteA (and consolidates: the marker is local
+        // only, so nothing it processed is lost for other clones).
+        await gitRun(repo.path, ['checkout', '-q', '-b', 'agent-a']);
+        final storeA = store(repo.path);
+        expect(await storeA.deleteRecord(noteA.id), isTrue);
+        final serviceA = MemoryDeletionService(storeA.storage);
+        await serviceA.markDeletionsProcessed(
+          await serviceA.unprocessedDeletions(),
+        );
+        await gitRun(repo.path, ['add', '-A']);
+        await gitRun(repo.path, ['commit', '-q', '-m', 'A deletes noteA']);
+
+        // Agent B works in a fresh clone of main: its local marker does not
+        // exist yet (the marker never travels through git).
+        await gitRun(repo.path, ['checkout', '-q', 'main']);
+        File('${repo.path}/.last_deletions').deleteSync();
+        final storeB = store(repo.path);
+        expect(await storeB.deleteRecord(noteB.id), isTrue);
+        final serviceB = MemoryDeletionService(storeB.storage);
+        // B only sees its own deletion — noteA is not in its clone.
+        final pendingB = await serviceB.unprocessedDeletions();
+        expect(pendingB.map((d) => d.id), [noteB.id]);
+        await serviceB.markDeletionsProcessed(pendingB);
+        await gitRun(repo.path, ['add', '-A']);
+        await gitRun(repo.path, ['commit', '-q', '-m', 'B deletes noteB']);
+
+        // Both branches only CREATED files (tombstone rewrite + deleted/
+        // record + local gitignored marker) — merge must be trivially clean.
+        final merge = await gitRun(repo.path, [
+          'merge',
+          '--no-edit',
+          'agent-a',
+        ]);
+        expect(
+          merge.exitCode,
+          0,
+          reason: 'stdout: ${merge.stdout}\nstderr: ${merge.stderr}',
+        );
+
+        final merged = store(repo.path);
+        expect(await merged.isDeleted(noteA.id), isTrue);
+        expect(await merged.isDeleted(noteB.id), isTrue);
+        expect(await merged.hasDeletedText('Fact deleted by agent A.'), isTrue);
+        expect(await merged.hasDeletedText('Fact deleted by agent B.'), isTrue);
+        // A's deletion still surfaces for consolidation in this clone even
+        // though B already consolidated its own — the set difference cannot
+        // lose entries across branches (the legacy seq cursor would have).
+        final pending = await MemoryDeletionService(
+          merged.storage,
+        ).unprocessedDeletions();
+        expect(pending.map((d) => d.id), [noteA.id]);
+      },
+      skip: git == null ? 'git binary not available' : false,
+    );
+
+    test(
       'delete on both branches merges cleanly through the union driver',
       () async {
         final s = store(repo.path);

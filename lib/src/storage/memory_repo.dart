@@ -23,8 +23,8 @@ class MemoryRepoInitResult {
 ///
 /// - `.gitignore` — derivative files that are rebuilt from records and
 ///   must not be committed (`GRAPH.md`, `MEMORY.revision`, `INDEX.md`,
-///   `.last_maintenance`). Keeping them out of git removes the main source
-///   of merge conflicts.
+///   `.last_maintenance`, `.last_deletions`). Keeping them out of git
+///   removes the main source of merge conflicts.
 /// - `.gitattributes` — union merge drivers, so concurrent modifications
 ///   of the same file from parallel branches merge line-wise instead of
 ///   blocking with a content conflict:
@@ -43,12 +43,15 @@ class MemoryRepoInit {
   static const gitattributesFile = '.gitattributes';
 
   /// Derivative files excluded from git. Anything here must be
-  /// rebuildable from the record files alone.
+  /// rebuildable from the record files alone or be purely local state.
   static const derivativeFiles = <String>[
     'GRAPH.md',
     'MEMORY.revision',
     'INDEX.md',
     '.last_maintenance',
+    // Local consolidation progress (set-difference marker for deleted/
+    // files) — each clone tracks its own; merging it would lose entries.
+    '.last_deletions',
   ];
 
   /// Merge-driver assignments for conflict-prone files.
@@ -57,6 +60,11 @@ class MemoryRepoInit {
     'questions/*.md merge=union',
     'answers/*.md merge=union',
     'notes/*.md merge=union',
+    // Safety net: same-record deletions from parallel branches write the
+    // identical file (deterministic content), so add/add merges are
+    // trivial; the driver covers the exotic legacy-id collision where two
+    // different texts share one id.
+    'deleted/*.md merge=union',
   ];
 
   static const _gitignoreHeader =

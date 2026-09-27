@@ -1,5 +1,34 @@
 # Changelog
 
+## 0.2.3
+
+- **Per-record `deleted/` deletion record — concurrent agents can never
+  conflict on deletions, and cleanup notices can never be lost across
+  branches.** Every deletion now also creates one small deterministic
+  file `deleted/<id>_<fingerprint8>.md` (no wall-clock fields): two
+  branches deleting the same record produce the identical file (git
+  merges them trivially), different deletions are independent files.
+  Recording a deletion is only ever a file *creation* — there is no
+  shared mutable file and no global `seq` counter anymore.
+- **Consolidation progress is a local set difference, not a shared
+  cursor.** New `unprocessedDeletions()` /
+  `markDeletionsProcessed()` pair: the gitignored `.last_deletions`
+  marker (added to `MemoryRepoInit` derivatives, union-safety
+  `deleted/*.md merge=union` added to merge drivers) lists the
+  fingerprints already fed to the local consolidation. The legacy
+  `DELETIONS.md` `consolidatedUpTo` cursor is a global counter that does
+  not survive branching — deletions merged in after the cursor was
+  written were silently never reported to consolidation (deleted facts
+  could resurrect in `MEMORY.md`). `pendingDeletions`/`markConsolidated`
+  remain for backward compatibility; `consolidate()` uses the new API.
+- `isDeleted` / `hasDeletedText` answer from `deleted/` first, with the
+  legacy ledger as fallback for pre-0.2.3 stores; `deleted/` files are
+  never rotated, so capture-time deduplication covers the full deletion
+  history.
+- New real-git acceptance test: independent deletions from two branches
+  (each already consolidated locally) merge cleanly, and the deletion
+  from the other branch still surfaces for consolidation afterwards.
+
 ## 0.2.2
 
 - **Conflict-free deletions (issue #1).** Deleting a record no longer
