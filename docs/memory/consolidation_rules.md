@@ -35,6 +35,26 @@ text is never re-captured while its ledger entry exists
 `agent_memory memory init-git`); the parser tolerates duplicate and
 out-of-order lines and takes the max cursor.
 
+## Entity files: tombstones, never unlinks
+
+A deletion never unlinks the entity file. On the git-backed file storage
+the file is rewritten in place as a tombstone (`tombstone: true` in the
+frontmatter); readers treat tombstoned entities as absent. Because git
+never sees a file deletion for `questions/answers/notes/*.md`, the classic
+delete/modify conflict — one branch deletes a record, another edits it —
+cannot occur. The union merge drivers for the entity files (also written
+by `agent_memory memory init-git`) resolve the remaining modify/modify
+case line-wise; the tombstone marker survives a union merge, so delete
+wins deterministically and no rebase or merge ever needs manual
+resolution for memory churn.
+
+Tombstone files accumulate until `agent_memory memory gc`
+(`store.purgeTombstones()`) runs during a maintenance window when no
+concurrent agent writes memory — purging re-introduces file deletions
+into git history, which is safe only when nothing else touches the same
+files. The ledger above is the durable record of what was deleted, so
+purging loses no history and tombstoned ids are never reused.
+
 ## Derivative files — rebuilt, never edited, never committed
 
 - `GRAPH.md` — rebuilt deterministically (sorted nodes/edges) from the

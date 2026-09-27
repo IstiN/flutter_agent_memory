@@ -303,6 +303,17 @@ class KBMemoryStore {
   /// True when [id] was deleted through [deleteRecord]/[deleteRecordByText].
   Future<bool> isDeleted(String id) => _deletions.isDeleted(id);
 
+  /// Physically removes tombstoned entity files (git-backed file storage
+  /// only; other backends have nothing to purge).
+  ///
+  /// Deletions rewrite entity files as tombstones instead of unlinking
+  /// them, so git merges/rebases never hit delete/modify conflicts.
+  /// Tombstone files accumulate until this runs. Call it only during
+  /// maintenance, when no concurrent agent is writing memory — purging
+  /// re-introduces file deletions into git history. The `DELETIONS.md`
+  /// ledger preserves what was deleted.
+  Future<List<String>> purgeTombstones() => _deletions.purgeTombstones();
+
   /// True when text with the same normalized content was deleted before.
   Future<bool> hasDeletedText(String text) => _deletions.hasDeletedText(text);
 

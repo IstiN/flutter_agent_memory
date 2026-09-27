@@ -71,6 +71,27 @@ abstract interface class KbAppendCapable {
   FutureOr<void> appendFile(String path, String content);
 }
 
+/// Optional capability for git-backed storages that keep entity files on a
+/// real file system (the file backend).
+///
+/// Implements the conflict-free deletion strategy: instead of unlinking an
+/// entity file (which produces git delete/modify conflicts that block
+/// rebases), a deletion rewrites the file in place with a tombstone marker.
+/// Both sides of a merge then only ever *modify* files, and the union merge
+/// driver resolves them line-wise. [KbStorage.readEntity] reports tombstoned
+/// entities as absent, so readers never see deleted records.
+abstract interface class KbTombstoneCapable {
+  /// Rewrites the entity file as a tombstone, preserving the file on disk.
+  FutureOr<void> tombstoneEntity(String type, String id);
+
+  /// Physically removes tombstoned entity files and returns the purged ids.
+  ///
+  /// This re-introduces deletions into git history, so it must only run
+  /// during maintenance windows when no concurrent agent can be modifying
+  /// the same files (e.g. `agent_memory memory gc`).
+  FutureOr<List<String>> purgeTombstones();
+}
+
 /// Uniform append access for any [KbStorage].
 ///
 /// Storages implementing [KbAppendCapable] get their native append;

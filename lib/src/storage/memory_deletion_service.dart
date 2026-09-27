@@ -58,8 +58,13 @@ class MemoryDeleteResult {
 ///
 /// Deleting a record through this service does three things:
 ///
-/// 1. Removes the entity file atomically (unlink for file storage,
-///    transactional `DELETE` for SQLite, ...).
+/// 1. Removes the entity — on git-backed storages implementing
+///    [KbTombstoneCapable] (the file backend does) the file is rewritten
+///    in place as a tombstone instead of being unlinked, so a delete can
+///    never produce a git delete/modify conflict: both sides of a merge
+///    only ever modify files. Other backends fall back to a physical
+///    delete. In both cases [KbStorage.readEntity] reports the entity as
+///    absent afterwards.
 /// 2. Appends a tombstone entry to `DELETIONS.md` so capture-time
 ///    deduplication can keep deleted garbage from being re-added by another
 ///    process working from the same transcript.
@@ -77,6 +82,10 @@ class MemoryDeleteResult {
 /// (rewritten, deduplicated) only after it grows past twice
 /// [maxLedgerEntries], and compaction refuses to touch content it cannot
 /// parse.
+///
+/// Tombstone files accumulate until [purgeTombstones] runs during a
+/// maintenance window; the deletion ledger keeps the history, so purging
+/// never loses the fact that a record was deleted.
 class MemoryDeletionService {
   final KbStorage storage;
   final KBFileParser parser;
@@ -104,7 +113,7 @@ class MemoryDeletionService {
     if (content == null) return const MemoryDeleteResult([]);
 
     final text = _extractText(type, content);
-    await storage.deleteEntity(type, id);
+    await _removeEntity(type, id);
     await _recordDeletion(id, type, text);
     await _maybeRebuildGraph(rebuildGraph);
     return MemoryDeleteResult([id]);
@@ -153,7 +162,7 @@ class MemoryDeletionService {
     final entityText = _extractText(type, content);
     if (entityText == null) return null;
     if (normalizeMemoryText(entityText) != normalized) return null;
-    await storage.deleteEntity(type, id);
+    await _removeEntity(type, id);
     await _recordDeletion(id, type, entityText);
     return id;
   }
@@ -220,6 +229,33 @@ class MemoryDeletionService {
   }
 
   // --- internals -----------------------------------------------------------
+
+  /// Removes the entity: tombstone-in-place on git-backed file storage so
+  /// merges never see a file deletion, physical delete everywhere else.
+  Future<void> _removeEntity(String type, String id) async {
+    final s = storage;
+    if (s is KbTombstoneCapable) {
+      await (s as KbTombstoneCapable).tombstoneEntity(type, id);
+    } else {
+      await s.deleteEntity(type, id);
+    }
+  }
+
+  /// Physically removes tombstoned entity files (git-backed file storage
+  /// only; other backends delete eagerly and have nothing to purge).
+  ///
+  /// Run during maintenance when no concurrent agent is writing memory —
+  /// purging re-introduces file deletions into git history, which is safe
+  /// only when nothing else touches the same files. The deletion ledger
+  /// (`DELETIONS.md`) is the durable record of what was deleted, so purge
+  /// loses no history.
+  Future<List<String>> purgeTombstones() async {
+    final s = storage;
+    if (s is KbTombstoneCapable) {
+      return await (s as KbTombstoneCapable).purgeTombstones();
+    }
+    return const [];
+  }
 
   static const List<String> _allTypes = ['question', 'answer', 'note'];
 

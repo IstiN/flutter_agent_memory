@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter_agent_memory/src/llm/llm_message.dart';
 import 'package:flutter_agent_memory/src/llm/llm_provider.dart';
 import 'package:flutter_agent_memory/src/storage/in_memory_kb_storage.dart';
+import 'package:flutter_agent_memory/src/storage/file_kb_storage.dart';
 import 'package:flutter_agent_memory/src/storage/kb_memory_store.dart';
 import 'package:flutter_agent_memory/src/storage/sqlite_kb_storage.dart';
 import 'package:sqlite3/sqlite3.dart';
@@ -68,7 +69,7 @@ void main() {
       if (tmpDir.existsSync()) tmpDir.deleteSync(recursive: true);
     });
 
-    test('removes the record and is idempotent', () async {
+    test('tombstones the record and is idempotent', () async {
       final record = await store.addNote(
         text: 'Deploy happens on Fridays.',
         area: 'dev',
@@ -76,10 +77,11 @@ void main() {
       );
 
       expect(await store.deleteRecord(record.id), isTrue);
-      expect(
-        File('${tmpDir.path}/notes/${record.id}.md').existsSync(),
-        isFalse,
-      );
+      final file = File('${tmpDir.path}/notes/${record.id}.md');
+      // Kept on disk as a tombstone so git merges never see a file
+      // deletion; readers treat the entity as absent.
+      expect(file.existsSync(), isTrue);
+      expect(FileKbStorage.isTombstoneContent(file.readAsStringSync()), isTrue);
       expect(await store.findById(record.id), isNull);
       expect(await store.deleteRecord(record.id), isFalse);
     });

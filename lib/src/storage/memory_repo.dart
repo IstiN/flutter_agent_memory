@@ -25,8 +25,17 @@ class MemoryRepoInitResult {
 ///   must not be committed (`GRAPH.md`, `MEMORY.revision`, `INDEX.md`,
 ///   `.last_maintenance`). Keeping them out of git removes the main source
 ///   of merge conflicts.
-/// - `.gitattributes` — `DELETIONS.md merge=union`, so concurrent
-///   tombstone appends from parallel branches merge line-wise.
+/// - `.gitattributes` — union merge drivers, so concurrent modifications
+///   of the same file from parallel branches merge line-wise instead of
+///   blocking with a content conflict:
+///   - `DELETIONS.md merge=union` — tombstone ledger appends.
+///   - `questions|answers|notes/*.md merge=union` — entity files.
+///     Deletions never unlink entity files (they rewrite them in place as
+///     tombstones, see [KbTombstoneCapable]), so git never sees a
+///     delete/modify conflict for them; union resolves the remaining
+///     modify/modify case (e.g. an update on one branch, a tombstone or
+///     another update on the other) deterministically — the tombstone
+///     marker survives the union, so delete wins.
 class MemoryRepoInit {
   MemoryRepoInit(this.storage);
 
@@ -43,13 +52,17 @@ class MemoryRepoInit {
   ];
 
   /// Merge-driver assignments for conflict-prone files.
-  static const mergeDriverLines = <String>['DELETIONS.md merge=union'];
+  static const mergeDriverLines = <String>[
+    'DELETIONS.md merge=union',
+    'questions/*.md merge=union',
+    'answers/*.md merge=union',
+    'notes/*.md merge=union',
+  ];
 
   static const _gitignoreHeader =
       '# flutter_agent_memory derivatives - rebuilt from records, '
       'do not commit';
-  static const _gitattributesHeader =
-      '# flutter_agent_memory merge drivers';
+  static const _gitattributesHeader = '# flutter_agent_memory merge drivers';
 
   final KbStorage storage;
 

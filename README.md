@@ -622,7 +622,12 @@ final json = jsonEncode(overview.toJson()); // send to your Flutter app
 
 `deleteRecord` / `deleteRecordByText` are safe for multi-process hosts:
 
-1. The record file is removed atomically.
+1. The entity file is rewritten **in place as a tombstone** (`tombstone: true`
+   marker in the frontmatter) instead of being unlinked — git never sees a
+   file deletion for memory records, so two concurrent agents can delete
+   and modify the same file and a rebase/merge completes with zero manual
+   conflict resolution. Readers (`list`, `search`, `graph`, `overview`)
+   treat tombstoned entities as absent.
 2. A tombstone is appended to the `DELETIONS.md` ledger, so capture-time
    deduplication will not re-add the same text later (`respectTombstones`,
    default `true`).
@@ -631,6 +636,10 @@ final json = jsonEncode(overview.toJson()); // send to your Flutter app
 4. The next `consolidate()` receives cleanup notices for pending deletions,
    so stale statements are removed from the summary.
 5. `GRAPH.md` is regenerated (disable with `rebuildGraph: false` / `--no-graph`).
+6. Tombstone files are physically removed only during maintenance, via
+   `agent_memory memory gc` (or `store.purgeTombstones()`), when no
+   concurrent agent is writing memory. The ledger keeps the durable record
+   of what was deleted.
 
 ### Git-backed memory
 
@@ -647,6 +656,11 @@ repo gives every agent the full memory:
   local. Both are safe to keep uncommitted.
 - **Union-mergeable ledger.** `DELETIONS.md` is append-only line-based and
   parses git `merge=union` output (duplicates collapsed, max cursor).
+- **Conflict-free deletions.** Deletions rewrite entity files as
+  tombstones instead of unlinking them, and `questions/answers/notes/*.md`
+  get `merge=union` drivers (alongside `DELETIONS.md`) — delete/modify
+  conflicts are impossible by construction and modify/modify merges resolve
+  line-wise with delete winning deterministically.
 - **One-command setup:**
 
 ```bash

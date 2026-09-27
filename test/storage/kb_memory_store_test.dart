@@ -4,6 +4,7 @@ import 'package:flutter_agent_memory/src/llm/llm_message.dart';
 import 'package:flutter_agent_memory/src/llm/llm_provider.dart';
 import 'package:flutter_agent_memory/src/models/memory_level.dart';
 import 'package:flutter_agent_memory/src/models/relation.dart';
+import 'package:flutter_agent_memory/src/storage/file_kb_storage.dart';
 import 'package:flutter_agent_memory/src/storage/kb_memory_store.dart';
 import 'package:test/test.dart';
 
@@ -12,7 +13,11 @@ class _TagProvider implements LlmProvider {
   String get defaultModel => 'fake';
 
   @override
-  Future<String> chat(String prompt, {String? model, void Function()? onCancel}) async {
+  Future<String> chat(
+    String prompt, {
+    String? model,
+    void Function()? onCancel,
+  }) async {
     return 'TAG=dart\nTAG=testing';
   }
 
@@ -50,7 +55,11 @@ class _ConsolidationProvider implements LlmProvider {
   String get defaultModel => 'fake';
 
   @override
-  Future<String> chat(String prompt, {String? model, void Function()? onCancel}) async {
+  Future<String> chat(
+    String prompt, {
+    String? model,
+    void Function()? onCancel,
+  }) async {
     return 'SUMMARY=Consolidated summary.\n'
         'SKILL | ID=sk_1 | TITLE=Test skill | INSTRUCTION=Run tests. | TAGS=dart,testing';
   }
@@ -156,32 +165,26 @@ void main() {
     expect(note.id, matches(r'^n_0001_[0-9a-f]{4}$'));
   });
 
-  test('recordAccess increments counter and sets lastAccessedAt for question',
-      () async {
-    final record = await store.addQuestion(
-      text: 'Q?',
-      area: 'dev',
-      tags: ['x'],
-    );
-    await store.recordAccess(record.id);
+  test(
+    'recordAccess increments counter and sets lastAccessedAt for question',
+    () async {
+      final record = await store.addQuestion(
+        text: 'Q?',
+        area: 'dev',
+        tags: ['x'],
+      );
+      await store.recordAccess(record.id);
 
-    final updated = await store.findById(record.id);
-    expect(updated, isNotNull);
-    expect(updated!.accessCount, 1);
-    expect(updated.lastAccessedAt, isNotNull);
-  });
+      final updated = await store.findById(record.id);
+      expect(updated, isNotNull);
+      expect(updated!.accessCount, 1);
+      expect(updated.lastAccessedAt, isNotNull);
+    },
+  );
 
   test('recordAccess works for answers and notes', () async {
-    final answer = await store.addAnswer(
-      text: 'A.',
-      area: 'dev',
-      tags: ['y'],
-    );
-    final note = await store.addNote(
-      text: 'N.',
-      area: 'dev',
-      tags: ['z'],
-    );
+    final answer = await store.addAnswer(text: 'A.', area: 'dev', tags: ['y']);
+    final note = await store.addNote(text: 'N.', area: 'dev', tags: ['z']);
 
     await store.recordAccess(answer.id);
     await store.recordAccess(note.id);
@@ -195,17 +198,18 @@ void main() {
     expect(await store.findById('q_unknown'), isNull);
   });
 
-  test('deleteRecord removes file', () async {
+  test('deleteRecord tombstones the file', () async {
     final record = await store.addQuestion(
       text: 'Q?',
       area: 'dev',
       tags: ['x'],
     );
     await store.deleteRecord(record.id);
-    expect(
-      File('${tmpDir.path}/questions/${record.id}.md').existsSync(),
-      isFalse,
-    );
+    final file = File('${tmpDir.path}/questions/${record.id}.md');
+    // Tombstone-in-place: the file stays on disk (conflict-free git
+    // merges) but reads as deleted.
+    expect(file.existsSync(), isTrue);
+    expect(FileKbStorage.isTombstoneContent(file.readAsStringSync()), isTrue);
     expect(await store.findById(record.id), isNull);
   });
 

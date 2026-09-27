@@ -220,6 +220,8 @@ Future<void> _memory(ArgResults args) async {
       await _memoryGraph(sub);
     case 'init-git':
       await _memoryInitGit(sub);
+    case 'gc':
+      await _memoryGc(sub);
   }
 }
 
@@ -252,6 +254,20 @@ Future<void> _memoryGraph(ArgResults args) async {
   final store = KBMemoryStore.file(outputPath, source: 'agent');
   await store.buildGraph();
   stdout.writeln('Regenerated $outputPath/GRAPH.md');
+}
+
+Future<void> _memoryGc(ArgResults args) async {
+  final outputPath = args['output'] as String;
+  final store = KBMemoryStore.file(outputPath, source: 'agent');
+  final purged = await store.purgeTombstones();
+  if (purged.isEmpty) {
+    stdout.writeln('Nothing to purge.');
+    return;
+  }
+  stdout.writeln('Purged ${purged.length} tombstone file(s):');
+  for (final id in purged) {
+    stdout.writeln('  - $id');
+  }
 }
 
 Future<void> _memoryInitGit(ArgResults args) async {

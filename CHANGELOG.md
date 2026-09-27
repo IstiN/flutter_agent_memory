@@ -1,5 +1,40 @@
 # Changelog
 
+## 0.2.2
+
+- **Conflict-free deletions (issue #1).** Deleting a record no longer
+  unlinks its entity file. On the git-backed file storage a deletion now
+  rewrites the file in place as a **tombstone** (frontmatter marker
+  `tombstone: true`), so git never sees a file deletion for
+  `questions/answers/notes/*.md` and the classic **delete/modify conflict
+  that blocked automated rebases cannot occur by construction**. Both
+  sides of a merge only ever modify files.
+- **Union merge drivers for entity files.** `MemoryRepoInit` now writes
+  `questions/*.md merge=union`, `answers/*.md merge=union` and
+  `notes/*.md merge=union` into `.gitattributes` (alongside the existing
+  `DELETIONS.md merge=union`). The remaining modify/modify case (e.g. an
+  update on one branch, a tombstone on the other) resolves line-wise; the
+  tombstone marker survives a union merge, so **delete wins
+  deterministically** and no rebase/merge ever needs manual resolution
+  for memory churn.
+- **New `KbTombstoneCapable` interface** implemented by `FileKbStorage`:
+  `tombstoneEntity` (rewrite-in-place) and `purgeTombstones` (physical
+  removal). `KbStorage.readEntity` on the file backend reports tombstoned
+  entities as absent, so all readers (list, search, graph, overview) skip
+  them. Storages without the capability keep the previous physical-delete
+  behaviour.
+- **New `agent_memory memory gc` command** (and
+  `KBMemoryStore.purgeTombstones`) physically removes tombstone files.
+  Run it only during maintenance when no concurrent agent writes memory:
+  purging re-introduces file deletions into git history. The `DELETIONS.md`
+  ledger is the durable deletion record, so purging loses no history.
+- Tombstoned ids still occupy their index — record ids are never reused
+  even after a purge.
+- Acceptance coverage with the real `git` binary
+  (`test/storage/delete_modify_conflict_test.dart`): tombstone-on-one-branch
+  + edit-on-the-other rebases with zero conflicts; delete-on-both-branches
+  merges cleanly through the union driver.
+
 ## 0.2.1
 
 - **Fix: append-only deletion ledger (critical).** `DELETIONS.md` writes

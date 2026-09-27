@@ -126,8 +126,14 @@ final List<CliCommand> agentMemoryCommands = [
       CliCommand(
         name: 'init-git',
         description:
-            'Prepare the memory store for git: write .gitignore (derivatives) and .gitattributes (union merge for DELETIONS.md).',
+            'Prepare the memory store for git: write .gitignore (derivatives) and .gitattributes (union merge drivers).',
         buildParser: _memoryInitGitCommandParser,
+      ),
+      CliCommand(
+        name: 'gc',
+        description:
+            'Physically purge tombstoned entity files (run during maintenance only, when no concurrent agent writes memory).',
+        buildParser: _memoryGcCommandParser,
       ),
     ],
   ),
@@ -493,6 +499,14 @@ ArgParser _memoryGraphCommandParser() => ArgParser()
   );
 
 ArgParser _memoryInitGitCommandParser() => ArgParser()
+  ..addOption(
+    'output',
+    abbr: 'o',
+    defaultsTo: 'kb',
+    help: 'Knowledge-base directory',
+  );
+
+ArgParser _memoryGcCommandParser() => ArgParser()
   ..addOption(
     'output',
     abbr: 'o',

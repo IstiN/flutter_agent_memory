@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import '../models/kb_context.dart';
+import '../utils/date_utils.dart';
 import 'kb_context_loader.dart';
 import 'kb_storage.dart';
 
@@ -23,11 +24,47 @@ import 'kb_storage.dart';
 ///   GRAPH.md
 ///   MEMORY.md
 /// ```
-class FileKbStorage implements KbStorage, KbAppendCapable {
+class FileKbStorage implements KbStorage, KbAppendCapable, KbTombstoneCapable {
   final Directory kbDir;
   final KBContextLoader _contextLoader;
 
   FileKbStorage(this.kbDir) : _contextLoader = KBContextLoader();
+
+  /// Frontmatter marker line written by [tombstoneEntity]. Chosen to be
+  /// unambiguous (not part of any entity schema) and to survive a git
+  /// union merge intact: even if another branch's modification of the same
+  /// file is concatenated around it, the marker is still present, so
+  /// [isTombstoneContent] keeps reporting the entity as deleted and the
+  /// merge completes without manual resolution (delete wins).
+  static const String tombstoneMarker = 'tombstone: true';
+
+  static final RegExp _tombstoneRegex = RegExp(
+    r'^tombstone:\s*true\s*$',
+    multiLine: true,
+  );
+
+  /// True when [content] is a tombstone file (see [tombstoneEntity]).
+  static bool isTombstoneContent(String content) =>
+      _tombstoneRegex.hasMatch(content);
+
+  /// Renders the tombstone body for [id]. Kept deliberately small and
+  /// line-oriented so union merges of two tombstones (or a tombstone and a
+  /// concurrent edit) stay well-formed and keep the marker.
+  static String tombstoneContentFor(String id, String deletedAt) =>
+      '''
+---
+id: $id
+tombstone: true
+deletedAt: $deletedAt
+---
+
+# Entity: $id
+
+> 🪦 Deleted $deletedAt. This file is a tombstone: it is kept on disk
+> instead of being unlinked so that git branches merge and rebase without
+> delete/modify conflicts. Readers treat this entity as absent. Physical
+> removal happens only during maintenance (`agent_memory memory gc`).
+''';
 
   static const Map<String, String> _entityPrefix = {
     'question': 'q',
@@ -53,7 +90,10 @@ class FileKbStorage implements KbStorage, KbAppendCapable {
   String? readEntity(String type, String id) {
     final file = _entityFile(type, id);
     if (!file.existsSync()) return null;
-    return file.readAsStringSync();
+    final content = file.readAsStringSync();
+    // Tombstoned files stay on disk for conflict-free git merges; readers
+    // must see the entity as absent.
+    return isTombstoneContent(content) ? null : content;
   }
 
   @override
@@ -67,6 +107,29 @@ class FileKbStorage implements KbStorage, KbAppendCapable {
   void deleteEntity(String type, String id) {
     final file = _entityFile(type, id);
     if (file.existsSync()) file.deleteSync();
+  }
+
+  @override
+  void tombstoneEntity(String type, String id) {
+    final file = _entityFile(type, id);
+    file.parent.createSync(recursive: true);
+    file.writeAsStringSync(tombstoneContentFor(id, currentUtcTimestamp()));
+  }
+
+  @override
+  List<String> purgeTombstones() {
+    final removed = <String>[];
+    for (final type in _entityDir.keys) {
+      for (final id in listEntityIds(type)) {
+        final file = _entityFile(type, id);
+        if (!file.existsSync()) continue;
+        if (isTombstoneContent(file.readAsStringSync())) {
+          file.deleteSync();
+          removed.add(id);
+        }
+      }
+    }
+    return removed..sort();
   }
 
   @override

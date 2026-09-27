@@ -247,7 +247,9 @@ $text
         expect(gitignore, contains(f));
       }
       final gitattributes = (await s.storage.readFile('.gitattributes'))!;
-      expect(gitattributes, contains('DELETIONS.md merge=union'));
+      for (final line in MemoryRepoInit.mergeDriverLines) {
+        expect(gitattributes, contains(line));
+      }
     });
 
     test('is idempotent and preserves user content', () async {
